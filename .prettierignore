@@ -1,0 +1,23 @@
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Miscellaneous
+/static/
+
+# Generiert bzw. nicht formatieren
+/src/lib/paraglide/
+/project.inlang/*
+!/project.inlang/settings.json
+/pocketbase/bin/
+/pocketbase/pb_data/
+/pocketbase/pb_public/
+/build/
+/.svelte-kit/
+/playwright-report/
+/test-results/
+CLAUDE.md
+PLAN.md

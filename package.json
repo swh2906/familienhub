@@ -1,0 +1,60 @@
+{
+	"name": "familienhub",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"packageManager": "pnpm@11.28.6",
+	"engines": {
+		"node": ">=24.0.0 <25"
+	},
+	"scripts": {
+		"dev": "node scripts/dev.ts",
+		"dev:web": "vite dev",
+		"build": "vite build && node scripts/copy-build.ts",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync && pnpm run i18n || echo ''",
+		"i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --emit-ts-declarations --strategy localStorage preferredLanguage baseLocale --silent",
+		"check": "svelte-kit sync && pnpm run i18n && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && pnpm run i18n && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write .",
+		"test": "vitest --run",
+		"test:watch": "vitest",
+		"test:e2e": "playwright test",
+		"test:e2e:install": "playwright install chromium",
+		"pb:download": "node scripts/pb-download.ts",
+		"bootstrap": "pnpm install && pnpm run test:e2e:install && pnpm run pb:download",
+		"doctor": "node scripts/claude-tools.ts doctor",
+		"sync-check": "node scripts/claude-tools.ts sync-check",
+		"clean": "node scripts/claude-tools.ts clean",
+		"index": "node scripts/claude-tools.ts index"
+	},
+	"dependencies": {
+		"pocketbase": "^0.28.1"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@inlang/paraglide-js": "^2.18.2",
+		"@playwright/test": "^1.60.0",
+		"@sveltejs/adapter-static": "^4.0.0",
+		"@sveltejs/kit": "^3.0.0",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/node": "^24",
+		"eslint": "^10.4.1",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.19.0",
+		"globals": "^17.6.0",
+		"prettier": "^3.8.3",
+		"prettier-plugin-svelte": "^4.1.0",
+		"svelte": "^5.57.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.60.1",
+		"vite": "^8.3.0",
+		"vitest": "^4.1.8"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
+	}
+}

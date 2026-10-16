@@ -1,0 +1,30 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-settings.json",
+	"extraKnownMarketplaces": {
+		"swh-tools": { "source": { "source": "github", "repo": "swh2906/claude-code-kit" } }
+	},
+	"enabledPlugins": { "devkit@swh-tools": true },
+	"permissions": {
+		"allow": [
+			"Bash(pnpm test:*)",
+			"Bash(pnpm lint:*)",
+			"Bash(pnpm check:*)",
+			"Bash(pnpm run doctor:*)",
+			"Bash(pnpm run sync-check:*)",
+			"Bash(pnpm run index:*)",
+			"Bash(git status:*)",
+			"Bash(git diff:*)",
+			"Bash(git log:*)",
+			"Bash(rg:*)",
+			"mcp__plugin_devkit_code-graph"
+		],
+		"deny": [
+			"Read(./.env)",
+			"Read(./.env.*)",
+			"Read(./pocketbase/pb_data/**)",
+			"Read(**/*.pem)",
+			"Read(**/id_rsa*)",
+			"Read(**/id_ed25519*)"
+		]
+	}
+}

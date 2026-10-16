@@ -12,25 +12,17 @@ Primäre Strategie: **Devcontainer** (`.devcontainer/`). Ohne Docker läuft alle
 
 ## Bekannte Unterschiede
 
-| Thema                     | Windows                                     | macOS / Linux | Container                              |
-| ------------------------- | ------------------------------------------- | ------------- | -------------------------------------- |
-| PocketBase-Binary         | `pocketbase.exe` (über `pnpm pb:download`)  | `pocketbase`  | Linux-Binary, eigener Download         |
-| `npx` in `.mcp.json`      | braucht `cmd /c` → lokaler Override (s. u.) | ok            | ok                                     |
-| Hooks                     | laufen über Git Bash, `node` nötig          | `node` nötig  | `node` (Feature)                       |
-| Zeilenenden               | `.gitattributes` erzwingt LF                | LF            | LF                                     |
-| `node_modules`            | Host                                        | Host          | eigenes Volume (keine Binär-Konflikte) |
-| Playwright-Abhängigkeiten | `pnpm test:e2e:install`                     | ebenso        | `--with-deps` im postCreate            |
-
-**Windows-Override für code-graph** (lokal, nicht versioniert):
-
-```
-claude mcp add --scope local code-graph -- cmd /c npx -y @sdsrs/code-graph
-```
+| Thema                     | Windows                                    | macOS / Linux | Container                              |
+| ------------------------- | ------------------------------------------ | ------------- | -------------------------------------- |
+| PocketBase-Binary         | `pocketbase.exe` (über `pnpm pb:download`) | `pocketbase`  | Linux-Binary, eigener Download         |
+| Hooks                     | laufen über Git Bash, `node` nötig         | `node` nötig  | `node` (Feature)                       |
+| Zeilenenden               | `.gitattributes` erzwingt LF               | LF            | LF                                     |
+| `node_modules`            | Host                                       | Host          | eigenes Volume (keine Binär-Konflikte) |
+| Playwright-Abhängigkeiten | `pnpm test:e2e:install`                    | ebenso        | `--with-deps` im postCreate            |
 
 ## Neues Gerät
 
 1. Git und Node 24 installieren (`corepack enable` für pnpm), Repo klonen.
 2. `GITHUB_PERSONAL_ACCESS_TOKEN` als Benutzer-Umgebungsvariable setzen; `gh auth login`.
 3. Mit Docker: in VS Code „Reopen in Container“. Ohne Docker: `pnpm run bootstrap`.
-4. Nur Windows ohne Container: den code-graph-Override oben ausführen.
-5. Claude Code öffnen, MCP-Server freigeben, `/mcp` prüfen; `pnpm run doctor` und `pnpm run sync-check`.
+4. Plugin `devkit@swh-tools` installieren (siehe claude-code-kit), Claude Code öffnen, `/devkit:doctor`; `pnpm run doctor` und `pnpm run sync-check`.

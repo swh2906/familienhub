@@ -61,7 +61,14 @@ function doctor(): void {
 		`.code-graph ignoriert=${gitignore.includes('.code-graph') ? 'ja' : 'NEIN'}`
 	);
 	const mcp = readJson<{ mcpServers?: Record<string, unknown> }>('.mcp.json')?.mcpServers ?? {};
-	console.log('mcp     ', Object.keys(mcp).join(',') || 'keine');
+	const plugins =
+		readJson<{ enabledPlugins?: Record<string, boolean> }>('.claude/settings.json')
+			?.enabledPlugins ?? {};
+	const enabled = Object.keys(plugins).filter((name) => plugins[name]);
+	console.log(
+		'claude  ',
+		`plugins=${enabled.join(',') || 'keine'} projekt-mcp=${Object.keys(mcp).join(',') || 'keine'}`
+	);
 }
 
 function syncCheck(): void {

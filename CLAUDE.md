@@ -137,7 +137,7 @@ Befehle (immer diese verwenden):
 | Code-Graph | `pnpm run index [--rebuild]` |
 | Umgebung | `pnpm run doctor`, `pnpm run sync-check` |
 
-Workflow: `/issue` → `/plan-task` → `/implement` → `/test` → `/review-diff` → `/pr` → `/ci`. Der GitHub-MCP ist read-only; Push, PR, Kommentar und Merge nur nach Freigabe (ein Hook fragt nach).
+Workflow: `/devkit:issue` → `/devkit:plan` → `/devkit:implement` → `/devkit:test` → `/devkit:review` → `/devkit:pr` → `/devkit:ci`. Der GitHub-MCP ist read-only; Push, PR, Kommentar und Merge nur nach Freigabe (ein Hook fragt nach).
 
 Ignorieren: node_modules, build, .svelte-kit, src/lib/paraglide (generiert), pocketbase/bin, pocketbase/pb_data, pocketbase/pb_public, test-results, playwright-report, .code-graph, pnpm-lock.yaml.
 
@@ -148,7 +148,7 @@ Token-Regeln:
 3. Vor größeren Aufgaben: Plan mit maximal 8 Bulletpoints.
 4. Minimaler Diff; keinen Code in Antworten wiederholen, `datei:zeile` nennen.
 5. Such-, Issue-, PR- und CI-Ergebnisse kompakt (maximal ~10 Zeilen); bei GitHub zuerst Titel, Labels, Status.
-6. Vor Datenmodell-, Migrations- oder Rechte-Regel-Änderungen `/impact`.
+6. Vor Datenmodell-, Migrations- oder Rechte-Regel-Änderungen `/devkit:impact`.
 7. Gezielt testen, nur Fehlschläge berichten.
-8. Breite Recherche an Subagents (`explorer`, `code-navigator`, `github-analyst`).
+8. Breite Recherche an Subagents (`devkit:explorer`, `devkit:code-navigator`, `devkit:github-analyst`).
 9. Bei großem Kontext `/compact` vorschlagen.

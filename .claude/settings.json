@@ -1,5 +1,9 @@
 {
 	"$schema": "https://json.schemastore.org/claude-code-settings.json",
+	"extraKnownMarketplaces": {
+		"swh-tools": { "source": { "source": "github", "repo": "swh2906/claude-code-kit" } }
+	},
+	"enabledPlugins": { "devkit@swh-tools": true },
 	"permissions": {
 		"allow": [
 			"Bash(pnpm test:*)",
@@ -12,7 +16,7 @@
 			"Bash(git diff:*)",
 			"Bash(git log:*)",
 			"Bash(rg:*)",
-			"mcp__code-graph"
+			"mcp__plugin_devkit_code-graph"
 		],
 		"deny": [
 			"Read(./.env)",
@@ -21,32 +25,6 @@
 			"Read(**/*.pem)",
 			"Read(**/id_rsa*)",
 			"Read(**/id_ed25519*)"
-		]
-	},
-	"hooks": {
-		"PreToolUse": [
-			{
-				"matcher": "Bash|PowerShell|mcp__github__.*",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\"",
-						"timeout": 10
-					}
-				]
-			}
-		],
-		"PostToolUse": [
-			{
-				"matcher": "Edit|Write|MultiEdit",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\"",
-						"timeout": 60
-					}
-				]
-			}
 		]
 	}
 }

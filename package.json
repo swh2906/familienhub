@@ -22,7 +22,12 @@
 		"test:watch": "vitest",
 		"test:e2e": "playwright test",
 		"test:e2e:install": "playwright install chromium",
-		"pb:download": "node scripts/pb-download.ts"
+		"pb:download": "node scripts/pb-download.ts",
+		"bootstrap": "pnpm install && pnpm run test:e2e:install && pnpm run pb:download",
+		"doctor": "node scripts/claude-tools.ts doctor",
+		"sync-check": "node scripts/claude-tools.ts sync-check",
+		"clean": "node scripts/claude-tools.ts clean",
+		"index": "node scripts/claude-tools.ts index"
 	},
 	"dependencies": {
 		"pocketbase": "^0.28.1"

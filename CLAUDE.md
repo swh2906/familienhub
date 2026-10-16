@@ -108,7 +108,7 @@ Jeder Schritt endet mit lauffähigem, getestetem Stand und einem Commit. Vor jed
 
 ## Git-Ablauf
 
-- Repo: https://github.com/swh2906/familienhub (privat). Lokaler Ordner: `C:\Users\201707\Documents\Projekte\FamilyPlanner`.
+- Repo: https://github.com/swh2906/familienhub (privat). Lokaler Ordner je Gerät beliebig (Geräte: `docs/environments.md`).
 - Nie direkt auf `main` committen oder pushen. Pro Schritt ein Branch `feat/schritt-<n>-<kurzname>` (ausgehend vom aktuellen `main`).
 - Am Ende des Schritts: Branch pushen und Pull Request öffnen. **Gemergt wird erst, wenn der Entwickler den PR geprüft und freigegeben hat.**
 - Nach dem Merge: `main` lokal aktualisieren, erst dann den nächsten Schritt beginnen.
@@ -120,3 +120,35 @@ Jeder Schritt endet mit lauffähigem, getestetem Stand und einem Commit. Vor jed
 - Logik (Sync, Mengen-Zusammenfassung, Wiederholungen, Konflikte) immer mit Unit-Tests.
 - README aktuell halten: Voraussetzungen, Startbefehl, Projektstruktur.
 - DSGVO-Grundsätze: Datensparsamkeit, keine Tracker, keine externen CDNs oder Schriften.
+
+## Claude-Code-Setup
+
+Befehle (immer diese verwenden):
+
+| Zweck | Befehl |
+| --- | --- |
+| Setup neues Gerät | `pnpm run bootstrap` (install, Playwright-Chromium, PocketBase) |
+| Entwickeln | `pnpm dev` (App + PocketBase), nur Oberfläche: `pnpm dev:web` |
+| Build | `pnpm build` |
+| Tests | `pnpm test <pfad>` (Vitest, gezielt), `pnpm test:e2e <spec>` |
+| Lint/Typen | `pnpm lint`, `pnpm check` |
+| Format | `pnpm format` |
+| Aufräumen | `pnpm run clean [--all]` |
+| Code-Graph | `pnpm run index [--rebuild]` |
+| Umgebung | `pnpm run doctor`, `pnpm run sync-check` |
+
+Workflow: `/issue` → `/plan-task` → `/implement` → `/test` → `/review-diff` → `/pr` → `/ci`. Der GitHub-MCP ist read-only; Push, PR, Kommentar und Merge nur nach Freigabe (ein Hook fragt nach).
+
+Ignorieren: node_modules, build, .svelte-kit, src/lib/paraglide (generiert), pocketbase/bin, pocketbase/pb_data, pocketbase/pb_public, test-results, playwright-report, .code-graph, pnpm-lock.yaml.
+
+Token-Regeln:
+
+1. Strukturfragen (Aufrufer, Importe, Tests, Impact) zuerst über code-graph (`find_references`, `get_call_graph`, `module_overview`). `.svelte`-Dateien kennt der Graph nicht, dafür `rg`.
+2. Nur relevante Ausschnitte lesen, nie ganze große Dateien. PLAN.md nur beim aktuellen Schritt lesen.
+3. Vor größeren Aufgaben: Plan mit maximal 8 Bulletpoints.
+4. Minimaler Diff; keinen Code in Antworten wiederholen, `datei:zeile` nennen.
+5. Such-, Issue-, PR- und CI-Ergebnisse kompakt (maximal ~10 Zeilen); bei GitHub zuerst Titel, Labels, Status.
+6. Vor Datenmodell-, Migrations- oder Rechte-Regel-Änderungen `/impact`.
+7. Gezielt testen, nur Fehlschläge berichten.
+8. Breite Recherche an Subagents (`explorer`, `code-navigator`, `github-analyst`).
+9. Bei großem Kontext `/compact` vorschlagen.

@@ -1,0 +1,52 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-settings.json",
+	"permissions": {
+		"allow": [
+			"Bash(pnpm test:*)",
+			"Bash(pnpm lint:*)",
+			"Bash(pnpm check:*)",
+			"Bash(pnpm run doctor:*)",
+			"Bash(pnpm run sync-check:*)",
+			"Bash(pnpm run index:*)",
+			"Bash(git status:*)",
+			"Bash(git diff:*)",
+			"Bash(git log:*)",
+			"Bash(rg:*)",
+			"mcp__code-graph"
+		],
+		"deny": [
+			"Read(./.env)",
+			"Read(./.env.*)",
+			"Read(./pocketbase/pb_data/**)",
+			"Read(**/*.pem)",
+			"Read(**/id_rsa*)",
+			"Read(**/id_ed25519*)"
+		]
+	},
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Bash|PowerShell|mcp__github__.*",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\"",
+						"timeout": 10
+					}
+				]
+			}
+		],
+		"PostToolUse": [
+			{
+				"matcher": "Edit|Write|MultiEdit",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\"",
+						"timeout": 60
+					}
+				]
+			}
+		]
+	}
+}

@@ -35,3 +35,11 @@ blob-report
 pocketbase/bin/
 pocketbase/pb_data/
 pocketbase/pb_public/
+
+# Claude Code: Secrets, persönliche Einstellungen, Code-Graph-Index
+*.pem
+*.key
+.claude/settings.local.json
+.claude/.credentials.json
+CLAUDE.local.md
+.code-graph/

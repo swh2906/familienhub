@@ -71,9 +71,9 @@ Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketb
 │  │  ├─ db/              Dexie-Schema (ab Schritt 4)
 │  │  ├─ sync/            Sync-Modul (ab Schritt 4)
 │  │  ├─ features/        household, shopping, tasks, calendar, meals, today
-│  │  ├─ ui/              gemeinsame Komponenten, Theme (CSS-Variablen Hell/Dunkel)
+│  │  ├─ ui/              gemeinsame Komponenten, Theme (CSS-Variablen Hell/Dunkel, Akzentfarben)
 │  │  └─ paraglide/       generierte Übersetzungsfunktionen (nicht bearbeiten)
-│  └─ routes/             Seiten: / (Heute), /essen, /einkauf, /kalender, /aufgaben
+│  └─ routes/             Seiten: / (Heute), /essen, /einkauf, /kalender, /aufgaben, /einstellungen
 ├─ messages/de.json       alle Texte der Oberfläche (Paraglide)
 ├─ project.inlang/        Paraglide-Einstellungen
 ├─ pocketbase/

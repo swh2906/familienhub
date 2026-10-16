@@ -6,10 +6,13 @@
 		<meta name="text-scale" content="scale" />
 		<meta name="color-scheme" content="light dark" />
 		<script>
-			// Gespeichertes Farbschema sofort setzen, damit die Seite nicht kurz aufblitzt.
+			// Gespeichertes Farbschema und Akzentfarbe sofort setzen, damit die Seite nicht kurz aufblitzt.
 			try {
 				const theme = localStorage.getItem('fh-theme');
 				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+				const accent = localStorage.getItem('fh-accent');
+				if (accent === 'indigo' || accent === 'graphit')
+					document.documentElement.dataset.accent = accent;
 			} catch {
 				// Speicher nicht verfügbar (z. B. privater Modus): Systemeinstellung gilt.
 			}

@@ -37,3 +37,39 @@ export function applyTheme(theme: ThemePreference): void {
 		// Speicher nicht verfügbar: Einstellung gilt nur bis zum Neuladen.
 	}
 }
+
+// Akzentfarbe für Aktionen (Buttons, aktive Navigation, Häkchen). Petrol ist Standard.
+
+export const ACCENTS = ['petrol', 'indigo', 'graphit'] as const;
+
+export type Accent = (typeof ACCENTS)[number];
+
+export const DEFAULT_ACCENT: Accent = 'petrol';
+
+export const ACCENT_STORAGE_KEY = 'fh-accent';
+
+/** Wandelt einen gespeicherten Wert sicher in eine gültige Akzentfarbe um. */
+export function parseAccent(value: string | null | undefined): Accent {
+	return ACCENTS.find((accent) => accent === value) ?? DEFAULT_ACCENT;
+}
+
+export function loadAccent(): Accent {
+	try {
+		return parseAccent(localStorage.getItem(ACCENT_STORAGE_KEY));
+	} catch {
+		return DEFAULT_ACCENT;
+	}
+}
+
+/** Speichert die Akzentfarbe und setzt `data-accent` am <html>-Element (Standard: kein Attribut). */
+export function applyAccent(accent: Accent): void {
+	const root = document.documentElement;
+	if (accent === DEFAULT_ACCENT) delete root.dataset.accent;
+	else root.dataset.accent = accent;
+	try {
+		if (accent === DEFAULT_ACCENT) localStorage.removeItem(ACCENT_STORAGE_KEY);
+		else localStorage.setItem(ACCENT_STORAGE_KEY, accent);
+	} catch {
+		// Speicher nicht verfügbar: Einstellung gilt nur bis zum Neuladen.
+	}
+}

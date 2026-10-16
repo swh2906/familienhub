@@ -12,5 +12,14 @@
 	"theme_system": "System",
 	"theme_light": "Hell",
 	"theme_dark": "Dunkel",
+	"settings_title": "Einstellungen",
+	"settings_appearance": "Darstellung",
+	"settings_theme": "Farbschema",
+	"settings_theme_hint": "„System“ folgt der Einstellung deines Geräts.",
+	"settings_accent": "Akzentfarbe",
+	"settings_accent_hint": "Für Schaltflächen, aktive Bereiche und Häkchen. Gilt nur auf diesem Gerät.",
+	"accent_petrol": "Petrol",
+	"accent_indigo": "Indigo",
+	"accent_graphit": "Graphit",
 	"placeholder_coming_soon": "Dieser Bereich wird in einem späteren Schritt gebaut."
 }

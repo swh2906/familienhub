@@ -12,6 +12,7 @@
 	let { children }: LayoutProps = $props();
 
 	const home = resolve('/');
+	const settings = resolve('/einstellungen');
 	const items = [
 		{ id: 'today', route: '/', label: m.nav_today },
 		{ id: 'meals', route: '/essen', label: m.nav_meals },
@@ -29,8 +30,22 @@
 
 <div class="app">
 	<header class="header">
-		<span class="brand">{m.app_name()}</span>
-		<ThemeToggle />
+		<a class="brand" href={home}>
+			<span class="logo" aria-hidden="true">F</span>
+			<span>{m.app_name()}</span>
+		</a>
+		<div class="header-actions">
+			<ThemeToggle />
+			<a
+				class="icon-link"
+				href={settings}
+				aria-label={m.settings_title()}
+				title={m.settings_title()}
+				aria-current={isActive(page.url.pathname, settings, home) ? 'page' : undefined}
+			>
+				<Icon name="settings" />
+			</a>
+		</div>
 	</header>
 
 	<nav class="nav" aria-label={m.nav_label()}>
@@ -43,7 +58,7 @@
 							? 'page'
 							: undefined}
 					>
-						<Icon name={item.id} />
+						<span class="nav-icon"><Icon name={item.id} /></span>
 						<span>{item.label()}</span>
 					</a>
 				</li>
@@ -52,7 +67,9 @@
 	</nav>
 
 	<main id="main" tabindex="-1">
-		{@render children()}
+		<div class="content">
+			{@render children()}
+		</div>
 	</main>
 </div>
 
@@ -77,6 +94,7 @@
 		min-height: 100dvh;
 	}
 
+	/* Kopfzeile: Logo links, Schnellaktionen rechts */
 	.header {
 		position: sticky;
 		top: 0;
@@ -84,24 +102,70 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		height: var(--header-height);
-		padding: 0 var(--space-2) 0 var(--space-4);
+		height: calc(var(--header-height) + env(safe-area-inset-top));
+		padding: env(safe-area-inset-top) var(--space-2) 0 var(--space-4);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-surface);
 	}
 
 	.brand {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-3);
+		min-height: var(--touch-target);
+		color: var(--color-text);
 		font-weight: 700;
-		font-size: 1.125rem;
+		font-size: 1.0625rem;
+		text-decoration: none;
+	}
+
+	.logo {
+		display: grid;
+		place-items: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 10px;
+		background: var(--color-primary);
+		color: var(--color-primary-text);
+		font-weight: 800;
+		font-size: 0.9375rem;
+	}
+
+	.header-actions {
+		display: flex;
+		gap: var(--space-1);
+	}
+
+	.icon-link {
+		display: inline-grid;
+		place-items: center;
+		min-width: var(--touch-target);
+		min-height: var(--touch-target);
+		border-radius: var(--radius);
+		color: var(--color-text);
+	}
+
+	.icon-link:hover {
+		background: var(--color-surface-2);
+	}
+
+	.icon-link[aria-current='page'] {
+		background: var(--color-primary-soft);
+		color: var(--color-primary-strong);
 	}
 
 	main {
-		padding: var(--space-4);
-		padding-bottom: calc(var(--nav-height) + var(--space-6) + env(safe-area-inset-bottom));
+		padding: var(--space-6) var(--space-4);
+		padding-bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
 	}
 
 	main:focus {
 		outline: none;
+	}
+
+	.content {
+		max-width: var(--content-max-width);
+		margin: 0 auto;
 	}
 
 	/* Handy: untere Leiste mit fünf gleich breiten Einträgen */
@@ -111,7 +175,7 @@
 		z-index: 10;
 		border-top: 1px solid var(--color-border);
 		background: var(--color-surface);
-		padding-bottom: env(safe-area-inset-bottom);
+		padding: var(--space-1) var(--space-1) env(safe-area-inset-bottom);
 	}
 
 	.nav ul {
@@ -131,33 +195,40 @@
 		min-height: var(--nav-height);
 		min-width: var(--touch-target);
 		padding: var(--space-1);
+		border-radius: var(--radius);
 		color: var(--color-text-muted);
 		font-size: 0.75rem;
+		font-weight: 500;
 		text-decoration: none;
 	}
 
-	.nav a[aria-current='page'] {
-		color: var(--color-nav-active-text);
-		font-weight: 600;
-	}
-
-	.nav a[aria-current='page'] :global(svg) {
-		background: var(--color-nav-active-bg);
+	.nav-icon {
+		display: grid;
+		place-items: center;
+		padding: 2px 16px;
 		border-radius: 999px;
-		padding: 2px 12px;
-		box-sizing: content-box;
 	}
 
-	/* Desktop: Seitenleiste links */
-	@media (min-width: 768px) {
+	.nav a[aria-current='page'] {
+		color: var(--color-primary-strong);
+		font-weight: 700;
+	}
+
+	.nav a[aria-current='page'] .nav-icon {
+		background: var(--color-primary-soft);
+	}
+
+	/* Tablet (z. B. iPad hochkant): schmale Leiste links, Icon über Beschriftung */
+	@media (min-width: 700px) {
 		.app {
 			display: grid;
-			grid-template-columns: var(--sidebar-width) 1fr;
-			grid-template-rows: var(--header-height) 1fr;
+			grid-template-columns: var(--rail-width) 1fr;
+			grid-template-rows: auto 1fr;
 		}
 
 		.header {
 			grid-column: 1 / -1;
+			padding-left: var(--space-6);
 		}
 
 		.nav {
@@ -165,14 +236,46 @@
 			top: var(--header-height);
 			align-self: start;
 			height: calc(100dvh - var(--header-height));
+			padding: var(--space-4) var(--space-2);
 			border-top: none;
 			border-right: 1px solid var(--color-border);
-			padding: var(--space-3) var(--space-2);
 		}
 
 		.nav ul {
 			display: flex;
 			flex-direction: column;
+			gap: var(--space-2);
+		}
+
+		.nav a:hover {
+			color: var(--color-text);
+		}
+
+		.nav a:hover .nav-icon {
+			background: var(--color-surface-2);
+		}
+
+		.nav a[aria-current='page'] .nav-icon {
+			background: var(--color-primary-soft);
+		}
+
+		main {
+			padding: var(--space-8) var(--space-8) var(--space-8);
+			min-width: 0;
+		}
+	}
+
+	/* Laptop, iPad quer: Seitenleiste mit Beschriftung neben dem Icon */
+	@media (min-width: 1100px) {
+		.app {
+			grid-template-columns: var(--sidebar-width) 1fr;
+		}
+
+		.nav {
+			padding: var(--space-4) var(--space-3);
+		}
+
+		.nav ul {
 			gap: var(--space-1);
 		}
 
@@ -182,25 +285,26 @@
 			gap: var(--space-3);
 			min-height: var(--touch-target);
 			padding: 0 var(--space-3);
-			border-radius: var(--radius);
-			font-size: 1rem;
+			font-size: 0.9375rem;
+		}
+
+		.nav-icon,
+		.nav a[aria-current='page'] .nav-icon,
+		.nav a:hover .nav-icon {
+			padding: 0;
+			background: none;
 		}
 
 		.nav a:hover {
-			background: var(--color-nav-active-bg);
+			background: var(--color-surface-2);
 		}
 
 		.nav a[aria-current='page'] {
-			background: var(--color-nav-active-bg);
-		}
-
-		.nav a[aria-current='page'] :global(svg) {
-			background: none;
-			padding: 0;
+			background: var(--color-primary-soft);
 		}
 
 		main {
-			padding: var(--space-6);
+			padding: var(--space-8) 40px;
 		}
 	}
 </style>

@@ -32,3 +32,25 @@ test('Farbschema-Umschalter bleibt nach dem Neuladen erhalten', async ({ page })
 	await page.reload();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
+
+test('Akzentfarbe in den Einstellungen wählen und behalten', async ({ page }) => {
+	await page.goto('/');
+	await page.getByRole('link', { name: 'Einstellungen' }).click();
+	await expect(page.getByRole('heading', { level: 1, name: 'Einstellungen' })).toBeVisible();
+
+	const accent = page.getByRole('group', { name: 'Akzentfarbe' });
+	await expect(accent.getByRole('radio', { name: 'Petrol' })).toBeChecked();
+	await expect(page.locator('html')).not.toHaveAttribute('data-accent');
+
+	await accent.getByText('Indigo').click();
+	await expect(page.locator('html')).toHaveAttribute('data-accent', 'indigo');
+
+	await page.reload();
+	await expect(page.locator('html')).toHaveAttribute('data-accent', 'indigo');
+	await expect(accent.getByRole('radio', { name: 'Indigo' })).toBeChecked();
+
+	await page.getByRole('group', { name: 'Farbschema' }).getByText('Dunkel').click();
+	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+	// Der Umschalter in der Kopfzeile zeigt denselben Stand
+	await expect(page.getByRole('button', { name: /Farbschema: Dunkel/ })).toBeVisible();
+});

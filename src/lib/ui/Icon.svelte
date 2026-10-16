@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Schlanke Inline-Icons (dekorativ, der Text daneben trägt die Bedeutung).
-	type IconName = 'today' | 'meals' | 'shopping' | 'calendar' | 'tasks' | 'sun' | 'moon' | 'system';
+	type IconName =
+		'today' | 'meals' | 'shopping' | 'calendar' | 'tasks' | 'sun' | 'moon' | 'system' | 'settings';
 
 	let { name, size = 24 }: { name: IconName; size?: number } = $props();
 </script>
@@ -39,5 +40,10 @@
 	{:else if name === 'system'}
 		<rect x="3" y="4" width="18" height="12" rx="2" />
 		<path d="M8 20h8M12 16v4" />
+	{:else if name === 'settings'}
+		<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
+		<circle cx="16" cy="6" r="2" />
+		<circle cx="10" cy="12" r="2" />
+		<circle cx="18" cy="18" r="2" />
 	{/if}
 </svg>

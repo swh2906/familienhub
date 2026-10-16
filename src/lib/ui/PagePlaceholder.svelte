@@ -14,7 +14,8 @@
 <style>
 	h1 {
 		margin: 0 0 var(--space-2);
-		font-size: 1.75rem;
+		font-size: 2rem;
+		letter-spacing: -0.02em;
 	}
 
 	.muted {

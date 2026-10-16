@@ -1,65 +1,167 @@
 /*
  * Design-Grundlage: alle Farben und Maße als CSS-Variablen.
  * Hell ist Standard; Dunkel per prefers-color-scheme oder manuell über data-theme="dark".
+ * Akzentfarbe über data-accent (petrol = Standard, indigo, graphit).
+ * Alle Text-Kombinationen erfüllen WCAG AA (mind. 4,5 : 1) in beiden Modi.
  */
 
+/* Akzentfarben: je ein Satz für Hell und Dunkel, der Modus wählt unten den passenden aus. */
 :root {
-	--color-bg: #f7f7f5;
+	--accent-light: #0e6e66;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #ddf1ee;
+	--accent-light-strong: #0a5650;
+	--accent-dark: #4fc9b9;
+	--accent-dark-on: #052a26;
+	--accent-dark-soft: #143330;
+	--accent-dark-strong: #93e3d8;
+}
+
+:root[data-accent='indigo'] {
+	--accent-light: #4f46e5;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #e9e8fd;
+	--accent-light-strong: #3730a3;
+	--accent-dark: #a5b4fc;
+	--accent-dark-on: #1a1748;
+	--accent-dark-soft: #23234a;
+	--accent-dark-strong: #c7d0fe;
+}
+
+:root[data-accent='graphit'] {
+	--accent-light: #2f3136;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #ebebea;
+	--accent-light-strong: #1f2023;
+	--accent-dark: #e6e6e4;
+	--accent-dark-on: #121314;
+	--accent-dark-soft: #2a2b2e;
+	--accent-dark-strong: #f5f5f3;
+}
+
+:root {
+	/* Neutrale Grundfarben, leicht warm */
+	--color-bg: #f5f5f3;
 	--color-surface: #ffffff;
-	--color-surface-raised: #ffffff;
-	--color-text: #1c1c1e;
-	--color-text-muted: #55565b;
-	--color-border: #d9d9dc;
-	--color-primary: #2357c6;
-	--color-primary-text: #ffffff;
-	--color-nav-active-bg: #e3ebfb;
-	--color-nav-active-text: #1b46a3;
-	--color-focus: #2357c6;
+	--color-surface-2: #efefec;
+	--color-text: #1f2023;
+	--color-text-muted: #62646a;
+	--color-border: #e4e4e0;
+	--shadow-card: 0 1px 2px rgb(20 20 25 / 0.06), 0 2px 8px rgb(20 20 25 / 0.04);
+
+	/* Akzent (aus dem gewählten Satz) */
+	--color-primary: var(--accent-light);
+	--color-primary-text: var(--accent-light-on);
+	--color-primary-soft: var(--accent-light-soft);
+	--color-primary-strong: var(--accent-light-strong);
+	--color-focus: var(--accent-light);
+
+	/* Hinweise */
+	--color-warning: #8a5a00;
+	--color-warning-bg: #fdf3dc;
+
+	/* Bereichsfarben: nur für kleine Symbole, nie für große Flächen */
+	--color-meals: #b4410f;
+	--color-meals-bg: #fdeee4;
+	--color-shopping: #18733b;
+	--color-shopping-bg: #e4f4e9;
+	--color-calendar: #2453c7;
+	--color-calendar-bg: #e6edfc;
+	--color-tasks: #7a3bd1;
+	--color-tasks-bg: #f0e9fc;
+
+	/* Mitgliedsfarben: immer mit weißer Initiale, in beiden Modi gleich */
+	--member-1: #2453c7;
+	--member-2: #18733b;
+	--member-3: #7a3bd1;
+	--member-4: #b4410f;
+	--member-5: #b42318;
+	--member-6: #b0236a;
+	--member-7: #0e6e66;
+	--member-8: #8a5a00;
+	--member-text: #ffffff;
+
+	/* Vorschaufarben für die Auswahl in den Einstellungen */
+	--swatch-petrol: #0e6e66;
+	--swatch-indigo: #4f46e5;
+	--swatch-graphit: #2f3136;
 
 	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 	--radius: 12px;
+	--radius-card: 18px;
 	--space-1: 4px;
 	--space-2: 8px;
 	--space-3: 12px;
 	--space-4: 16px;
 	--space-6: 24px;
+	--space-8: 32px;
 	--touch-target: 48px;
 	--header-height: 56px;
 	--nav-height: 64px;
-	--sidebar-width: 220px;
+	--rail-width: 96px;
+	--sidebar-width: 248px;
+	--content-max-width: 1080px;
 
 	color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--color-bg: #121214;
-		--color-surface: #1c1c1f;
-		--color-surface-raised: #26262a;
-		--color-text: #f2f2f4;
-		--color-text-muted: #b0b1b8;
-		--color-border: #3a3a40;
-		--color-primary: #8fb0ff;
-		--color-primary-text: #0d1a33;
-		--color-nav-active-bg: #233150;
-		--color-nav-active-text: #c9d8ff;
-		--color-focus: #8fb0ff;
+		--color-bg: #121314;
+		--color-surface: #1b1c1e;
+		--color-surface-2: #242528;
+		--color-text: #ededeb;
+		--color-text-muted: #a4a6ab;
+		--color-border: #2e3033;
+		--shadow-card: 0 0 0 1px #2a2b2e;
+		--color-primary: var(--accent-dark);
+		--color-primary-text: var(--accent-dark-on);
+		--color-primary-soft: var(--accent-dark-soft);
+		--color-primary-strong: var(--accent-dark-strong);
+		--color-focus: var(--accent-dark);
+		--color-warning: #f5c76b;
+		--color-warning-bg: #3a2e12;
+		--color-meals: #ffb48a;
+		--color-meals-bg: #3a2418;
+		--color-shopping: #86dba4;
+		--color-shopping-bg: #17301f;
+		--color-calendar: #a8c1ff;
+		--color-calendar-bg: #1b2846;
+		--color-tasks: #cfb3ff;
+		--color-tasks-bg: #2c2045;
+		--swatch-petrol: #4fc9b9;
+		--swatch-indigo: #a5b4fc;
+		--swatch-graphit: #e6e6e4;
 		color-scheme: dark;
 	}
 }
 
 :root[data-theme='dark'] {
-	--color-bg: #121214;
-	--color-surface: #1c1c1f;
-	--color-surface-raised: #26262a;
-	--color-text: #f2f2f4;
-	--color-text-muted: #b0b1b8;
-	--color-border: #3a3a40;
-	--color-primary: #8fb0ff;
-	--color-primary-text: #0d1a33;
-	--color-nav-active-bg: #233150;
-	--color-nav-active-text: #c9d8ff;
-	--color-focus: #8fb0ff;
+	--color-bg: #121314;
+	--color-surface: #1b1c1e;
+	--color-surface-2: #242528;
+	--color-text: #ededeb;
+	--color-text-muted: #a4a6ab;
+	--color-border: #2e3033;
+	--shadow-card: 0 0 0 1px #2a2b2e;
+	--color-primary: var(--accent-dark);
+	--color-primary-text: var(--accent-dark-on);
+	--color-primary-soft: var(--accent-dark-soft);
+	--color-primary-strong: var(--accent-dark-strong);
+	--color-focus: var(--accent-dark);
+	--color-warning: #f5c76b;
+	--color-warning-bg: #3a2e12;
+	--color-meals: #ffb48a;
+	--color-meals-bg: #3a2418;
+	--color-shopping: #86dba4;
+	--color-shopping-bg: #17301f;
+	--color-calendar: #a8c1ff;
+	--color-calendar-bg: #1b2846;
+	--color-tasks: #cfb3ff;
+	--color-tasks-bg: #2c2045;
+	--swatch-petrol: #4fc9b9;
+	--swatch-indigo: #a5b4fc;
+	--swatch-graphit: #e6e6e4;
 	color-scheme: dark;
 }
 

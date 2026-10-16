@@ -1,0 +1,16 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"app_name": "FamilienHub",
+	"skip_to_content": "Zum Inhalt springen",
+	"nav_label": "Hauptnavigation",
+	"nav_today": "Heute",
+	"nav_meals": "Essen",
+	"nav_shopping": "Einkauf",
+	"nav_calendar": "Kalender",
+	"nav_tasks": "Aufgaben",
+	"theme_toggle_label": "Farbschema: {theme}. Tippen zum Wechseln.",
+	"theme_system": "System",
+	"theme_light": "Hell",
+	"theme_dark": "Dunkel",
+	"placeholder_coming_soon": "Dieser Bereich wird in einem späteren Schritt gebaut."
+}

@@ -1,0 +1,10 @@
+# Einheitlich LF-Zeilenenden auf allen Systemen (wichtig für Windows)
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.webp binary
+*.woff2 binary
+*.zip binary
+*.exe binary

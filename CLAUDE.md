@@ -106,6 +106,13 @@ Details, Aufgaben und Abnahmekriterien pro Schritt stehen in **PLAN.md**. Dort C
 
 Jeder Schritt endet mit lauffähigem, getestetem Stand und einem Commit. Vor jedem neuen Schritt kurz den Plan zeigen und auf Freigabe warten.
 
+## Git-Ablauf
+
+- Repo: https://github.com/swh2906/familienhub (privat). Lokaler Ordner: `C:\Users\201707\Documents\Projekte\FamilyPlanner`.
+- Nie direkt auf `main` committen oder pushen. Pro Schritt ein Branch `feat/schritt-<n>-<kurzname>` (ausgehend vom aktuellen `main`).
+- Am Ende des Schritts: Branch pushen und Pull Request öffnen. **Gemergt wird erst, wenn der Entwickler den PR geprüft und freigegeben hat.**
+- Nach dem Merge: `main` lokal aktualisieren, erst dann den nächsten Schritt beginnen.
+
 ## Qualitätsregeln
 
 - TypeScript strict, keine `any` ohne Begründung.

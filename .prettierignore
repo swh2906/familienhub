@@ -10,7 +10,8 @@ bun.lockb
 
 # Generiert bzw. nicht formatieren
 /src/lib/paraglide/
-/project.inlang/cache/
+/project.inlang/*
+!/project.inlang/settings.json
 /pocketbase/bin/
 /pocketbase/pb_data/
 /pocketbase/pb_public/

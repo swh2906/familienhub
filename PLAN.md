@@ -171,8 +171,9 @@ Umsetzungsnotizen:
 - Kategorien in Ladenreihenfolge (`src/lib/features/meals/catalog.ts`), eigene Kategorien danach, „Sonstiges“ zuletzt.
 - Stichwortliste mit „längstes Stichwort gewinnt“ (Komposita: „Kokosmilch“ → Konserven); „TK …“ immer Tiefkühl.
 - Schnell-Eingabe nutzt den Zutaten-Parser aus den Rezepten; Feld wird sofort geleert (kein Verlust bei schnellem Tippen).
-- „Erledigte leeren“ und Löschen mit „Rückgängig“ (8 Sekunden); Kinder leeren nur eigene erledigte Artikel.
-- Bearbeiten per Dialog (Name, Menge, Einheit, Kategorie, Löschen).
+- Oberfläche im Bring-Stil (auf Wunsch): Kacheln mit Emoji in der Akzentfarbe, nach Kategorien gruppiert. Antippen = gekauft; gekaufte Artikel erscheinen als graue Kacheln unter „Zuletzt gekauft“ und kommen mit einem Tipp zurück (derselbe Datensatz wird wieder geöffnet, kein Duplikat). Ersetzt „Erledigt“ und „Erledigte leeren“.
+- Beim Tippen Vorschläge aus „Zuletzt gekauft“ und einem Katalog häufiger Artikel; eine getippte Menge gilt für den gewählten Vorschlag.
+- Details über Bearbeiten-Modus (barrierefrei) oder langes Drücken/Rechtsklick; Löschen mit „Rückgängig“ (8 Sekunden). Kinder bearbeiten nur eigene Artikel.
 
 **Fertig, wenn:**
 - Zwei Geräte bearbeiten die Liste gleichzeitig, beide sehen sofort dasselbe.

@@ -32,6 +32,19 @@ export async function addItem(
 	});
 }
 
+/**
+ * Gekauften Artikel wieder auf die Liste setzen (Bring: Kachel aus „Zuletzt gekauft“ antippen).
+ * Optional mit neuer Menge, z. B. wenn „2 l Milch“ eingetippt und „Milch“ gewählt wurde.
+ */
+export async function reopenItem(item: ShoppingItem, input?: QuickInput): Promise<void> {
+	await repo('shopping_items').update(item.id, {
+		checked: false,
+		checked_at: '',
+		checked_by: '',
+		...(input && input.amount ? { amount: input.amount, unit: input.unit } : {})
+	});
+}
+
 /** Abhaken oder wieder öffnen. */
 export async function toggleItem(item: ShoppingItem, membership: string): Promise<void> {
 	const checked = !item.checked;

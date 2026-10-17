@@ -98,9 +98,9 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 4. Sync-Grundgerüst ✓ – danach vorgezogen: Schritt 8 Rezepte und Wochenplan ✓
 5. Einkaufsliste ✓
 6. Aufgaben ✓
-7. **Kalender** ← aktueller Schritt
+7. Kalender ✓
 8. Essensplan und Rezepte
-9. Heute-Ansicht
+9. **Heute-Ansicht** ← aktueller Schritt
 10. Feinschliff, Offline-Tests, Deployment, Backups
 
 Details, Aufgaben und Abnahmekriterien pro Schritt stehen in **PLAN.md**. Dort Checkboxen abhaken, sobald etwas erledigt ist.

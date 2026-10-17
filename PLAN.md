@@ -206,13 +206,23 @@ Umsetzungsnotizen:
 
 ## Schritt 7 – Kalender
 
-- [ ] Ansichten Tag, Woche, Monat als eigene schlanke Komponenten (keine schwere Kalender-Bibliothek).
-- [ ] Zeiten in UTC speichern, in der Zeitzone des Haushalts anzeigen.
-- [ ] Editor: Titel, Datum, Uhrzeit oder ganztägig, Ort, Teilnehmer, Erinnerungszeit (nur gespeichert, Push kommt in Phase 2), Wiederholung als Vorlagen.
-- [ ] Wiederholungen: nur Regel plus `exdates` speichern, Termine für den sichtbaren Zeitraum berechnen. Ändern mit Auswahl „nur dieser Termin“ (Ausnahme plus Einzeltermin) oder „alle“.
-- [ ] Personen-Filter als Chips.
-- [ ] Konflikte: überlappende Termine derselben Person markieren, Warnung schon im Editor.
-- [ ] Tests: Expansion von Wiederholungen, Ausnahmen, Konflikterkennung, Zeitumstellung (Unit). E2E: Serientermin anlegen und einzelnen Termin verschieben.
+- [x] Ansichten Tag, Woche, Monat als eigene schlanke Komponenten (keine schwere Kalender-Bibliothek).
+- [x] Zeiten in UTC speichern, in der Zeitzone des Haushalts anzeigen.
+- [x] Editor: Titel, Datum, Uhrzeit oder ganztägig, Ort, Teilnehmer, Erinnerungszeit (nur gespeichert, Push kommt in Phase 2), Wiederholung als Vorlagen.
+- [x] Wiederholungen: nur Regel plus `exdates` speichern, Termine für den sichtbaren Zeitraum berechnen. Ändern mit Auswahl „nur dieser Termin“ (Ausnahme plus Einzeltermin) oder „alle“.
+- [x] Personen-Filter als Chips.
+- [x] Konflikte: überlappende Termine derselben Person markieren, Warnung schon im Editor.
+- [x] Tests: Expansion von Wiederholungen, Ausnahmen, Konflikterkennung, Zeitumstellung (Unit). E2E: Serientermin anlegen und einzelnen Termin verschieben.
+
+Umsetzungsnotizen:
+- Zeitzonen ohne Bibliothek über `Intl` (`src/lib/features/calendar/tz.ts`): nicht existierende Uhrzeit → nach vorn, doppelte Stunde → erste. Zeitzone kommt aus `households.timezone`, sonst Gerät.
+- Ganztägige Termine: `start`/`end` = erster/letzter Tag als UTC-Mitternacht (reines Datum, rutscht nie auf den Vortag).
+- Serien werden in Wanduhrzeit expandiert (15:00 bleibt nach der Zeitumstellung 15:00); `exdates` = Tage (JJJJ-MM-TT).
+- „Alle Termine“ mit anderem Tag verschiebt die Serie; Wochentage/Monatstag wandern mit (`shiftRrule`), außer die Wiederholung wurde geändert.
+- Konflikt = gleiche Person, zeitliche Überschneidung; ganztägige und Termine ohne Teilnehmer zählen nicht.
+- Woche: Zeitachse ab Tablet-Breite, Tagesliste auf dem Handy; Monat: Punkte (Handy) bzw. Titel, darunter der gewählte Tag.
+- Vorlage „jährlich“ ergänzt (auch für Aufgaben).
+- Später: „Diesen und alle folgenden Termine“, Erinnerungen per Push (Phase 2), ICS-Abo (Phase 2).
 
 **Fertig, wenn:** Serientermine, Ausnahmen und Konflikte sind korrekt und getestet.
 

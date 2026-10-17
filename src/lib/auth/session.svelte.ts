@@ -68,6 +68,12 @@ class Session {
 		return this.membership?.role === 'admin';
 	}
 
+	/** Darf Rezepte, Essensplan, Termine und Aufgaben bearbeiten (Admin und Erwachsene, keine Kinder). */
+	get canEdit(): boolean {
+		const role = this.membership?.role;
+		return role === 'admin' || role === 'adult';
+	}
+
 	/** Stellt die Sitzung beim Start einmalig wieder her und verlängert sie (Token-Refresh). */
 	ready(): Promise<void> {
 		this.#ready ??= this.#restore();

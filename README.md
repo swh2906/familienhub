@@ -113,7 +113,7 @@ flowchart LR
 │  │  ├─ ui/              gemeinsame Komponenten, Theme (CSS-Variablen Hell/Dunkel, Akzentfarben)
 │  │  └─ paraglide/       generierte Übersetzungsfunktionen (nicht bearbeiten)
 │  └─ routes/
-│     ├─ (app)/           mit Navigation, Anmeldung nötig: / (Heute), /essen, /einkauf, /kalender, /aufgaben, /einstellungen
+│     ├─ (app)/           mit Navigation, Anmeldung nötig: / (Heute), /essen (/rezepte, /wochenplan), /einkauf, /kalender, /aufgaben, /einstellungen
 │     └─ (auth)/          ohne Navigation: /login, /register, /onboarding, /join/[token]
 ├─ messages/de.json       alle Texte der Oberfläche (Paraglide)
 ├─ project.inlang/        Paraglide-Einstellungen

@@ -203,7 +203,9 @@ Umsetzungsnotizen:
 
 ## Schritt 8 – Essensplan und Rezepte
 
-- [ ] Rezepte: Liste mit Suche, Tag-Filter (vegetarisch, schnell, günstig, Reste), Favoriten oben. Editor mit Zutatenliste (Name, Menge, Einheit, Kategorie).
+- [x] Rezepte: Liste mit Suche, Tag-Filter (vegetarisch, schnell, günstig, Reste), Favoriten oben. Editor mit Zutatenliste (Name, Menge, Einheit, Kategorie). *(vorgezogen vor Schritt 5, eigener PR)*
+  - Dazu: Rezeptansicht mit Portionen-Umrechnung, Zutaten-Zeilen mit ↑/↓ sortierbar, „Zutaten aus Text einfügen“ (Parser auf dem Gerät, z. B. für Text aus Live Text/Google Lens), Kinder nur lesend.
+  - `/essen` öffnet bis zum Wochenplan direkt `/essen/rezepte`.
 - [ ] Wochenplan: 7 Tage × Frühstück, Mittag, Abend. Rezept per Ziehen (Desktop) oder Antippen und Auswählen (Handy), alternativ Freitext-Notiz.
 - [ ] Zutaten-Zusammenfassung als reine Funktion: Namen vereinheitlichen, g/kg und ml/l umrechnen und addieren, Stück, EL und TL getrennt lassen, Portionen skalieren.
 - [ ] „Einkauf füllen“: Vorschau der Zutaten für einen Zeitraum, einzelne abwählbar, Übernahme mit Verweis auf den Essensplan-Eintrag. Erneute Übernahme erzeugt keine Duplikate.
@@ -249,3 +251,9 @@ Umsetzungsnotizen:
 ## Danach: Phase 2
 
 Push-Benachrichtigungen für Erinnerungen, Punkte und Belohnungen, ICS-Kalender-Abo, Rezept-Import per Link und Fotos, native Apps über Capacitor.
+
+Rezept-Import im Detail (Reihenfolge nach Nutzen/Aufwand):
+1. Import per Webadresse: strukturierte Daten (schema.org `Recipe`, JSON-LD) serverseitig per PocketBase-Hook holen und in den Editor übernehmen.
+2. Foto am Rezept speichern (PocketBase-Datei-Feld; offline: Bild in Dexie zwischenspeichern und später hochladen).
+3. Scan direkt in der App: entweder Texterkennung auf dem Gerät (z. B. Tesseract.js, mehrere MB, mittlere Genauigkeit) oder KI-Erkennung über einen externen Dienst (sehr gut, aber Datenschutz-Entscheidung und API-Schlüssel nötig).
+Bis dahin: „Zutaten aus Text einfügen“ zusammen mit der Texterkennung des Handys (Live Text, Google Lens).

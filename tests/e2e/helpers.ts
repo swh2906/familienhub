@@ -72,6 +72,38 @@ export async function createFamilyWithMember(): Promise<{
 	return { admin, member, household };
 }
 
+/** Anmelde-Token für direkte API-Aufrufe im Test. */
+export async function apiToken(identity: string): Promise<string> {
+	const { token } = await api<{ token: string }>('/api/collections/users/auth-with-password', {
+		identity,
+		password: PASSWORD
+	});
+	return token;
+}
+
+/** Legt einen Datensatz direkt über die API an (mit den Rechten des Kontos). */
+export async function apiCreate<T = { id: string }>(
+	token: string,
+	collection: string,
+	data: object
+): Promise<T> {
+	return api<T>(`/api/collections/${collection}/records`, data, token);
+}
+
+/** Admin legt ein Kinderkonto an; gibt den Benutzernamen zurück. */
+export async function createChild(adminEmail: string, household: string): Promise<string> {
+	const username = unique('kind')
+		.toLowerCase()
+		.replace(/[^a-z0-9._-]/g, '')
+		.slice(0, 30);
+	await api(
+		'/api/fh/children',
+		{ household, username, password: PASSWORD, display_name: 'Mia' },
+		await apiToken(adminEmail)
+	);
+	return username;
+}
+
 /** Meldet sich über das Formular an und wartet auf die Heute-Ansicht. */
 export async function login(page: Page, identity: string, password = PASSWORD): Promise<void> {
 	await page.goto('/login');

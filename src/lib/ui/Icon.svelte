@@ -13,7 +13,10 @@
 		| 'synced'
 		| 'pending'
 		| 'offline'
-		| 'error';
+		| 'error'
+		| 'up'
+		| 'down'
+		| 'close';
 
 	let { name, size = 24 }: { name: IconName; size?: number } = $props();
 </script>
@@ -68,6 +71,12 @@
 			d="M7 18a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 2.1-3.3M12 4.5a6 6 0 0 1 5.8 6 3.75 3.75 0 0 1 2.7 5.6"
 		/>
 		<path d="M3 3l18 18" />
+	{:else if name === 'up'}
+		<path d="M12 19V5M6 11l6-6 6 6" />
+	{:else if name === 'down'}
+		<path d="M12 5v14M6 13l6 6 6-6" />
+	{:else if name === 'close'}
+		<path d="M6 6l12 12M18 6 6 18" />
 	{:else if name === 'error'}
 		<path d="M12 3 2 20h20z" />
 		<path d="M12 10v4M12 17v.5" />

@@ -24,7 +24,7 @@ Vollständiges Konzept (Architektur, Datenmodell, Sitemap): https://claude.ai/co
 | Wiederholungen | rrule (RFC 5545) |
 | Tests | Vitest (Logik), Playwright (E2E) |
 | Werkzeuge | Node LTS, pnpm, ESLint, Prettier |
-| Hosting | Später auf kleinem Server (alter PC, Raspberry Pi oder Mini-VPS). Während der Entwicklung läuft PocketBase lokal |
+| Hosting | Mini-PC mit ZimaOS: Docker-Image (`ghcr.io/swh2906/familienhub`, öffentlich) + Tailscale-Beiwagen für HTTPS im Heimnetz (`deploy/zimaos/`). Während der Entwicklung läuft PocketBase lokal |
 
 PocketBase ist noch vor 1.0: Version fest pinnen, Schema nur über Migrationen in `pb_migrations/`, vor Updates Changelog lesen.
 

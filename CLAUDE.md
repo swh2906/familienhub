@@ -31,6 +31,7 @@ PocketBase ist noch vor 1.0: Version fest pinnen, Schema nur über Migrationen i
 ## Architektur in Kürze
 
 - Die Oberfläche liest und schreibt **nur** in Dexie. Nie direkt auf PocketBase aus Komponenten zugreifen.
+  Ausnahme: `src/lib/auth/` (Anmeldung, Familienraum, Einladungen, Mitglieder), das geht nur online.
 - Sync-Modul (`src/lib/sync/`):
   - Schreiben: Dexie + Eintrag in Outbox (nur geänderte Felder).
   - Online: Outbox der Reihe nach senden, danach Delta-Pull aller Datensätze mit `updated > lastSync`.
@@ -92,8 +93,8 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 ## Umsetzungsplan
 
 1. Projektstruktur ✓
-2. **Datenmodell als Migrationen + Rechte-Regeln mit Tests** ← aktueller Schritt
-3. Anmeldung und Familienraum
+2. Datenmodell als Migrationen + Rechte-Regeln mit Tests ✓
+3. **Anmeldung und Familienraum** ← aktueller Schritt
 4. Sync-Grundgerüst
 5. Einkaufsliste
 6. Aufgaben

@@ -1,13 +1,36 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { session } from '#lib/auth/session.svelte.js';
 	import { m } from '#lib/paraglide/messages.js';
+	import { startSync, stopSync } from '#lib/sync/service.js';
+	import { syncStatus } from '#lib/sync/status.svelte.js';
 	import Icon from '#lib/ui/Icon.svelte';
+	import SyncIndicator from '#lib/ui/SyncIndicator.svelte';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
 	import { isActive, type NavId } from '#lib/ui/nav.js';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+
+	// Abgleich läuft, solange die App-Seiten offen sind und ein Familienraum gewählt ist.
+	$effect(() => {
+		const household = session.householdId;
+		if (!household) return;
+		startSync(household);
+		return () => void stopSync();
+	});
+
+	// Nur im Test-Build für Playwright (VITE_E2E=1); im normalen Build entfällt dieser Code ganz.
+	if (import.meta.env.VITE_E2E === '1') {
+		void import('#lib/testing/e2e-hook.js').then((hook) => hook.install());
+	}
+
+	async function relogin() {
+		await session.logout();
+		await goto(resolve('/(auth)/login'));
+	}
 
 	const home = resolve('/(app)');
 	const settings = resolve('/(app)/einstellungen');
@@ -26,9 +49,10 @@
 	<header class="header">
 		<a class="brand" href={home}>
 			<span class="logo" aria-hidden="true">F</span>
-			<span>{m.app_name()}</span>
+			<span class="brand-name">{m.app_name()}</span>
 		</a>
 		<div class="header-actions">
+			<SyncIndicator />
 			<ThemeToggle />
 			<a
 				class="icon-link"
@@ -62,6 +86,20 @@
 
 	<main id="main" tabindex="-1">
 		<div class="content">
+			{#if syncStatus.authLost}
+				<div class="notice" role="alert">
+					<p>{m.sync_error()}</p>
+					<button class="btn" type="button" onclick={relogin}>{m.sync_relogin()}</button>
+				</div>
+			{/if}
+			{#if syncStatus.notices.length > 0}
+				<div class="notice" role="alert">
+					<p>{m.sync_rejected({ count: syncStatus.notices.length })}</p>
+					<button class="btn" type="button" onclick={() => syncStatus.dismissNotices()}>
+						{m.sync_dismiss()}
+					</button>
+				</div>
+			{/if}
 			{@render children()}
 		</div>
 	</main>
@@ -127,7 +165,20 @@
 
 	.header-actions {
 		display: flex;
+		align-items: center;
 		gap: var(--space-1);
+	}
+
+	/* Schmale Handys: nur das Logo, damit der Sync-Status Platz hat (Name bleibt für Screenreader). */
+	@media (max-width: 419px) {
+		.brand-name {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0 0 0 0);
+			white-space: nowrap;
+		}
 	}
 
 	.icon-link {
@@ -160,6 +211,26 @@
 	.content {
 		max-width: var(--content-max-width);
 		margin: 0 auto;
+	}
+
+	.notice {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-3);
+		margin-bottom: var(--space-4);
+		padding: var(--space-3) var(--space-4);
+		border-radius: var(--radius);
+		background: var(--color-warning-bg);
+		color: var(--color-warning);
+		font-weight: 600;
+	}
+
+	.notice p {
+		margin: 0;
+		flex: 1;
+		min-width: 12rem;
 	}
 
 	/* Handy: untere Leiste mit fünf gleich breiten Einträgen */

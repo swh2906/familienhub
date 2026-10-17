@@ -1,12 +1,35 @@
 // Startet PocketBase (Port 8090) und den Vite-Dev-Server parallel.
 // Strg+C beendet beide; stürzt einer ab, wird auch der andere beendet.
 import { spawn, type ChildProcess } from 'node:child_process';
+import { once } from 'node:events';
 import { existsSync } from 'node:fs';
+import { createServer } from 'node:net';
 import path from 'node:path';
 import { PB_BINARY, PB_DIR, PB_PORT, ROOT } from './lib/paths.ts';
 
 if (!existsSync(PB_BINARY)) {
 	console.error('PocketBase fehlt. Bitte zuerst ausführen: pnpm pb:download');
+	process.exit(1);
+}
+
+/** Ist der Port frei? Ein kurzer Test-Server verrät es, ohne etwas zu verändern. */
+async function isPortFree(port: number): Promise<boolean> {
+	const server = createServer();
+	server.listen(port, '127.0.0.1');
+	try {
+		await once(server, 'listening');
+		server.close();
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+if (!(await isPortFree(PB_PORT))) {
+	console.error(
+		`Port ${PB_PORT} ist belegt. Läuft PocketBase (pnpm dev) schon in einem anderen Terminal?\n` +
+			'Dieses Terminal beenden oder den anderen Prozess stoppen und erneut starten.'
+	);
 	process.exit(1);
 }
 

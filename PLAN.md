@@ -126,17 +126,28 @@ Umsetzungsnotizen:
 
 **Abhängigkeiten:** `dexie`, für Tests `fake-indexeddb`.
 
-- [ ] Dexie-Schema in `src/lib/db/`: eine Tabelle pro synchronisierter Collection, dazu `outbox` und `meta` (z. B. `lastSync` pro Collection).
-- [ ] ID-Erzeugung auf dem Gerät im PocketBase-Format (15 Zeichen, `[a-z0-9]`).
-- [ ] Repository-API pro Collection (`create`, `update`, `remove`, `liveQuery`). Schreibt in Dexie plus Outbox (nur geänderte Felder). `remove` setzt `deleted_at`.
-- [ ] Sync-Engine in `src/lib/sync/`:
+- [x] Dexie-Schema in `src/lib/db/`: eine Tabelle pro synchronisierter Collection, dazu `outbox` und `meta` (z. B. `lastSync` pro Collection).
+- [x] ID-Erzeugung auf dem Gerät im PocketBase-Format (15 Zeichen, `[a-z0-9]`).
+- [x] Repository-API pro Collection (`create`, `update`, `remove`, `liveQuery`). Schreibt in Dexie plus Outbox (nur geänderte Felder). `remove` setzt `deleted_at`.
+- [x] Sync-Engine in `src/lib/sync/`:
   - Push: Outbox der Reihe nach senden, Einträge erst nach Erfolg entfernen. Unterscheiden zwischen „später erneut“ (Netzfehler) und „verworfen mit Hinweis“ (z. B. Rechte-Fehler).
   - Pull: alle Datensätze mit `updated > lastSync` pro Collection holen.
   - Realtime: Abo pro Collection mit Haushaltsfilter, eingehende Änderungen nach Dexie, eigene Echos ignorieren.
   - Reconnect mit Backoff, Auslöser: Online-Event, App wieder sichtbar, Intervall.
-- [ ] Sync-Status-Store (`synced`, `pending`, `offline`, `error`) und Anzeige in der Kopfzeile.
-- [ ] Unit-Tests: Outbox-Reihenfolge, Feld-Merge, Lösch-Markierung, Wiederholung nach Netzfehler.
-- [ ] E2E-Test mit zwei Browser-Kontexten: Änderung in A erscheint in B. A offline, ändert, wieder online, Änderung kommt an.
+- [x] Sync-Status-Store (`synced`, `pending`, `offline`, `error`) und Anzeige in der Kopfzeile.
+- [x] Unit-Tests: Outbox-Reihenfolge, Feld-Merge, Lösch-Markierung, Wiederholung nach Netzfehler.
+- [x] E2E-Test mit zwei Browser-Kontexten: Änderung in A erscheint in B. A offline, ändert, wieder online, Änderung kommt an.
+
+Umsetzungsnotizen:
+- Die Engine kennt nur die Schnittstelle `Remote` (`src/lib/sync/remote.ts`); PocketBase steckt allein in `pocketbase-remote.ts`. Unit-Tests nutzen einen Server im Speicher.
+- Outbox fasst Änderungen nur zusammen, wenn der Datensatz ganz am Ende steht und nicht gerade gesendet wird; so bleibt die Reihenfolge bei Verweisen auf neuere Datensätze erhalten.
+- Abgelehnte Änderungen (Rechte, ungültig): verwerfen, Serverstand wiederherstellen (oder lokal löschen, wenn es den Datensatz nicht gibt), Hinweis in der App. Abgelaufene Anmeldung pausiert den Sync mit Hinweis „Neu anmelden“.
+- Eigene Live-Echos werden nicht herausgefiltert, sondern idempotent übernommen (Feld-Merge mit ausstehenden Feldern, ältere Stände werden ignoriert).
+- Pull mit `updated >= lastSync` (Zeitstempel vom Server); doppelte Datensätze schaden nicht.
+- Abmelden und ungültige Anmeldung löschen die lokale Datenbank.
+- E2E: Test-Build mit `VITE_E2E=1` enthält `window.__familienhub` (Repositories, Status); im normalen Build nicht enthalten (geprüft).
+- `pnpm dev` meldet einen belegten Port 8090 verständlich.
+- Offen: Wenn nach einer Ablehnung der Serverstand nicht geholt werden kann (offline), bleibt die lokale Änderung bis zur nächsten Änderung am Datensatz stehen.
 
 **Fertig, wenn:**
 - Keine Komponente greift direkt auf PocketBase zu (nur das Sync-Modul).

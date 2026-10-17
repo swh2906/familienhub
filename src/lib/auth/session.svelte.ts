@@ -2,7 +2,9 @@
 // Spricht direkt mit PocketBase, weil Anmelden und Familienraum-Verwaltung nur online gehen.
 // Die Familien-Daten (Einkauf, Aufgaben …) laufen ab Schritt 4 über das Sync-Modul.
 import { ClientResponseError } from 'pocketbase';
+import { deleteLocalData } from '#lib/db/database.js';
 import { getPocketBase } from '#lib/pb/client.js';
+import { stopSync } from '#lib/sync/service.js';
 import type { Membership, User } from './types.js';
 
 const HOUSEHOLD_KEY = 'fh-household';
@@ -88,7 +90,8 @@ class Session {
 				this.user = toUser(pb.authStore.record);
 				this.memberships = readCache<Membership[]>(MEMBERSHIPS_KEY) ?? [];
 			} else {
-				this.#clear();
+				// Anmeldung ungültig: auch lokale Daten verwerfen, ein anderes Konto könnte sich anmelden.
+				await this.#clear();
 			}
 		}
 	}
@@ -131,19 +134,20 @@ class Session {
 	}
 
 	/** Abmelden löscht Sitzung und lokale Daten; Darstellung (Hell/Dunkel, Akzent) bleibt. */
-	logout(): void {
-		getPocketBase().authStore.clear();
-		this.#clear();
+	logout(): Promise<void> {
+		return this.#clear();
 	}
 
-	#clear(): void {
+	async #clear(): Promise<void> {
+		this.#ready = Promise.resolve();
 		getPocketBase().authStore.clear();
 		this.user = null;
 		this.memberships = [];
 		this.#householdId = null;
 		writeCache(HOUSEHOLD_KEY, null);
 		writeCache(MEMBERSHIPS_KEY, null);
-		this.#ready = Promise.resolve();
+		await stopSync();
+		await deleteLocalData();
 	}
 }
 

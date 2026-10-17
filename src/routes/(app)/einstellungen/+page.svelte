@@ -51,7 +51,7 @@
 	}
 
 	async function logout() {
-		session.logout();
+		await session.logout();
 		await goto(resolve('/(auth)/login'));
 	}
 </script>

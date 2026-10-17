@@ -94,8 +94,8 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 
 1. Projektstruktur ✓
 2. Datenmodell als Migrationen + Rechte-Regeln mit Tests ✓
-3. **Anmeldung und Familienraum** ← aktueller Schritt
-4. Sync-Grundgerüst
+3. Anmeldung und Familienraum ✓
+4. **Sync-Grundgerüst** ← aktueller Schritt
 5. Einkaufsliste
 6. Aufgaben
 7. Kalender

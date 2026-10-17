@@ -192,20 +192,20 @@
 							class="icon"
 							aria-label={m.editor_ingredient_up({ n })}
 							disabled={index === 0}
-							onclick={() => move(index, -1)}>↑</button
+							onclick={() => move(index, -1)}><Icon name="up" size={20} /></button
 						>
 						<button
 							type="button"
 							class="icon"
 							aria-label={m.editor_ingredient_down({ n })}
 							disabled={index === rows.length - 1}
-							onclick={() => move(index, 1)}>↓</button
+							onclick={() => move(index, 1)}><Icon name="down" size={20} /></button
 						>
 						<button
 							type="button"
 							class="icon"
 							aria-label={m.editor_ingredient_remove({ n })}
-							onclick={() => removeRow(index)}>✕</button
+							onclick={() => removeRow(index)}><Icon name="close" size={20} /></button
 						>
 					</div>
 				</li>
@@ -339,24 +339,22 @@
 
 	.rows {
 		display: grid;
-		gap: var(--space-3);
 		margin: 0;
 		padding: 0;
 		list-style: none;
+		border-top: 1px solid var(--color-border);
 	}
 
-	/* Handy: Name über die volle Breite, darunter Menge, Einheit, Kategorie und Knöpfe. */
+	/* Handy: zwei Zeilen pro Zutat – Name und Knöpfe, darunter Menge, Einheit, Kategorie. */
 	.row {
 		display: grid;
-		grid-template-columns: 5rem 6.5rem 1fr;
+		grid-template-columns: 4.5rem 6rem 1fr auto;
 		grid-template-areas:
-			'name name name'
-			'amount unit category'
-			'actions actions actions';
+			'name name name actions'
+			'amount unit category category';
 		gap: var(--space-2);
-		padding: var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
+		padding: var(--space-3) 0;
+		border-bottom: 1px solid var(--color-border);
 	}
 
 	.row input {
@@ -387,23 +385,31 @@
 		grid-area: actions;
 		display: flex;
 		justify-content: flex-end;
-		gap: var(--space-1);
+		gap: 2px;
 	}
 
+	/* Schlichte Symbol-Knöpfe ohne Rahmen; Touch-Fläche bleibt 48 px. */
 	.icon {
+		display: inline-grid;
+		place-items: center;
 		min-width: var(--touch-target);
 		min-height: var(--touch-target);
-		border: 1px solid var(--color-border);
+		border: 0;
 		border-radius: var(--radius);
-		background: var(--color-surface);
-		color: var(--color-text);
+		background: transparent;
+		color: var(--color-text-muted);
 		font: inherit;
 		font-size: 1.125rem;
 		cursor: pointer;
 	}
 
+	.icon:hover:not(:disabled) {
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
+
 	.icon:disabled {
-		opacity: 0.4;
+		opacity: 0.3;
 		cursor: default;
 	}
 
@@ -433,8 +439,7 @@
 			grid-template-columns: minmax(10rem, 1fr) 5.5rem 6rem minmax(8rem, 12rem) auto;
 			grid-template-areas: 'name amount unit category actions';
 			align-items: center;
-			padding: 0;
-			border: 0;
+			padding: var(--space-2) 0;
 		}
 	}
 </style>

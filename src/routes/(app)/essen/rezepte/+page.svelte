@@ -139,10 +139,24 @@
 		width: 100%;
 	}
 
+	/* Handy: Filter in einer Zeile zum Wischen, damit die Rezepte nicht nach unten rutschen. */
 	.chips {
 		display: flex;
-		flex-wrap: wrap;
 		gap: var(--space-2);
+		overflow-x: auto;
+		padding-bottom: var(--space-1);
+		scrollbar-width: none;
+	}
+
+	.chips > * {
+		flex: none;
+	}
+
+	@media (min-width: 700px) {
+		.chips {
+			flex-wrap: wrap;
+			overflow-x: visible;
+		}
 	}
 
 	.chip {

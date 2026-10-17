@@ -8,8 +8,8 @@
 	let { children }: LayoutProps = $props();
 
 	const tabs = [
-		{ href: resolve('/(app)/essen/rezepte'), label: m.meals_tab_recipes },
-		{ href: resolve('/(app)/essen/wochenplan'), label: m.meals_tab_plan }
+		{ href: resolve('/(app)/essen/wochenplan'), label: m.meals_tab_plan },
+		{ href: resolve('/(app)/essen/rezepte'), label: m.meals_tab_recipes }
 	];
 </script>
 

@@ -206,7 +206,12 @@ Umsetzungsnotizen:
 - [x] Rezepte: Liste mit Suche, Tag-Filter (vegetarisch, schnell, günstig, Reste), Favoriten oben. Editor mit Zutatenliste (Name, Menge, Einheit, Kategorie). *(vorgezogen vor Schritt 5, eigener PR)*
   - Dazu: Rezeptansicht mit Portionen-Umrechnung, Zutaten-Zeilen mit ↑/↓ sortierbar, „Zutaten aus Text einfügen“ (Parser auf dem Gerät, z. B. für Text aus Live Text/Google Lens), Kinder nur lesend.
   - `/essen` öffnet bis zum Wochenplan direkt `/essen/rezepte`.
-- [ ] Wochenplan: 7 Tage × Frühstück, Mittag, Abend. Rezept per Ziehen (Desktop) oder Antippen und Auswählen (Handy), alternativ Freitext-Notiz.
+- [x] Wochenplan: 7 Tage × Frühstück, Mittag, Abend. Rezept per Ziehen (Desktop) oder Antippen und Auswählen (Handy), alternativ Freitext-Notiz.
+  - Umgesetzt mit Gericht als Text (`title`) und Link zum Rezept in einer eigenen Rezept-App (`recipe_url`, nur http/https); FamilienHub-Rezepte werden bei gleichem Namen automatisch verknüpft.
+  - Wochen blättern über `?woche=JJJJ-Www` (ISO-Kalenderwoche), „Diese Woche“ springt zurück; `/essen` öffnet den Wochenplan.
+  - Mehrere Einträge pro Mahlzeit erlaubt (verhindert Überschreiben bei gleichzeitiger Offline-Planung).
+  - Verschieben per Dialog (Tag/Mahlzeit) oder Ziehen auf dem Desktop; eingebautes `<dialog>` statt Bits UI.
+  - Später: Anbindung der eigenen Rezept-App (z. B. Rezepte/Zutaten über deren API abrufen).
 - [ ] Zutaten-Zusammenfassung als reine Funktion: Namen vereinheitlichen, g/kg und ml/l umrechnen und addieren, Stück, EL und TL getrennt lassen, Portionen skalieren.
 - [ ] „Einkauf füllen“: Vorschau der Zutaten für einen Zeitraum, einzelne abwählbar, Übernahme mit Verweis auf den Essensplan-Eintrag. Erneute Übernahme erzeugt keine Duplikate.
 - [ ] Tests: Zusammenfassung mit vielen Sonderfällen (Unit). E2E: Rezept anlegen, einplanen, auf die Einkaufsliste übernehmen.

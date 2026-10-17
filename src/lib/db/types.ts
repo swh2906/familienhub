@@ -44,6 +44,11 @@ export interface MealPlanEntry extends BaseRecord {
 	household: string;
 	date: string;
 	slot: 'breakfast' | 'lunch' | 'dinner';
+	/** Gericht als Text (z. B. „Gemüse-Lasagne“, „Reste“). */
+	title: string;
+	/** Link zum Rezept in einer anderen App (nur http/https). */
+	recipe_url: string;
+	/** Optional: FamilienHub-Rezept. */
 	recipe: string;
 	note: string;
 	servings: number;

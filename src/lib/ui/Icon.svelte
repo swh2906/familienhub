@@ -1,7 +1,19 @@
 <script lang="ts">
 	// Schlanke Inline-Icons (dekorativ, der Text daneben trägt die Bedeutung).
 	type IconName =
-		'today' | 'meals' | 'shopping' | 'calendar' | 'tasks' | 'sun' | 'moon' | 'system' | 'settings';
+		| 'today'
+		| 'meals'
+		| 'shopping'
+		| 'calendar'
+		| 'tasks'
+		| 'sun'
+		| 'moon'
+		| 'system'
+		| 'settings'
+		| 'synced'
+		| 'pending'
+		| 'offline'
+		| 'error';
 
 	let { name, size = 24 }: { name: IconName; size?: number } = $props();
 </script>
@@ -45,5 +57,19 @@
 		<circle cx="16" cy="6" r="2" />
 		<circle cx="10" cy="12" r="2" />
 		<circle cx="18" cy="18" r="2" />
+	{:else if name === 'synced'}
+		<path d="M7 18a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.4 1.5A3.75 3.75 0 0 1 17.5 18z" />
+		<path d="m9.5 13.5 2 2 3.5-4" />
+	{:else if name === 'pending'}
+		<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4" />
+		<path d="M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4" />
+	{:else if name === 'offline'}
+		<path
+			d="M7 18a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 2.1-3.3M12 4.5a6 6 0 0 1 5.8 6 3.75 3.75 0 0 1 2.7 5.6"
+		/>
+		<path d="M3 3l18 18" />
+	{:else if name === 'error'}
+		<path d="M12 3 2 20h20z" />
+		<path d="M12 10v4M12 17v.5" />
 	{/if}
 </svg>

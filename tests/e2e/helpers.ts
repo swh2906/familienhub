@@ -40,6 +40,38 @@ export async function createFamily(name = 'Julia'): Promise<{ email: string; hou
 	return { email, household: household.id };
 }
 
+/** Familie mit Admin und einem per Einladung beigetretenen Erwachsenen. */
+export async function createFamilyWithMember(): Promise<{
+	admin: string;
+	member: string;
+	household: string;
+}> {
+	const { email: admin, household } = await createFamily('Julia');
+	const { token: adminToken } = await api<{ token: string }>(
+		'/api/collections/users/auth-with-password',
+		{ identity: admin, password: PASSWORD }
+	);
+	const invite = await api<{ token: string }>(
+		'/api/fh/invites',
+		{ household, role: 'adult' },
+		adminToken
+	);
+
+	const member = `${unique('tom')}@e2e.test`;
+	await api('/api/collections/users/records', {
+		email: member,
+		name: 'Tom',
+		password: PASSWORD,
+		passwordConfirm: PASSWORD
+	});
+	const { token } = await api<{ token: string }>('/api/collections/users/auth-with-password', {
+		identity: member,
+		password: PASSWORD
+	});
+	await api('/api/fh/invites/redeem', { token: invite.token }, token);
+	return { admin, member, household };
+}
+
 /** Meldet sich über das Formular an und wartet auf die Heute-Ansicht. */
 export async function login(page: Page, identity: string, password = PASSWORD): Promise<void> {
 	await page.goto('/login');

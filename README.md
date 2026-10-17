@@ -63,6 +63,24 @@ Beim ersten Start zeigt PocketBase in der Konsole einen Link zum Anlegen des Adm
 
 Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketbase serve` und dann http://127.0.0.1:8090 öffnen.
 
+## Offline und Sync
+
+Die Oberfläche liest und schreibt nur in die lokale Datenbank (`repo('shopping_items').create(…)` aus `#lib/db`). Jede Änderung landet zusätzlich in einer Warteschlange (Outbox) und wird im Hintergrund gesendet:
+
+```mermaid
+flowchart LR
+  UI[Oberfläche] -->|create/update/remove| Dexie[(Lokale DB)]
+  Dexie -->|Outbox, der Reihe nach| PB[(PocketBase)]
+  PB -->|Änderungen seit lastSync| Dexie
+  PB -->|Live-Updates| Dexie
+  Dexie -->|liveQuery| UI
+```
+
+- Ohne Verbindung arbeitet die App normal weiter; die Kopfzeile zeigt „Offline“ bzw. „N ausstehend“.
+- Konflikte: pro Feld gewinnt die zuletzt beim Server angekommene Änderung.
+- Lehnt der Server eine Änderung ab (z. B. fehlende Rechte), wird sie zurückgesetzt und ein Hinweis angezeigt.
+- Abmelden löscht die lokale Datenbank.
+
 ## Datenmodell und Rechte
 
 - Das Schema entsteht ausschließlich über Migrationen in `pocketbase/pb_migrations/` (eine Datei pro Collection). PocketBase wendet sie beim Start automatisch an; eine leere Datenbank hat nach `pnpm dev` sofort das komplette Schema.
@@ -88,8 +106,9 @@ Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketb
 │  ├─ lib/
 │  │  ├─ pb/              PocketBase-Client (nur Sync- und Auth-Modul, per ESLint erzwungen)
 │  │  ├─ auth/            Anmeldung, Sitzung, Familienraum verwalten (nur online)
-│  │  ├─ db/              Dexie-Schema (ab Schritt 4)
-│  │  ├─ sync/            Sync-Modul (ab Schritt 4)
+│  │  ├─ db/              lokale Datenbank (Dexie): Schema, IDs, Repositories – hier liest/schreibt die Oberfläche
+│  │  ├─ sync/            Abgleich mit PocketBase: Outbox senden, Änderungen holen, Live-Updates, Status
+│  │  ├─ testing/         Test-Zugang für E2E (nur im Build mit VITE_E2E=1)
 │  │  ├─ features/        household, shopping, tasks, calendar, meals, today
 │  │  ├─ ui/              gemeinsame Komponenten, Theme (CSS-Variablen Hell/Dunkel, Akzentfarben)
 │  │  └─ paraglide/       generierte Übersetzungsfunktionen (nicht bearbeiten)

@@ -32,10 +32,10 @@
 		}
 	}
 
-	function switchAccount() {
-		session.logout();
+	async function switchAccount() {
+		await session.logout();
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- loginHref nutzt resolve()
-		goto(loginHref);
+		await goto(loginHref);
 	}
 </script>
 

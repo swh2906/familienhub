@@ -101,5 +101,14 @@
 	"child_created": "{name} kann sich jetzt mit dem Benutzernamen „{username}“ anmelden.",
 	"account_title": "Konto",
 	"account_signed_in": "Angemeldet als {name}",
-	"logout": "Abmelden"
+	"logout": "Abmelden",
+	"sync_synced": "Synchron",
+	"sync_pending": "{count} ausstehend",
+	"sync_offline": "Offline",
+	"sync_error": "Anmeldung abgelaufen",
+	"sync_label": "Abgleich: {state}",
+	"sync_offline_hint": "Änderungen werden gespeichert und gesendet, sobald wieder eine Verbindung besteht.",
+	"sync_rejected": "{count} Änderung(en) wurden vom Server abgelehnt und zurückgesetzt, z. B. wegen fehlender Rechte.",
+	"sync_dismiss": "Ausblenden",
+	"sync_relogin": "Neu anmelden"
 }

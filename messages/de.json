@@ -191,6 +191,8 @@
 	"repeat_desc_biweekly": "alle 2 Wochen: {days}",
 	"repeat_desc_monthly": "monatlich am {day}.",
 	"repeat_desc_custom": "wiederholt sich",
+	"repeat_desc_yearly": "jährlich",
+	"repeat_yearly": "Jährlich",
 	"plan_title": "Wochenplan",
 	"plan_week": "KW {week}",
 	"plan_week_label": "Woche {week}, {range}",

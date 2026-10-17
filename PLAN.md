@@ -69,13 +69,19 @@ Dieser Plan ergänzt CLAUDE.md (Entscheidungen, Datenmodell, Rechte). Hier steht
 
 **Ziel:** Alle Collections aus CLAUDE.md als Migrationen, Rechte-Regeln serverseitig durchgesetzt und getestet.
 
-- [ ] Je eine Migration pro Collection in `pocketbase/pb_migrations/`, inklusive gemeinsamer Felder (`updated_by`, `deleted_at`).
-- [ ] Auth-Collection `users`: Login per E-Mail **oder** Benutzername.
-- [ ] API-Regeln pro Collection gemäß Rechte-Tabelle in CLAUDE.md. Grundregel: Zugriff nur, wenn eine Mitgliedschaft im selben Haushalt existiert.
-- [ ] Kind-Einschränkungen: Einkaufsartikel nur eigene ändern oder löschen, beim Abhaken nur `checked`, `checked_at`, `checked_by` änderbar. Aufgaben: nur eigene und nicht zugewiesene abhaken.
-- [ ] Indizes auf `household` und `updated` (für den Delta-Abgleich).
-- [ ] `scripts/seed.ts`: Demo-Familie (Admin, Erwachsener, Kind) mit Beispieldaten für die Entwicklung.
-- [ ] Integrationstests (Vitest): starten PocketBase mit temporärem Datenordner auf freiem Port, prüfen jede Zeile der Rechte-Tabelle mit allen drei Rollen plus einem Fremd-Haushalt.
+- [x] Je eine Migration pro Collection in `pocketbase/pb_migrations/`, inklusive gemeinsamer Felder (`updated_by`, `deleted_at`).
+- [x] Auth-Collection `users`: Login per E-Mail **oder** Benutzername.
+- [x] API-Regeln pro Collection gemäß Rechte-Tabelle in CLAUDE.md. Grundregel: Zugriff nur, wenn eine Mitgliedschaft im selben Haushalt existiert.
+- [x] Kind-Einschränkungen: Einkaufsartikel nur eigene ändern oder löschen, beim Abhaken nur `checked`, `checked_at`, `checked_by` änderbar. Aufgaben: nur eigene und nicht zugewiesene abhaken.
+- [x] Indizes auf `household` und `updated` (für den Delta-Abgleich).
+- [x] `scripts/seed.ts`: Demo-Familie (Admin, Erwachsener, Kind) mit Beispieldaten für die Entwicklung.
+- [x] Integrationstests (Vitest): starten PocketBase mit temporärem Datenordner auf freiem Port, prüfen jede Zeile der Rechte-Tabelle mit allen drei Rollen plus einem Fremd-Haushalt.
+
+Umsetzungsnotizen:
+- `recipe_ingredients` und `task_completions` haben kein eigenes `household`; Regeln und Delta-Abgleich laufen über `recipe.household` bzw. `task.household`.
+- `added_by`, `checked_by`, `checked_at` und `updated_by` setzt ein Hook serverseitig. Der Ersteller eines Haushalts wird per Hook Admin.
+- Datumsfelder ohne Uhrzeit (`meal_plan_entries.date`, `tasks.due_date`) sind Text im Format JJJJ-MM-TT, damit Zeitzonen keine Rolle spielen.
+- Offen für Schritt 3: Registrierung ist noch für alle offen (`users.createRule = ""`); Einladungen einlösen und Kinderkonten anlegen kommen dort.
 
 **Fertig, wenn:**
 - Leere Datenbank plus `pnpm dev` ergibt automatisch das komplette Schema.

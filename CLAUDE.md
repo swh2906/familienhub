@@ -130,7 +130,8 @@ Befehle (immer diese verwenden):
 | Setup neues Gerät | `pnpm run bootstrap` (install, Playwright-Chromium, PocketBase) |
 | Entwickeln | `pnpm dev` (App + PocketBase), nur Oberfläche: `pnpm dev:web` |
 | Build | `pnpm build` |
-| Tests | `pnpm test <pfad>` (Vitest, gezielt), `pnpm test:e2e <spec>` |
+| Tests | `pnpm test <pfad>` (Vitest, gezielt), `pnpm test:integration` (Rechte gegen echtes PocketBase), `pnpm test:e2e <spec>` |
+| Demo-Daten | `pnpm seed` (PocketBase muss laufen) |
 | Lint/Typen | `pnpm lint`, `pnpm check` |
 | Format | `pnpm format` |
 | Aufräumen | `pnpm run clean [--all]` |

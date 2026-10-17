@@ -43,6 +43,16 @@ export default defineConfig({
 					include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.{test,spec}.ts'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
 				}
+			},
+			{
+				// Startet ein echtes PocketBase (pnpm test:integration), daher getrennt von den schnellen Unit-Tests.
+				test: {
+					name: 'integration',
+					environment: 'node',
+					include: ['tests/integration/**/*.test.ts'],
+					testTimeout: 20_000,
+					hookTimeout: 60_000
+				}
 			}
 		]
 	}

@@ -55,11 +55,21 @@ Beim ersten Start zeigt PocketBase in der Konsole einen Link zum Anlegen des Adm
 | `pnpm lint`             | Formatierung (Prettier) und ESLint prüfen          |
 | `pnpm format`           | Code automatisch formatieren                       |
 | `pnpm test`             | Unit-Tests (Vitest)                                |
+| `pnpm test:integration` | Rechte-Tests gegen ein temporäres PocketBase       |
 | `pnpm test:e2e:install` | Browser für E2E-Tests einmalig herunterladen       |
 | `pnpm test:e2e`         | E2E-Tests (Playwright, Handy- und Desktop-Ansicht) |
 | `pnpm pb:download`      | PocketBase herunterladen (`--force` lädt neu)      |
+| `pnpm seed`             | Demo-Familie anlegen (PocketBase muss laufen)      |
 
 Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketbase serve` und dann http://127.0.0.1:8090 öffnen.
+
+## Datenmodell und Rechte
+
+- Das Schema entsteht ausschließlich über Migrationen in `pocketbase/pb_migrations/` (eine Datei pro Collection). PocketBase wendet sie beim Start automatisch an; eine leere Datenbank hat nach `pnpm dev` sofort das komplette Schema.
+- Die Rechte aus der Tabelle in `CLAUDE.md` stecken in den API-Regeln der Migrationen. Grundregel: Zugriff nur mit aktiver Mitgliedschaft (`memberships`, `deleted_at` leer) im selben Haushalt.
+- `pocketbase/pb_hooks/` ergänzt, was Regeln allein nicht sicher können: `updated_by`, `added_by`, `checked_by`/`checked_at` setzt der Server; Verknüpfungen müssen zum selben Haushalt gehören; wer einen Haushalt anlegt, wird Admin.
+- `pnpm test:integration` startet PocketBase mit leerem Datenordner auf einem freien Port und prüft jede Regel mit Admin, Erwachsenem, Kind, entferntem Mitglied und fremdem Haushalt.
+- `pnpm seed` legt die Demo-Familie an: `julia@demo.familienhub.test` (Admin), `tom@demo.familienhub.test` (Erwachsener), Benutzername `mia` (Kind), Passwort jeweils `demo-passwort`.
 
 ## Projektstruktur
 
@@ -78,13 +88,14 @@ Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketb
 ├─ project.inlang/        Paraglide-Einstellungen
 ├─ pocketbase/
 │  ├─ VERSION             gepinnte PocketBase-Version
-│  ├─ pb_migrations/      Datenbank-Schema als Migrationen
-│  ├─ pb_hooks/           serverseitige Erweiterungen (JavaScript)
+│  ├─ pb_migrations/      Datenbank-Schema und API-Regeln als Migrationen
+│  ├─ pb_hooks/           serverseitige Ergänzungen zu den Regeln (JavaScript)
 │  ├─ bin/                heruntergeladene PocketBase (nicht im Git)
 │  ├─ pb_data/            Datenbank (nicht im Git)
 │  └─ pb_public/          gebaute App (nicht im Git)
 ├─ scripts/               Hilfsskripte in TypeScript (laufen direkt mit Node 24)
 ├─ tests/e2e/             Playwright-Tests
+├─ tests/integration/     Rechte-Tests gegen echtes PocketBase (Vitest)
 └─ static/                statische Dateien
 ```
 

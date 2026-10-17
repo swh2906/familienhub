@@ -34,6 +34,18 @@ export default defineConfig(
 		}
 	},
 	{
+		// PocketBase-Migrationen und -Hooks laufen in PocketBases eigener JS-Umgebung (CommonJS,
+		// globale Helfer wie `migrate`, `$app`). Die Typen kommen per Referenz aus pb_data/types.d.ts.
+		files: ['pocketbase/pb_migrations/**/*.js', 'pocketbase/pb_hooks/**/*.js'],
+		languageOptions: { sourceType: 'commonjs' },
+		rules: {
+			'@typescript-eslint/triple-slash-reference': 'off',
+			'@typescript-eslint/no-require-imports': 'off',
+			// Svelte-Regel stürzt bei CommonJS-Dateien ab und ist hier ohnehin nicht relevant.
+			'svelte/no-inner-declarations': 'off'
+		}
+	},
+	{
 		// Architekturregel: Nur das Sync-Modul spricht mit PocketBase, die Oberfläche nutzt Dexie.
 		files: ['src/**/*.{ts,js,svelte}'],
 		ignores: ['src/lib/pb/**', 'src/lib/sync/**'],

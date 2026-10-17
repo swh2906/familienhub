@@ -11,6 +11,14 @@ export function eventsOf(household: string): Promise<CalendarEvent[]> {
 	return repo('events').table.where('household').equals(household).toArray();
 }
 
+/** Was der Termin-Dialog bearbeitet: bestehender Termin (Vorkommen) oder neuer an Tag/Uhrzeit. */
+export interface EventTarget {
+	event?: CalendarEvent;
+	occurrenceDate?: string;
+	date: string;
+	time?: string;
+}
+
 export interface EventForm {
 	title: string;
 	allDay: boolean;

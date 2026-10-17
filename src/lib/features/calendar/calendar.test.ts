@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CalendarEvent } from '#lib/db/types.js';
 import { conflictsWith, findConflicts, layoutColumns, matchesFilter } from './conflicts.js';
 import { expandEvents, onDay } from './expand.js';
+import { daysFor, parseView, shiftDate } from './range.js';
 import { dateToAllDay, offsetMinutes, toUtcString, utcToZoned, zonedToUtc } from './tz.js';
 
 const BERLIN = 'Europe/Berlin';
@@ -33,6 +34,34 @@ function event(
 		...extra
 	};
 }
+
+describe('Zeiträume der Ansichten', () => {
+	it('Tag, Woche ab Montag, Monat als 6 Wochen', () => {
+		expect(daysFor('tag', '2026-10-21')).toEqual(['2026-10-21']);
+		expect(daysFor('woche', '2026-10-21')).toEqual([
+			'2026-10-19',
+			'2026-10-20',
+			'2026-10-21',
+			'2026-10-22',
+			'2026-10-23',
+			'2026-10-24',
+			'2026-10-25'
+		]);
+		const month = daysFor('monat', '2026-10-21');
+		expect(month).toHaveLength(42);
+		expect(month[0]).toBe('2026-09-28'); // Montag vor dem 1. Oktober (Donnerstag)
+		expect(month.at(-1)).toBe('2026-11-08');
+	});
+
+	it('blättert und bleibt bei Monaten auf einem gültigen Tag', () => {
+		expect(shiftDate('tag', '2026-10-31', 1)).toBe('2026-11-01');
+		expect(shiftDate('woche', '2026-10-21', -1)).toBe('2026-10-14');
+		expect(shiftDate('monat', '2026-01-31', 1)).toBe('2026-02-01');
+		expect(shiftDate('monat', '2026-01-15', -1)).toBe('2025-12-01');
+		expect(parseView('monat')).toBe('monat');
+		expect(parseView('quatsch')).toBe('woche');
+	});
+});
 
 describe('Zeitzone Europe/Berlin', () => {
 	it('rechnet Sommer- und Winterzeit um', () => {

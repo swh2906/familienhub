@@ -91,6 +91,25 @@ export function rruleToPreset(rrule: string): Preset {
 	return { kind: 'custom', rrule };
 }
 
+/**
+ * Regel um `days` Tage verschieben (wenn eine Serie auf einen anderen Tag gelegt wird):
+ * Wochentage wandern mit, ebenso der Monatstag. Täglich/jährlich hängen nur am Startdatum,
+ * eigene Regeln bleiben unverändert.
+ */
+export function shiftRrule(rrule: string, days: number): string {
+	if (!days) return rrule;
+	const preset = rruleToPreset(rrule);
+	if (preset.kind === 'weekly') {
+		const shift = ((days % 7) + 7) % 7;
+		return presetToRrule({ ...preset, days: preset.days.map((d) => (d + shift) % 7) });
+	}
+	if (preset.kind === 'monthly') {
+		const day = preset.day + days;
+		return day >= 1 && day <= 31 ? presetToRrule({ ...preset, day }) : rrule;
+	}
+	return rrule;
+}
+
 function toUtc(date: string): Date {
 	const [y, m, d] = date.split('-').map(Number);
 	return new Date(Date.UTC(y, m - 1, d));

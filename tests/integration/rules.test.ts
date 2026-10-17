@@ -2,7 +2,7 @@
 // Familie A: Admin, Erwachsener, Kind und ein entferntes Mitglied. Familie B: ein fremder Admin.
 import PocketBase, { type RecordModel } from 'pocketbase';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createHousehold, createInvite, expectDenied, signUp } from './helpers.ts';
+import { createHousehold, createInvite, expectDenied, redeem, signUp } from './helpers.ts';
 import { startPocketBase, type TestServer } from './pocketbase-server.ts';
 
 type Role = 'admin' | 'adult' | 'child';
@@ -36,18 +36,15 @@ beforeAll(async () => {
 	membership.admin = a.membership.id;
 	householdB = (await createHousehold(as.outsider, 'Familie B')).household.id;
 
-	for (const role of ['adult', 'child'] as const) {
-		membership[role] = (
-			await as.admin
-				.collection('memberships')
-				.create({ user: userId[role], household: householdA, role })
-		).id;
+	// Mitglieder kommen wie in der App über Einladungen dazu.
+	for (const [key, role] of [
+		['adult', 'adult'],
+		['child', 'child'],
+		['removed', 'adult']
+	] as const) {
+		const invite = await createInvite(as.admin, householdA, role);
+		membership[key] = (await redeem(as[key], { token: invite.token })).membership.id;
 	}
-	membership.removed = (
-		await as.admin
-			.collection('memberships')
-			.create({ user: userId.removed, household: householdA, role: 'adult' })
-	).id;
 	await as.admin
 		.collection('memberships')
 		.update(membership.removed, { deleted_at: new Date().toISOString() });
@@ -192,11 +189,10 @@ describe('Familienraum (households)', () => {
 		expect(renamed.name).toBe('Familie A.');
 	});
 
-	it('nur der Admin löscht', async () => {
-		await expectDenied(as.adult.collection('households').delete(householdA));
-		await expectDenied(as.child.collection('households').delete(householdA));
-		const temp = await createHousehold(as.admin, 'Ferienhaus');
-		await expect(as.admin.collection('households').delete(temp.household.id)).resolves.toBe(true);
+	it('löschen nur über die eigene Route (siehe privacy.test.ts), nicht direkt', async () => {
+		for (const role of ['admin', 'adult', 'child'] as const) {
+			await expectDenied(as[role].collection('households').delete(householdA));
+		}
 	});
 });
 
@@ -209,18 +205,14 @@ describe('Mitglieder (memberships)', () => {
 		}
 	);
 
-	it('nur der Admin lädt Mitglieder ein', async () => {
-		for (const role of ['adult', 'child'] as const) {
+	it('Mitgliedschaften entstehen nur über Einladungen, nicht direkt über die API', async () => {
+		for (const role of ['admin', 'adult', 'child'] as const) {
 			await expectDenied(
 				as[role]
 					.collection('memberships')
 					.create({ user: userId.outsider, household: householdA, role: 'adult' })
 			);
 		}
-		const added = await as.admin
-			.collection('memberships')
-			.create({ user: userId.outsider, household: householdA, role: 'child' });
-		await expect(as.admin.collection('memberships').delete(added.id)).resolves.toBe(true);
 	});
 
 	it('nur der Admin ändert Rollen', async () => {

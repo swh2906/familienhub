@@ -58,6 +58,7 @@
 
 	/* Hinweise */
 	--color-warning: #8a5a00;
+	--color-danger: #b42318;
 	--color-warning-bg: #fdf3dc;
 
 	/* Bereichsfarben: nur für kleine Symbole, nie für große Flächen */
@@ -120,6 +121,7 @@
 		--color-primary-strong: var(--accent-dark-strong);
 		--color-focus: var(--accent-dark);
 		--color-warning: #f5c76b;
+		--color-danger: #ff9b8f;
 		--color-warning-bg: #3a2e12;
 		--color-meals: #ffb48a;
 		--color-meals-bg: #3a2418;
@@ -150,6 +152,7 @@
 	--color-primary-strong: var(--accent-dark-strong);
 	--color-focus: var(--accent-dark);
 	--color-warning: #f5c76b;
+	--color-danger: #ff9b8f;
 	--color-warning-bg: #3a2e12;
 	--color-meals: #ffb48a;
 	--color-meals-bg: #3a2418;
@@ -270,6 +273,12 @@ body {
 	border-color: var(--color-primary);
 	background: var(--color-primary);
 	color: var(--color-primary-text);
+}
+
+/* Unwiderrufliche Aktionen (Konto/Familienraum löschen): umrandet in Rot, AA in beiden Modi. */
+.btn-danger {
+	border-color: var(--color-danger);
+	color: var(--color-danger);
 }
 
 .btn-primary:hover {

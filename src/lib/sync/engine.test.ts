@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FamilyDb } from '#lib/db/database.js';
 import { Repository } from '#lib/db/repository.js';
 import type { CollectionName } from '#lib/db/types.js';
-import { SyncEngine, type SyncNotice } from './engine.js';
+import { isOlderTombstone, SyncEngine, type SyncNotice } from './engine.js';
 import { RemoteError, type Remote, type RemoteRecord } from './remote.js';
 
 const HOUSEHOLD = 'household000001';
@@ -303,5 +303,64 @@ describe('Pull und Feld-Merge', () => {
 			record: { id: item.id, updated: '' }
 		});
 		expect(await items.get(item.id)).toBeUndefined();
+	});
+});
+
+describe('Zugriff und Aufräumen', () => {
+	it('erkennt, wenn der Familienraum nicht mehr sichtbar ist', async () => {
+		remote.records.set(`households/${HOUSEHOLD}`, { id: HOUSEHOLD, updated: 'x' });
+		expect(await engine.hasAccess()).toBe(true);
+		remote.records.delete(`households/${HOUSEHOLD}`);
+		expect(await engine.hasAccess()).toBe(false);
+		remote.online = false;
+		await expect(engine.hasAccess()).rejects.toBeInstanceOf(RemoteError);
+	});
+
+	it('isOlderTombstone versteht ISO- und PocketBase-Format', () => {
+		const now = Date.parse('2026-10-17T12:00:00Z');
+		expect(isOlderTombstone('', now)).toBe(false);
+		expect(isOlderTombstone('2026-09-01 12:00:00.000Z', now)).toBe(true);
+		expect(isOlderTombstone('2026-10-01T12:00:00.000Z', now)).toBe(false);
+		expect(isOlderTombstone('kein Datum', now)).toBe(false);
+	});
+
+	it('entfernt lokal nur alte Löschungen ohne offene Änderungen; Mitglieder bleiben', async () => {
+		const now = Date.parse('2026-10-17T12:00:00Z');
+		const table = db.collection('shopping_items');
+		const base = { household: HOUSEHOLD, updated: 'x', created: '', updated_by: '' };
+		await table.bulkPut([
+			{ ...base, id: 'old000000000001', name: 'Alt', deleted_at: '2026-09-01 12:00:00.000Z' },
+			{ ...base, id: 'new000000000001', name: 'Neu', deleted_at: '2026-10-10 12:00:00.000Z' },
+			{ ...base, id: 'liv000000000001', name: 'Aktiv', deleted_at: '' }
+		] as never);
+		// Alter Eintrag, der lokal wiederhergestellt wurde, aber noch nicht gesendet ist.
+		await table.put({
+			...base,
+			id: 'pen000000000001',
+			name: 'Offen',
+			deleted_at: '2026-09-01 12:00:00.000Z'
+		} as never);
+		await db.outbox.add({
+			collection: 'shopping_items',
+			recordId: 'pen000000000001',
+			op: 'update',
+			fields: { deleted_at: '' },
+			queuedAt: now,
+			attempts: 0,
+			inFlight: 0
+		});
+		await db.collection('memberships').put({
+			id: 'mem000000000001',
+			household: HOUSEHOLD,
+			deleted_at: '2026-01-01 00:00:00.000Z'
+		} as never);
+
+		expect(await engine.purgeTombstones(now)).toBe(1);
+		expect((await table.toArray()).map((r) => r.id).sort()).toEqual([
+			'liv000000000001',
+			'new000000000001',
+			'pen000000000001'
+		]);
+		expect(await db.collection('memberships').get('mem000000000001')).toBeDefined();
 	});
 });

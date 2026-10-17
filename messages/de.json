@@ -350,5 +350,19 @@
 	"update_available": "Neue Version verfügbar.",
 	"update_reload": "Neu laden",
 	"update_later": "Später",
-	"cal_until": "bis {time}"
+	"cal_until": "bis {time}",
+	"member_former": "Ehemaliges Mitglied",
+	"privacy_title": "Daten und Konto",
+	"privacy_export_hint": "Lade alle Daten eurer Familie als JSON-Datei herunter: Rezepte, Wochenplan, Einkauf, Termine und Aufgaben.",
+	"privacy_export": "Daten exportieren",
+	"privacy_export_done": "Export gespeichert: {file}",
+	"account_delete": "Konto löschen",
+	"account_delete_warning": "Dein Konto wird endgültig gelöscht. Deine Einträge bleiben für die Familie erhalten und zeigen dann „Ehemaliges Mitglied“.",
+	"account_delete_password": "Passwort zur Bestätigung",
+	"account_delete_confirm": "Konto endgültig löschen",
+	"account_delete_last_admin": "Du bist der letzte Admin. Mach unter „Familie“ zuerst ein anderes Mitglied zum Admin oder lösche den Familienraum.",
+	"household_delete": "Familienraum löschen",
+	"household_delete_warning": "Alle Daten von „{name}“ werden für alle Mitglieder endgültig gelöscht: Rezepte, Wochenplan, Einkauf, Termine und Aufgaben.",
+	"household_delete_name": "Zum Bestätigen den Namen „{name}“ eingeben",
+	"household_delete_confirm": "Familienraum endgültig löschen"
 }

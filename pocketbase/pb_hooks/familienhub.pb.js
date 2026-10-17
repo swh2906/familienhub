@@ -45,6 +45,35 @@ routerAdd(
 	$apis.requireAuth('users')
 );
 
+routerAdd(
+	'POST',
+	'/api/fh/account/delete',
+	(e) => require(`${__hooks}/lib/familienhub.js`).deleteAccount(e),
+	$apis.requireAuth('users')
+);
+
+routerAdd(
+	'POST',
+	'/api/fh/households/delete',
+	(e) => require(`${__hooks}/lib/familienhub.js`).deleteHousehold(e),
+	$apis.requireAuth('users')
+);
+
+// ---- Aufräum-Job: gelöschte Einträge nach 30 Tagen endgültig entfernen ----
+
+cronAdd('fh_purge_deleted', '30 3 * * *', () => {
+	const removed = require(`${__hooks}/lib/familienhub.js`).purgeDeleted($app);
+	$app.logger().info('Gelöschte Einträge entfernt', 'removed', JSON.stringify(removed));
+});
+
+// Dasselbe von Hand (nur Superuser), z. B. für Tests oder nach einer Wartung.
+routerAdd(
+	'POST',
+	'/api/fh/purge',
+	(e) => e.json(200, require(`${__hooks}/lib/familienhub.js`).purgeDeleted(e.app)),
+	$apis.requireSuperuserAuth()
+);
+
 // ---- Hooks auf Collections ----
 
 onRecordCreateRequest(

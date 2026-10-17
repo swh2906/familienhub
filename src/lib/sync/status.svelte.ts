@@ -10,6 +10,8 @@ class SyncStatus {
 	pending = $state(0);
 	/** Anmeldung abgelaufen: Sync pausiert, bis neu angemeldet wird. */
 	authLost = $state(false);
+	/** Familienraum nicht mehr erreichbar (gelöscht oder aus der Familie entfernt). */
+	accessLost = $state(false);
 	/** Vom Server abgelehnte und zurückgesetzte Änderungen (zuletzt höchstens 5). */
 	notices: SyncNotice[] = $state([]);
 
@@ -32,6 +34,7 @@ class SyncStatus {
 		this.online = true;
 		this.pending = 0;
 		this.authLost = false;
+		this.accessLost = false;
 		this.notices = [];
 	}
 }

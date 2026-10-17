@@ -24,6 +24,7 @@ interface Running {
 	again: boolean;
 	retryDelay: number;
 	retryTimer: ReturnType<typeof setTimeout> | null;
+	purged: boolean;
 }
 
 let current: Running | null = null;
@@ -46,7 +47,8 @@ export function startSync(household: string): void {
 		busy: false,
 		again: false,
 		retryDelay: RETRY_MIN_MS,
-		retryTimer: null
+		retryTimer: null,
+		purged: false
 	};
 	current = running;
 	syncStatus.reset();
@@ -89,7 +91,11 @@ export function startSync(household: string): void {
 	// Live-Abos zuerst, damit zwischen Abgleich und Abo nichts verloren geht.
 	for (const { name, scope } of COLLECTIONS) {
 		remote
-			.subscribe(name, scope, household, (event) => void engine.applyRealtime(name, event))
+			.subscribe(name, scope, household, (event) => {
+				void engine.applyRealtime(name, event);
+				// Familienraum gelöscht: gleich abgleichen, dabei fällt der fehlende Zugriff auf.
+				if (name === 'households' && event.action === 'delete') void syncNow();
+			})
 			.then((unsubscribe) => {
 				if (current === running) running.unsubscribe.push(unsubscribe);
 				else void unsubscribe();
@@ -124,9 +130,16 @@ export async function syncNow(): Promise<void> {
 			syncStatus.authLost = true;
 		} else if (result === 'offline') {
 			retryLater(running);
+		} else if (!(await running.engine.hasAccess())) {
+			// Familienraum gelöscht oder Mitgliedschaft entfernt: die App räumt auf (siehe Layout).
+			syncStatus.accessLost = true;
 		} else {
 			syncStatus.online = true;
 			running.retryDelay = RETRY_MIN_MS;
+			if (!running.purged) {
+				running.purged = true;
+				await running.engine.purgeTombstones();
+			}
 		}
 	} catch (error) {
 		if (error instanceof RemoteError && error.kind === 'auth') syncStatus.authLost = true;

@@ -273,8 +273,8 @@ In drei PRs: **10a** App-Qualität (PWA, Offline, Barrierefreiheit), **10b** Dat
 - [x] PWA: Manifest, Icons (`pnpm icons`), Service Worker mit Vorab-Cache, Hinweis „Neue Version verfügbar“.
 - [x] Offline-E2E: App im Flugmodus starten, alle Bereiche bedienbar.
 - [x] Barrierefreiheit: axe-Prüfung aller Seiten in Hell und Dunkel, Tastaturbedienung, Fokus sichtbar, Kurzbefehl N für „Neu“.
-- [ ] Datenschutz: Datenexport als JSON, Konto löschen (Einträge zeigen dann „Ehemaliges Mitglied“), Familienraum löschen.
-- [ ] Aufräum-Job (PocketBase-Cron): Einträge mit `deleted_at` älter als 30 Tage endgültig löschen.
+- [x] Datenschutz: Datenexport als JSON, Konto löschen (Einträge zeigen dann „Ehemaliges Mitglied“), Familienraum löschen. Geräte ohne Zugriff (Familienraum gelöscht, Mitglied entfernt) verwerfen ihre lokalen Daten.
+- [x] Aufräum-Job (PocketBase-Cron, täglich 3:30 Uhr): Einträge mit `deleted_at` älter als 30 Tage endgültig löschen (Mitgliedschaften bleiben); die Apps räumen lokal ebenso auf.
 - [ ] Deployment:
   - `Dockerfile` (PocketBase plus gebaute App in `pb_public`) und `docker-compose.yml` mit Volume für `pb_data`.
   - Alternative ohne Docker: Anleitung für einen systemd-Dienst (z. B. Raspberry Pi).

@@ -139,6 +139,18 @@ class Session {
 		await this.login(data.email, data.password);
 	}
 
+	/**
+	 * Familienraum nicht mehr erreichbar (gelöscht oder entfernt): Sync stoppen, lokale Daten verwerfen,
+	 * Mitgliedschaften neu laden. Danach gilt der nächste Familienraum oder es geht zum Onboarding.
+	 */
+	async leaveHousehold(): Promise<void> {
+		await stopSync();
+		await deleteLocalData();
+		this.#householdId = null;
+		writeCache(HOUSEHOLD_KEY, null);
+		await this.loadMemberships();
+	}
+
 	/** Abmelden löscht Sitzung und lokale Daten; Darstellung (Hell/Dunkel, Akzent) bleibt. */
 	logout(): Promise<void> {
 		return this.#clear();

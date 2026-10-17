@@ -381,7 +381,152 @@ function checkSameHousehold(e) {
 	}
 }
 
+/** PocketBase-Datumsformat („2026-10-17 13:25:44.896Z“), damit Textvergleiche in Filtern stimmen. */
+function pbDate(ms) {
+	return new Date(ms).toISOString().replace('T', ' ');
+}
+
+/** Andere aktive Admins des Haushalts (ohne die Mitgliedschaft `exceptId`)? */
+function hasOtherAdmin(app, householdId, exceptId) {
+	return (
+		app.findRecordsByFilter(
+			'memberships',
+			"household = {:h} && role = 'admin' && deleted_at = '' && id != {:id}",
+			'',
+			1,
+			0,
+			{ h: householdId, id: exceptId }
+		).length > 0
+	);
+}
+
+/**
+ * POST /api/fh/account/delete: löscht das eigene Konto nach Passwort-Bestätigung.
+ * Mitgliedschaften bleiben als „Ehemaliges Mitglied“ (ohne Namen und Konto) bestehen.
+ * Der letzte Admin muss vorher die Rolle übergeben oder den Familienraum löschen.
+ */
+function deleteAccount(e) {
+	const body = e.requestInfo().body;
+	const password = String(body.password || '');
+	if (!password || !e.auth.validatePassword(password)) {
+		throw new BadRequestError('Das Passwort ist falsch.');
+	}
+
+	const memberships = e.app.findRecordsByFilter('memberships', 'user = {:user}', '', 0, 0, {
+		user: e.auth.id
+	});
+	for (const membership of memberships) {
+		const active = !membership.getString('deleted_at');
+		const household = membership.getString('household');
+		if (
+			active &&
+			membership.getString('role') === 'admin' &&
+			!hasOtherAdmin(e.app, household, membership.id)
+		) {
+			// data.household.code = 'last_admin', damit die App gezielt reagieren kann.
+			const message =
+				'Du bist der letzte Admin. Übergib zuerst die Admin-Rolle oder lösche den Familienraum.';
+			throw new BadRequestError(message, { household: new ValidationError('last_admin', message) });
+		}
+	}
+
+	e.app.runInTransaction((tx) => {
+		const now = pbDate(Date.now());
+		for (const membership of memberships) {
+			membership.set('user', '');
+			membership.set('display_name', '');
+			membership.set('updated_by', '');
+			if (!membership.getString('deleted_at')) membership.set('deleted_at', now);
+			tx.save(membership);
+		}
+		// Verweise in `updated_by` entfernt PocketBase beim Löschen selbst (Feld ist optional).
+		tx.delete(tx.findRecordById('users', e.auth.id));
+	});
+	return e.noContent(204);
+}
+
+// Löschreihenfolge für einen Haushalt: zuerst, was auf anderes verweist. `task_completions`
+// verweist als Pflichtfeld auf Mitgliedschaften und muss vor ihnen weg.
+const HOUSEHOLD_DELETE_ORDER = [
+	['task_completions', 'task.household = {:h}'],
+	['tasks', 'household = {:h}'],
+	['shopping_items', 'household = {:h}'],
+	['meal_plan_entries', 'household = {:h}'],
+	['recipe_ingredients', 'recipe.household = {:h}'],
+	['recipes', 'household = {:h}'],
+	['events', 'household = {:h}'],
+	['invites', 'household = {:h}'],
+	['memberships', 'household = {:h}']
+];
+
+/** POST /api/fh/households/delete: Admin löscht den Familienraum mit allen Daten (Name als Bestätigung). */
+function deleteHousehold(e) {
+	const body = e.requestInfo().body;
+	const householdId = String(body.household || '');
+	requireAdmin(e.app, e.auth.id, householdId);
+	const household = e.app.findRecordById('households', householdId);
+	if (String(body.name || '').trim() !== household.getString('name').trim()) {
+		throw new BadRequestError('Der eingegebene Name stimmt nicht mit dem Familienraum überein.');
+	}
+
+	e.app.runInTransaction((tx) => {
+		for (const [collection, filter] of HOUSEHOLD_DELETE_ORDER) {
+			for (const record of tx.findRecordsByFilter(collection, filter, '', 0, 0, {
+				h: householdId
+			})) {
+				tx.delete(record);
+			}
+		}
+		tx.delete(tx.findRecordById('households', householdId));
+	});
+	return e.noContent(204);
+}
+
+// Endgültig löschen nach 30 Tagen. Mitgliedschaften bleiben (für „Ehemaliges Mitglied“).
+const PURGE_AFTER_MS = 30 * DAY_MS;
+const PURGE_COLLECTIONS = [
+	'task_completions',
+	'tasks',
+	'shopping_items',
+	'meal_plan_entries',
+	'recipe_ingredients',
+	'recipes',
+	'events',
+	'invites'
+];
+
+/** Entfernt Einträge, deren `deleted_at` älter als 30 Tage ist. Gibt die Anzahl pro Collection zurück. */
+function purgeDeleted(app, now) {
+	const cutoff = pbDate((now || Date.now()) - PURGE_AFTER_MS);
+	const removed = {};
+	for (const collection of PURGE_COLLECTIONS) {
+		const records = app.findRecordsByFilter(
+			collection,
+			"deleted_at != '' && deleted_at < {:cutoff}",
+			'',
+			0,
+			0,
+			{ cutoff }
+		);
+		let count = 0;
+		for (const record of records) {
+			try {
+				app.delete(record);
+				count += 1;
+			} catch {
+				// Schon per Kaskade entfernt (z. B. Erledigungen einer gelöschten Aufgabe).
+			}
+		}
+		removed[collection] = count;
+	}
+	return removed;
+}
+
 module.exports = {
+	deleteAccount,
+	deleteHousehold,
+	purgeDeleted,
+	PURGE_AFTER_MS,
 	stampUpdatedBy,
 	stampShoppingItem,
 	checkSameHousehold,

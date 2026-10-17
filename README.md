@@ -90,6 +90,13 @@ flowchart LR
 - Tastatur: Der erste Tab-Stopp ist „Zum Inhalt springen“; die Taste **N** startet „Neu“ (Aufgabe, Termin, Rezept, Einkaufsfeld).
 - `pnpm test:e2e` prüft alle Seiten mit axe (WCAG 2.1 AA) in Hell und Dunkel sowie den Offline-Start.
 
+## Datenschutz
+
+- **Datenexport** (Einstellungen → Daten und Konto): alle Daten der Familie als JSON-Datei, direkt aus der lokalen Datenbank (geht auch offline). Gelöschte Einträge und Einladungen sind nicht enthalten.
+- **Konto löschen**: mit Passwort. Das Konto verschwindet, die Mitgliedschaft bleibt ohne Namen bestehen; Einträge zeigen „Ehemaliges Mitglied“. Der letzte Admin muss vorher die Admin-Rolle übergeben oder den Familienraum löschen.
+- **Familienraum löschen** (Admin): mit dem Namen als Bestätigung; alle Daten werden sofort endgültig gelöscht. Andere Geräte merken das beim nächsten Abgleich und verwerfen ihre lokalen Daten (ebenso, wenn jemand aus der Familie entfernt wurde).
+- **Aufräum-Job**: Gelöschte Einträge (`deleted_at`) werden nach 30 Tagen endgültig entfernt, täglich um 3:30 Uhr (Serverzeit). Mitgliedschaften bleiben für „Ehemaliges Mitglied“.
+
 ## Datenmodell und Rechte
 
 - Das Schema entsteht ausschließlich über Migrationen in `pocketbase/pb_migrations/` (eine Datei pro Collection). PocketBase wendet sie beim Start automatisch an; eine leere Datenbank hat nach `pnpm dev` sofort das komplette Schema.
@@ -97,13 +104,17 @@ flowchart LR
 - `pocketbase/pb_hooks/` ergänzt, was Regeln allein nicht sicher können: `updated_by`, `added_by`, `checked_by`/`checked_at` setzt der Server; Verknüpfungen müssen zum selben Haushalt gehören; der letzte Admin bleibt Admin.
 - Eigene Routen (nur angemeldet):
 
-  | Route                         | Zweck                                                                    |
-  | ----------------------------- | ------------------------------------------------------------------------ |
-  | `POST /api/fh/households`     | Familienraum anlegen, das Konto wird Admin (eine Transaktion)            |
-  | `POST /api/fh/invites`        | Admin: Link (7 Tage) und Code (24 Std.) erzeugen, nur Hashes gespeichert |
-  | `POST /api/fh/invites/redeem` | Mit Link-Token oder Code beitreten; Fehlversuche werden gedrosselt       |
-  | `POST /api/fh/children`       | Admin: Kinderkonto mit Benutzername und Passwort anlegen                 |
+  | Route                            | Zweck                                                                    |
+  | -------------------------------- | ------------------------------------------------------------------------ |
+  | `POST /api/fh/households`        | Familienraum anlegen, das Konto wird Admin (eine Transaktion)            |
+  | `POST /api/fh/invites`           | Admin: Link (7 Tage) und Code (24 Std.) erzeugen, nur Hashes gespeichert |
+  | `POST /api/fh/invites/redeem`    | Mit Link-Token oder Code beitreten; Fehlversuche werden gedrosselt       |
+  | `POST /api/fh/children`          | Admin: Kinderkonto mit Benutzername und Passwort anlegen                 |
+  | `POST /api/fh/account/delete`    | Eigenes Konto löschen (Passwort); der letzte Admin muss erst übergeben   |
+  | `POST /api/fh/households/delete` | Admin: Familienraum mit allen Daten löschen (Name zur Bestätigung)       |
+  | `POST /api/fh/purge`             | Nur Superuser: Aufräum-Job sofort ausführen                              |
 
+- Mitgliedschaften entstehen nur über diese Routen; direktes Anlegen über die API und direktes Löschen eines Familienraums sind gesperrt.
 - `pnpm test:integration` startet PocketBase mit leerem Datenordner auf einem freien Port und prüft jede Regel mit Admin, Erwachsenem, Kind, entferntem Mitglied und fremdem Haushalt.
 - `pnpm seed` legt die Demo-Familie an: `julia@demo.familienhub.test` (Admin), `tom@demo.familienhub.test` (Erwachsener), Benutzername `mia` (Kind), Passwort jeweils `demo-passwort`.
 

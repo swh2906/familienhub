@@ -1,6 +1,6 @@
 // Startet ein echtes PocketBase für Tests: leerer temporärer Datenordner, freier Port,
 // Migrationen und Hooks aus dem Projekt. Nach den Tests wird alles wieder entfernt.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -10,6 +10,8 @@ import { PB_BINARY, PB_DIR } from '../../scripts/lib/paths.ts';
 
 export interface TestServer {
 	url: string;
+	/** Superuser für Routen wie /api/fh/purge. */
+	superuser: { email: string; password: string };
 	stop(): Promise<void>;
 }
 
@@ -32,6 +34,21 @@ export async function startPocketBase(fixedPort?: number): Promise<TestServer> {
 	}
 
 	const dataDir = mkdtempSync(path.join(os.tmpdir(), 'familienhub-pb-'));
+	const superuser = { email: 'root@familienhub.test', password: 'superuser-passwort-123' };
+	const upsert = spawnSync(
+		PB_BINARY,
+		[
+			'superuser',
+			'upsert',
+			superuser.email,
+			superuser.password,
+			`--dir=${dataDir}`,
+			`--migrationsDir=${path.join(PB_DIR, 'pb_migrations')}`
+		],
+		{ encoding: 'utf8' }
+	);
+	if (upsert.status !== 0) throw new Error(`Superuser anlegen fehlgeschlagen:\n${upsert.stderr}`);
+
 	const port = fixedPort ?? (await freePort());
 	const url = `http://127.0.0.1:${port}`;
 
@@ -70,6 +87,7 @@ export async function startPocketBase(fixedPort?: number): Promise<TestServer> {
 
 	return {
 		url,
+		superuser,
 		async stop() {
 			if (child.exitCode === null) {
 				child.kill();

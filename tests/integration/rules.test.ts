@@ -1,10 +1,9 @@
 // Prüft die Rechte-Tabelle aus CLAUDE.md gegen ein echtes PocketBase mit allen Migrationen und Hooks.
 // Familie A: Admin, Erwachsener, Kind und ein entferntes Mitglied. Familie B: ein fremder Admin.
-import PocketBase, { ClientResponseError, type RecordModel } from 'pocketbase';
+import PocketBase, { type RecordModel } from 'pocketbase';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createHousehold, createInvite, expectDenied, signUp } from './helpers.ts';
 import { startPocketBase, type TestServer } from './pocketbase-server.ts';
-
-const PASSWORD = 'test-passwort-123';
 
 type Role = 'admin' | 'adult' | 'child';
 
@@ -17,26 +16,6 @@ let householdB: string;
 let recipeA: RecordModel;
 let recipeB: RecordModel;
 
-async function signUp(data: { email?: string; username?: string; name: string }) {
-	const pb = new PocketBase(server.url);
-	pb.autoCancellation(false);
-	const user = await pb
-		.collection('users')
-		.create({ ...data, password: PASSWORD, passwordConfirm: PASSWORD });
-	await pb.collection('users').authWithPassword(data.email ?? data.username ?? '', PASSWORD);
-	return { pb, id: user.id };
-}
-
-/** Erwartet, dass PocketBase die Anfrage ablehnt (400, 403 oder 404 je nach Regelart). */
-async function expectDenied(request: Promise<unknown>) {
-	const error = await request.then(
-		() => null,
-		(e: unknown) => e
-	);
-	expect(error, 'Anfrage hätte abgelehnt werden müssen').toBeInstanceOf(ClientResponseError);
-	expect([400, 403, 404]).toContain((error as ClientResponseError).status);
-}
-
 beforeAll(async () => {
 	server = await startPocketBase();
 
@@ -47,17 +26,16 @@ beforeAll(async () => {
 		['removed', { email: 'ex@familie-a.test', name: 'Ex' }],
 		['outsider', { email: 'admin@familie-b.test', name: 'Fremd' }]
 	] as const) {
-		const { pb, id } = await signUp(data);
+		const { pb, id } = await signUp(server.url, data);
 		as[key] = pb;
 		userId[key] = id;
 	}
 
-	householdA = (await as.admin.collection('households').create({ name: 'Familie A' })).id;
-	householdB = (await as.outsider.collection('households').create({ name: 'Familie B' })).id;
+	const a = await createHousehold(as.admin, 'Familie A');
+	householdA = a.household.id;
+	membership.admin = a.membership.id;
+	householdB = (await createHousehold(as.outsider, 'Familie B')).household.id;
 
-	membership.admin = (
-		await as.admin.collection('memberships').getFirstListItem(`user = "${userId.admin}"`)
-	).id;
 	for (const role of ['adult', 'child'] as const) {
 		membership[role] = (
 			await as.admin
@@ -89,7 +67,24 @@ afterAll(async () => {
 describe('Haushalt anlegen', () => {
 	it('macht das anlegende Konto zum Admin', async () => {
 		const own = await as.admin.collection('memberships').getOne(membership.admin);
-		expect(own).toMatchObject({ household: householdA, role: 'admin', display_name: 'Julia' });
+		expect(own).toMatchObject({
+			household: householdA,
+			user: userId.admin,
+			role: 'admin',
+			display_name: 'Julia',
+			color: '#2453c7'
+		});
+		const household = await as.admin.collection('households').getOne(householdA);
+		expect(household).toMatchObject({ timezone: 'Europe/Berlin', updated_by: userId.admin });
+	});
+
+	it('geht nur über die eigene Route, nicht direkt über die Collection', async () => {
+		await expectDenied(as.admin.collection('households').create({ name: 'Direkt' }));
+	});
+
+	it('verlangt einen Namen und eine Anmeldung', async () => {
+		await expectDenied(createHousehold(as.admin, '   '), [400]);
+		await expectDenied(createHousehold(new PocketBase(server.url), 'Anonym'), [401]);
 	});
 
 	it('setzt updated_by serverseitig, auch wenn der Client etwas anderes schickt', async () => {
@@ -200,8 +195,8 @@ describe('Familienraum (households)', () => {
 	it('nur der Admin löscht', async () => {
 		await expectDenied(as.adult.collection('households').delete(householdA));
 		await expectDenied(as.child.collection('households').delete(householdA));
-		const temp = await as.admin.collection('households').create({ name: 'Ferienhaus' });
-		await expect(as.admin.collection('households').delete(temp.id)).resolves.toBe(true);
+		const temp = await createHousehold(as.admin, 'Ferienhaus');
+		await expect(as.admin.collection('households').delete(temp.household.id)).resolves.toBe(true);
 	});
 });
 
@@ -252,6 +247,29 @@ describe('Mitglieder (memberships)', () => {
 		);
 	});
 
+	it('der letzte Admin kann weder herabgestuft noch entfernt werden', async () => {
+		await expectDenied(
+			as.admin.collection('memberships').update(membership.admin, { role: 'adult' }),
+			[400]
+		);
+		await expectDenied(
+			as.admin
+				.collection('memberships')
+				.update(membership.admin, { deleted_at: new Date().toISOString() }),
+			[400]
+		);
+		await expectDenied(as.admin.collection('memberships').delete(membership.admin), [400]);
+
+		// Mit einem zweiten Admin geht es.
+		await as.admin.collection('memberships').update(membership.adult, { role: 'admin' });
+		await as.adult.collection('memberships').update(membership.admin, { role: 'adult' });
+		await as.adult.collection('memberships').update(membership.admin, { role: 'admin' });
+		const back = await as.admin
+			.collection('memberships')
+			.update(membership.adult, { role: 'adult' });
+		expect(back.role).toBe('adult');
+	});
+
 	it('nur der Admin entfernt Mitglieder', async () => {
 		await expectDenied(as.adult.collection('memberships').delete(membership.child));
 		await expectDenied(
@@ -263,19 +281,24 @@ describe('Mitglieder (memberships)', () => {
 });
 
 describe('Einladungen (invites)', () => {
-	const invite = () => ({
-		household: householdA,
-		role: 'adult',
-		token_hash: 'hash-' + Math.random(),
-		expires_at: new Date(Date.now() + 7 * 86_400_000).toISOString(),
-		uses_left: 1
+	it('nur der Admin legt an (über die Route), Hashes bleiben unsichtbar', async () => {
+		await expectDenied(createInvite(as.adult, householdA, 'adult'), [403]);
+		await expectDenied(createInvite(as.child, householdA, 'adult'), [403]);
+		const created = await createInvite(as.admin, householdA, 'adult');
+		const stored = await as.admin.collection('invites').getOne(created.id);
+		expect(stored.token_hash).toBeUndefined();
+		expect(stored.code_hash).toBeUndefined();
 	});
 
-	it('nur der Admin legt an, Hashes bleiben unsichtbar', async () => {
-		await expectDenied(as.adult.collection('invites').create(invite()));
-		await expectDenied(as.child.collection('invites').create(invite()));
-		const created = await as.admin.collection('invites').create(invite());
-		expect(created.token_hash).toBeUndefined();
+	it('direktes Anlegen über die Collection ist für alle gesperrt', async () => {
+		const data = {
+			household: householdA,
+			role: 'adult',
+			expires_at: new Date(Date.now() + 86_400_000).toISOString()
+		};
+		for (const role of ['admin', 'adult', 'child'] as const) {
+			await expectDenied(as[role].collection('invites').create(data));
+		}
 	});
 
 	it.each(['adult', 'child'] as const)('%s sieht keine Einladungen', async (role) => {

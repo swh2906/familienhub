@@ -64,13 +64,14 @@ async function main(): Promise<void> {
 	const adult = await signUp('adult');
 	const child = await signUp('child');
 
-	const household = await admin.pb
-		.collection('households')
-		.create({ name: 'Familie Demo', timezone: 'Europe/Berlin' });
-
-	// Die Admin-Mitgliedschaft legt der Server an; Erwachsene und Kinder fügt der Admin hinzu.
+	// Die Route legt Haushalt und Admin-Mitgliedschaft gemeinsam an; die übrigen fügt der Admin hinzu.
+	const created: { household: { id: string }; membership: { id: string } } = await admin.pb.send(
+		'/api/fh/households',
+		{ method: 'POST', body: { name: 'Familie Demo', timezone: 'Europe/Berlin' } }
+	);
+	const household = created.household;
 	const membership: Record<Role, string> = {
-		admin: (await admin.pb.collection('memberships').getFirstListItem(`user = "${admin.id}"`)).id,
+		admin: created.membership.id,
 		adult: '',
 		child: ''
 	};

@@ -45,21 +45,21 @@ Beim ersten Start zeigt PocketBase in der Konsole einen Link zum Anlegen des Adm
 
 ## Befehle
 
-| Befehl                  | Zweck                                              |
-| ----------------------- | -------------------------------------------------- |
-| `pnpm dev`              | PocketBase + App starten                           |
-| `pnpm dev:web`          | nur die App (Vite) starten                         |
-| `pnpm build`            | App bauen und nach `pocketbase/pb_public` kopieren |
-| `pnpm preview`          | gebaute App lokal ansehen (Port 4173)              |
-| `pnpm check`            | TypeScript- und Svelte-Prüfung                     |
-| `pnpm lint`             | Formatierung (Prettier) und ESLint prüfen          |
-| `pnpm format`           | Code automatisch formatieren                       |
-| `pnpm test`             | Unit-Tests (Vitest)                                |
-| `pnpm test:integration` | Rechte-Tests gegen ein temporäres PocketBase       |
-| `pnpm test:e2e:install` | Browser für E2E-Tests einmalig herunterladen       |
-| `pnpm test:e2e`         | E2E-Tests (Playwright, Handy- und Desktop-Ansicht) |
-| `pnpm pb:download`      | PocketBase herunterladen (`--force` lädt neu)      |
-| `pnpm seed`             | Demo-Familie anlegen (PocketBase muss laufen)      |
+| Befehl                  | Zweck                                                                     |
+| ----------------------- | ------------------------------------------------------------------------- |
+| `pnpm dev`              | PocketBase + App starten                                                  |
+| `pnpm dev:web`          | nur die App (Vite) starten                                                |
+| `pnpm build`            | App bauen und nach `pocketbase/pb_public` kopieren                        |
+| `pnpm preview`          | gebaute App lokal ansehen (Port 4173)                                     |
+| `pnpm check`            | TypeScript- und Svelte-Prüfung                                            |
+| `pnpm lint`             | Formatierung (Prettier) und ESLint prüfen                                 |
+| `pnpm format`           | Code automatisch formatieren                                              |
+| `pnpm test`             | Unit-Tests (Vitest)                                                       |
+| `pnpm test:integration` | Rechte-Tests gegen ein temporäres PocketBase                              |
+| `pnpm test:e2e:install` | Browser für E2E-Tests einmalig herunterladen                              |
+| `pnpm test:e2e`         | E2E-Tests (Playwright, Handy + Desktop, eigenes PocketBase auf Port 8091) |
+| `pnpm pb:download`      | PocketBase herunterladen (`--force` lädt neu)                             |
+| `pnpm seed`             | Demo-Familie anlegen (PocketBase muss laufen)                             |
 
 Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketbase serve` und dann http://127.0.0.1:8090 öffnen.
 
@@ -67,7 +67,16 @@ Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketb
 
 - Das Schema entsteht ausschließlich über Migrationen in `pocketbase/pb_migrations/` (eine Datei pro Collection). PocketBase wendet sie beim Start automatisch an; eine leere Datenbank hat nach `pnpm dev` sofort das komplette Schema.
 - Die Rechte aus der Tabelle in `CLAUDE.md` stecken in den API-Regeln der Migrationen. Grundregel: Zugriff nur mit aktiver Mitgliedschaft (`memberships`, `deleted_at` leer) im selben Haushalt.
-- `pocketbase/pb_hooks/` ergänzt, was Regeln allein nicht sicher können: `updated_by`, `added_by`, `checked_by`/`checked_at` setzt der Server; Verknüpfungen müssen zum selben Haushalt gehören; wer einen Haushalt anlegt, wird Admin.
+- `pocketbase/pb_hooks/` ergänzt, was Regeln allein nicht sicher können: `updated_by`, `added_by`, `checked_by`/`checked_at` setzt der Server; Verknüpfungen müssen zum selben Haushalt gehören; der letzte Admin bleibt Admin.
+- Eigene Routen (nur angemeldet):
+
+  | Route                         | Zweck                                                                    |
+  | ----------------------------- | ------------------------------------------------------------------------ |
+  | `POST /api/fh/households`     | Familienraum anlegen, das Konto wird Admin (eine Transaktion)            |
+  | `POST /api/fh/invites`        | Admin: Link (7 Tage) und Code (24 Std.) erzeugen, nur Hashes gespeichert |
+  | `POST /api/fh/invites/redeem` | Mit Link-Token oder Code beitreten; Fehlversuche werden gedrosselt       |
+  | `POST /api/fh/children`       | Admin: Kinderkonto mit Benutzername und Passwort anlegen                 |
+
 - `pnpm test:integration` startet PocketBase mit leerem Datenordner auf einem freien Port und prüft jede Regel mit Admin, Erwachsenem, Kind, entferntem Mitglied und fremdem Haushalt.
 - `pnpm seed` legt die Demo-Familie an: `julia@demo.familienhub.test` (Admin), `tom@demo.familienhub.test` (Erwachsener), Benutzername `mia` (Kind), Passwort jeweils `demo-passwort`.
 
@@ -77,13 +86,16 @@ Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketb
 ├─ CLAUDE.md, PLAN.md     Konzept und Umsetzungsplan
 ├─ src/
 │  ├─ lib/
-│  │  ├─ pb/              PocketBase-Client (nur vom Sync-Modul genutzt, per ESLint erzwungen)
+│  │  ├─ pb/              PocketBase-Client (nur Sync- und Auth-Modul, per ESLint erzwungen)
+│  │  ├─ auth/            Anmeldung, Sitzung, Familienraum verwalten (nur online)
 │  │  ├─ db/              Dexie-Schema (ab Schritt 4)
 │  │  ├─ sync/            Sync-Modul (ab Schritt 4)
 │  │  ├─ features/        household, shopping, tasks, calendar, meals, today
 │  │  ├─ ui/              gemeinsame Komponenten, Theme (CSS-Variablen Hell/Dunkel, Akzentfarben)
 │  │  └─ paraglide/       generierte Übersetzungsfunktionen (nicht bearbeiten)
-│  └─ routes/             Seiten: / (Heute), /essen, /einkauf, /kalender, /aufgaben, /einstellungen
+│  └─ routes/
+│     ├─ (app)/           mit Navigation, Anmeldung nötig: / (Heute), /essen, /einkauf, /kalender, /aufgaben, /einstellungen
+│     └─ (auth)/          ohne Navigation: /login, /register, /onboarding, /join/[token]
 ├─ messages/de.json       alle Texte der Oberfläche (Paraglide)
 ├─ project.inlang/        Paraglide-Einstellungen
 ├─ pocketbase/

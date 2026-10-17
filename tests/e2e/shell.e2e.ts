@@ -1,8 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { createFamily, login } from './helpers.ts';
+
+test.beforeEach(async ({ page }) => {
+	const { email } = await createFamily();
+	await login(page, email);
+});
 
 test('Startseite lädt und die Leiste hat 5 Einträge', async ({ page }) => {
-	await page.goto('/');
-
 	await expect(page.getByRole('heading', { level: 1, name: 'Heute' })).toBeVisible();
 
 	const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
@@ -12,7 +16,6 @@ test('Startseite lädt und die Leiste hat 5 Einträge', async ({ page }) => {
 });
 
 test('Navigation wechselt den Bereich', async ({ page }) => {
-	await page.goto('/');
 	const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
 
 	await nav.getByRole('link', { name: 'Einkauf' }).click();
@@ -22,7 +25,6 @@ test('Navigation wechselt den Bereich', async ({ page }) => {
 });
 
 test('Farbschema-Umschalter bleibt nach dem Neuladen erhalten', async ({ page }) => {
-	await page.goto('/');
 	const toggle = page.getByRole('button', { name: /Farbschema/ });
 
 	await toggle.click(); // System → Hell
@@ -34,7 +36,6 @@ test('Farbschema-Umschalter bleibt nach dem Neuladen erhalten', async ({ page })
 });
 
 test('Akzentfarbe in den Einstellungen wählen und behalten', async ({ page }) => {
-	await page.goto('/');
 	await page.getByRole('link', { name: 'Einstellungen' }).click();
 	await expect(page.getByRole('heading', { level: 1, name: 'Einstellungen' })).toBeVisible();
 
@@ -53,4 +54,13 @@ test('Akzentfarbe in den Einstellungen wählen und behalten', async ({ page }) =
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	// Der Umschalter in der Kopfzeile zeigt denselben Stand
 	await expect(page.getByRole('button', { name: /Farbschema: Dunkel/ })).toBeVisible();
+});
+
+test('Abmelden führt zur Anmeldung und schützt die App-Seiten', async ({ page }) => {
+	await page.getByRole('link', { name: 'Einstellungen' }).click();
+	await page.getByRole('button', { name: 'Abmelden' }).click();
+	await expect(page).toHaveURL(/\/login$/);
+
+	await page.goto('/einkauf');
+	await expect(page).toHaveURL(/\/login\?next=%2Feinkauf$/);
 });

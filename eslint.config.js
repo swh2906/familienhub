@@ -47,8 +47,9 @@ export default defineConfig(
 	},
 	{
 		// Architekturregel: Nur das Sync-Modul spricht mit PocketBase, die Oberfläche nutzt Dexie.
+		// Ausnahme: src/lib/auth/ für Anmeldung und Familienraum-Verwaltung (geht nur online).
 		files: ['src/**/*.{ts,js,svelte}'],
-		ignores: ['src/lib/pb/**', 'src/lib/sync/**'],
+		ignores: ['src/lib/pb/**', 'src/lib/sync/**', 'src/lib/auth/**'],
 		rules: {
 			'no-restricted-imports': [
 				'error',

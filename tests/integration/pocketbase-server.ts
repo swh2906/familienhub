@@ -25,13 +25,14 @@ async function freePort(): Promise<number> {
 	return address.port;
 }
 
-export async function startPocketBase(): Promise<TestServer> {
+/** Startet PocketBase auf `fixedPort` oder, ohne Angabe, auf einem freien Port. */
+export async function startPocketBase(fixedPort?: number): Promise<TestServer> {
 	if (!existsSync(PB_BINARY)) {
 		throw new Error('PocketBase fehlt. Bitte zuerst ausführen: pnpm pb:download');
 	}
 
 	const dataDir = mkdtempSync(path.join(os.tmpdir(), 'familienhub-pb-'));
-	const port = await freePort();
+	const port = fixedPort ?? (await freePort());
 	const url = `http://127.0.0.1:${port}`;
 
 	const child = spawn(

@@ -94,15 +94,25 @@ Umsetzungsnotizen:
 
 **Ziel:** Registrieren, anmelden, Familie anlegen, einladen, beitreten, Kinderprofile.
 
-- [ ] Seiten: `/login`, `/register`, `/onboarding` (Familie anlegen oder beitreten), `/join/[token]`.
-- [ ] Hook: Haushalt anlegen erzeugt in derselben Transaktion die Admin-Mitgliedschaft.
-- [ ] Eigene Route `POST /api/fh/invites`: erzeugt Link-Token (zufällig, lang) und 8-stelligen Code, speichert nur Hashes, gibt Klartext einmalig zurück.
-- [ ] Eigene Route `POST /api/fh/invites/redeem`: prüft Hash, Ablauf, Nutzungen, Widerruf. Fehlversuche drosseln.
-- [ ] Eigene Route `POST /api/fh/children` (nur Admin): legt Kinderkonto mit Benutzername und Passwort plus Mitgliedschaft an.
-- [ ] Einstellungen: Mitgliederliste, Rolle ändern, entfernen, Farbe wählen, Einladung erstellen und widerrufen, Kind anlegen.
-- [ ] Sitzung bleibt erhalten (Token-Refresh). Abmelden löscht auch lokale Daten.
-- [ ] Farbauswahl nur aus einer Palette mit ausreichendem Kontrast in beiden Modi.
-- [ ] Tests: Hooks und Routen (Integration), E2E-Ablauf „Admin registriert sich → lädt ein → zweiter Nutzer tritt per Link bei“.
+- [x] Seiten: `/login`, `/register`, `/onboarding` (Familie anlegen oder beitreten), `/join/[token]`.
+- [x] Haushalt anlegen erzeugt in derselben Transaktion die Admin-Mitgliedschaft (eigene Route statt Hook, s. u.).
+- [x] Eigene Route `POST /api/fh/invites`: erzeugt Link-Token (zufällig, lang) und 8-stelligen Code, speichert nur Hashes, gibt Klartext einmalig zurück.
+- [x] Eigene Route `POST /api/fh/invites/redeem`: prüft Hash, Ablauf, Nutzungen, Widerruf. Fehlversuche drosseln.
+- [x] Eigene Route `POST /api/fh/children` (nur Admin): legt Kinderkonto mit Benutzername und Passwort plus Mitgliedschaft an.
+- [x] Einstellungen: Mitgliederliste, Rolle ändern, entfernen, Farbe wählen, Einladung erstellen und widerrufen, Kind anlegen.
+- [x] Sitzung bleibt erhalten (Token-Refresh). Abmelden löscht auch lokale Daten.
+- [x] Farbauswahl nur aus einer Palette mit ausreichendem Kontrast in beiden Modi.
+- [x] Tests: Hooks und Routen (Integration), E2E-Ablauf „Admin registriert sich → lädt ein → zweiter Nutzer tritt per Link bei“.
+
+Umsetzungsnotizen:
+- PocketBase führt API-Anlagen nicht in einer Transaktion aus. Daher `POST /api/fh/households` (Haushalt + Admin in `runInTransaction`); direktes Anlegen von `households` und `invites` über die Collections ist gesperrt.
+- Drosselung: eigene Zählung nur der **Fehlversuche** (5 pro Konto, 20 pro IP in 15 Minuten), statt PocketBases Rate-Limit, das jede Anfrage zählt und eine Familie im selben WLAN gemeinsam bremsen würde.
+- Einladungen haben `expires_at` (Link, 7 Tage) und `code_expires_at` (Code, 24 Stunden).
+- Der letzte Admin kann weder herabgestuft noch entfernt werden (Hook auf Update-/Delete-Anfragen).
+- `src/lib/auth/` darf direkt mit PocketBase sprechen (ESLint-Ausnahme); Seiten liegen in den Routengruppen `(app)` (mit Navigation, Anmeldung nötig) und `(auth)`.
+- Abmelden entfernt Sitzung und zwischengespeicherte Mitgliedschaften; Hell/Dunkel und Akzentfarbe bleiben (Geräte-Einstellung). Die lokale Datenbank kommt in Schritt 4 dazu.
+- E2E-Tests starten ein eigenes leeres PocketBase auf Port 8091 (`scripts/e2e-pocketbase.ts`).
+- Offen: Passwort eines Kindes zurücksetzen, „Konto löschen“ (MVP, später) muss den letzten Admin berücksichtigen.
 
 **Fertig, wenn:**
 - Eine Familie mit drei Rollen lässt sich komplett über die Oberfläche einrichten.

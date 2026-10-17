@@ -186,6 +186,105 @@ body {
 	outline-offset: 2px;
 }
 
+/* ---- Gemeinsame Bausteine für Formulare und Karten ---- */
+
+.card {
+	display: grid;
+	gap: var(--space-4);
+	padding: var(--space-6) var(--space-4);
+	border-radius: var(--radius-card);
+	background: var(--color-surface);
+	box-shadow: var(--shadow-card);
+}
+
+.field {
+	display: grid;
+	gap: var(--space-1);
+}
+
+/* Beschriftung: entweder <label class="field"><span>…</span><input></label>
+   oder bei Hinweistext <div class="field"><label for>…</label><input><span class="hint"></div>,
+   damit der Hinweis nicht Teil des Feldnamens wird (er hängt per aria-describedby am Feld). */
+.field > span:not(.hint),
+.field > label {
+	font-weight: 600;
+	font-size: 0.9375rem;
+}
+
+.field input,
+.field select {
+	min-height: var(--touch-target);
+	padding: 0 var(--space-3);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	color: var(--color-text);
+	font: inherit;
+}
+
+.field input:focus-visible,
+.field select:focus-visible {
+	border-color: var(--color-primary);
+}
+
+.hint {
+	margin: 0;
+	color: var(--color-text-muted);
+	font-size: 0.875rem;
+}
+
+.form-error {
+	margin: 0;
+	padding: var(--space-3) var(--space-4);
+	border-radius: var(--radius);
+	background: var(--color-warning-bg);
+	color: var(--color-warning);
+	font-weight: 600;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	min-height: var(--touch-target);
+	padding: 0 var(--space-6);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	background: var(--color-surface);
+	color: var(--color-text);
+	font: inherit;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.btn:hover {
+	background: var(--color-surface-2);
+}
+
+.btn-primary {
+	border-color: var(--color-primary);
+	background: var(--color-primary);
+	color: var(--color-primary-text);
+}
+
+.btn-primary:hover {
+	background: var(--color-primary-strong);
+	border-color: var(--color-primary-strong);
+	color: var(--color-bg);
+}
+
+.btn:disabled {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.link {
+	color: var(--color-primary-strong);
+	font-weight: 600;
+}
+
 .visually-hidden {
 	position: absolute;
 	width: 1px;

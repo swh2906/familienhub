@@ -3,7 +3,8 @@ import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 
-const POCKETBASE = 'http://127.0.0.1:8090';
+// E2E-Tests lenken den Proxy auf ein eigenes, leeres PocketBase um (siehe playwright.config.ts).
+const POCKETBASE = process.env.FH_PB_URL ?? 'http://127.0.0.1:8090';
 
 export default defineConfig({
 	plugins: [

@@ -72,7 +72,7 @@
 									class="chip"
 									class:conflict
 									style:--event-color={occurrenceColor(o, members)}
-									aria-label={describeOccurrence(o, members, conflict)}
+									aria-label={describeOccurrence(o, members, conflict, 'start')}
 									onclick={() => onopen?.(o)}
 								>
 									{#if !o.allDay}<span class="time">{o.startTime}</span>{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shortcut } from '#lib/ui/shortcut.js';
 	import { resolve } from '$app/paths';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { live } from '#lib/db/live.svelte.js';
@@ -38,7 +39,9 @@
 <div class="head">
 	<h1>{m.recipes_title()}</h1>
 	{#if session.canEdit}
-		<a class="btn btn-primary" href={resolve('/(app)/essen/rezepte/neu')}>{m.recipes_new()}</a>
+		<a class="btn btn-primary" href={resolve('/(app)/essen/rezepte/neu')} {@attach shortcut('n')}
+			>{m.recipes_new()}</a
+		>
 	{/if}
 </div>
 

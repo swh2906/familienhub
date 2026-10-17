@@ -148,11 +148,7 @@
 	<!-- Termine -->
 	<section class="card events" aria-labelledby="today-events">
 		<!-- eslint-disable svelte/no-navigation-without-resolve -- calendarToday nutzt resolve() -->
-		<a
-			class="card-head"
-			href={calendarToday}
-			aria-label={m.today_open_area({ area: m.cal_title() })}
-		>
+		<a class="card-head" href={calendarToday}>
 			<span class="icon calendar"><Icon name="calendar" size={20} /></span>
 			<h2 id="today-events">{m.today_events()}</h2>
 			<span class="arrow" aria-hidden="true">›</span>
@@ -208,11 +204,7 @@
 
 	<!-- Essen -->
 	<section class="card" aria-labelledby="today-meals">
-		<a
-			class="card-head"
-			href={resolve('/(app)/essen/wochenplan')}
-			aria-label={m.today_open_area({ area: m.plan_title() })}
-		>
+		<a class="card-head" href={resolve('/(app)/essen/wochenplan')}>
 			<span class="icon meals"><Icon name="meals" size={20} /></span>
 			<h2 id="today-meals">{m.today_meals()}</h2>
 			<span class="arrow" aria-hidden="true">›</span>
@@ -260,11 +252,7 @@
 
 	<!-- Einkauf -->
 	<section class="card" aria-labelledby="today-shopping">
-		<a
-			class="card-head"
-			href={resolve('/(app)/einkauf')}
-			aria-label={m.today_open_area({ area: m.shopping_title() })}
-		>
+		<a class="card-head" href={resolve('/(app)/einkauf')}>
 			<span class="icon shopping"><Icon name="shopping" size={20} /></span>
 			<h2 id="today-shopping">{m.today_shopping()}</h2>
 			{#if openItems.length > 0}<span class="count"
@@ -297,7 +285,7 @@
 							quantity={formatQuantity(item)}
 							category={item.category}
 							label={m.shopping_tile_buy({
-								name: [formatQuantity(item), item.name].filter(Boolean).join(' ')
+								name: [item.name, formatQuantity(item)].filter(Boolean).join(' ')
 							})}
 							onactivate={() => toggleItem(item, membership)}
 						/>
@@ -312,11 +300,7 @@
 
 	<!-- Aufgaben -->
 	<section class="card" aria-labelledby="today-tasks">
-		<a
-			class="card-head"
-			href={resolve('/(app)/aufgaben')}
-			aria-label={m.today_open_area({ area: m.tasks_title() })}
-		>
+		<a class="card-head" href={resolve('/(app)/aufgaben')}>
 			<span class="icon tasks"><Icon name="tasks" size={20} /></span>
 			<h2 id="today-tasks">{m.today_tasks()}</h2>
 			<span class="arrow" aria-hidden="true">›</span>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shortcut } from '#lib/ui/shortcut.js';
 	// Einkaufsliste im Bring-Stil: Kacheln nach Kategorien, Antippen = gekauft,
 	// „Zuletzt gekauft“ zum schnellen Wiederhinzufügen, Vorschläge beim Tippen.
 	import { session } from '#lib/auth/session.svelte.js';
@@ -57,7 +58,8 @@
 	function tileLabel(item: ShoppingItem, action: (args: { name: string }) => string): string {
 		const quantity = formatQuantity(item);
 		const adder = adderOf(item);
-		const name = [quantity, item.name].filter(Boolean).join(' ');
+		// Reihenfolge wie auf der Kachel (Name, dann Menge), damit der Name zum sichtbaren Text passt.
+		const name = [item.name, quantity].filter(Boolean).join(' ');
 		return [action({ name }), adder ? m.shopping_tile_added_by({ person: adder.name }) : '']
 			.filter(Boolean)
 			.join(', ');
@@ -146,6 +148,7 @@
 		<label class="visually-hidden" for="quick-add">{m.shopping_quick_label()}</label>
 		<input
 			id="quick-add"
+			{@attach shortcut('n')}
 			bind:this={queryInput}
 			bind:value={query}
 			type="search"

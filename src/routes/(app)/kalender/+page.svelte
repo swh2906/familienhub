@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shortcut } from '#lib/ui/shortcut.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -124,6 +125,7 @@
 		<button
 			class="btn btn-primary new"
 			type="button"
+			{@attach shortcut('n')}
 			onclick={() => create(view === 'monat' ? date : today)}
 		>
 			<Icon name="plus" size={20} />

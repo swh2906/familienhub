@@ -7,17 +7,30 @@ export function timeRange(o: Occurrence): string {
 	return o.allDay ? m.cal_all_day() : `${o.startTime}–${o.endTime}`;
 }
 
-/** „Zahnarzt, 16:00–16:45, Mia, Überschneidung“ */
+/**
+ * Vorlesbare Beschriftung. Beginnt mit dem, was in der jeweiligen Ansicht sichtbar zuerst steht
+ * (WCAG 2.5.3, Sprachsteuerung): 'title' = „Zahnarzt, 16:00–16:45, …“ (Woche/Tag),
+ * 'range' = „16:00–16:45, Zahnarzt, …“ (Liste), 'start' = „16:00 Zahnarzt, bis 16:45, …“ (Monat).
+ * Danach Ort, Personen und ggf. „Überschneidung“.
+ */
 export function describeOccurrence(
 	o: Occurrence,
 	members: ReadonlyMap<string, Membership>,
-	conflict: boolean
+	conflict: boolean,
+	lead: 'title' | 'range' | 'start' = 'title'
 ): string {
 	const people = (o.event.participants ?? [])
 		.map((id) => members.get(id)?.display_name)
 		.filter(Boolean)
 		.join(', ');
-	return [o.event.title, timeRange(o), o.event.location, people, conflict ? m.cal_conflict() : '']
+	const title = o.event.title;
+	const head =
+		lead === 'range'
+			? [timeRange(o), title]
+			: lead === 'start' && !o.allDay
+				? [`${o.startTime} ${title}`, m.cal_until({ time: o.endTime })]
+				: [title, timeRange(o)];
+	return [...head, o.event.location, people, conflict ? m.cal_conflict() : '']
 		.filter(Boolean)
 		.join(', ');
 }

@@ -18,7 +18,7 @@ Vollständiges Konzept (Architektur, Datenmodell, Sitemap): https://claude.ai/co
 | Frontend | SvelteKit (Svelte 5) + TypeScript (strict), reine SPA (`adapter-static`, `ssr = false`), als PWA |
 | Sync-Dienst / Backend | PocketBase (Go-Binary, SQLite): API, Auth, Rechte-Regeln, Realtime (SSE), liefert die gebaute App aus `pb_public` aus |
 | Lokale Daten | Dexie (IndexedDB) |
-| PWA | vite-plugin-pwa (SvelteKit-Integration) |
+| PWA | Eingebauter SvelteKit-Service-Worker (`src/service-worker/`) + statisches Manifest; vite-plugin-pwa unterstützt SvelteKit 3 nicht |
 | i18n | Paraglide JS, Deutsch Standard |
 | Styling | Eigenes CSS mit Custom Properties (Hell/Dunkel, Mitgliedsfarben). Bits UI nur für barrierearme Dialoge/Menüs |
 | Wiederholungen | rrule (RFC 5545) |
@@ -99,9 +99,9 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 5. Einkaufsliste ✓
 6. Aufgaben ✓
 7. Kalender ✓
-8. Essensplan und Rezepte
-9. **Heute-Ansicht** ← aktueller Schritt
-10. Feinschliff, Offline-Tests, Deployment, Backups
+8. Essensplan und Rezepte ✓
+9. Heute-Ansicht ✓
+10. **Feinschliff, Offline-Tests, Deployment, Backups** ← aktueller Schritt (10a App-Qualität, 10b Datenschutz, 10c Betrieb)
 
 Details, Aufgaben und Abnahmekriterien pro Schritt stehen in **PLAN.md**. Dort Checkboxen abhaken, sobald etwas erledigt ist.
 

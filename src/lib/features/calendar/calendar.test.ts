@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { CalendarEvent } from '#lib/db/types.js';
+import type { CalendarEvent, Membership } from '#lib/db/types.js';
 import { conflictsWith, findConflicts, layoutColumns, matchesFilter } from './conflicts.js';
 import { expandEvents, onDay } from './expand.js';
+import { describeOccurrence } from './label.js';
 import { daysFor, parseView, shiftDate } from './range.js';
 import { dateToAllDay, offsetMinutes, toUtcString, utcToZoned, zonedToUtc } from './tz.js';
 
@@ -228,5 +229,23 @@ describe('Konflikte', () => {
 		expect(matchesFilter(tomOnly, new Set([mia]))).toBe(false);
 		expect(matchesFilter(family, new Set([mia]))).toBe(true);
 		expect(matchesFilter(tomOnly, new Set())).toBe(true);
+	});
+});
+
+describe('describeOccurrence', () => {
+	const members = new Map([['m1', { id: 'm1', display_name: 'Mia' } as Membership]]);
+	const [o] = expandEvents(
+		[event('e1', 'Zahnarzt', '2026-10-20 16:00', '2026-10-20 16:45', { participants: ['m1'] })],
+		'2026-10-20',
+		'2026-10-20',
+		BERLIN
+	);
+
+	it('beginnt mit dem, was die Ansicht zuerst zeigt', () => {
+		expect(describeOccurrence(o, members, false)).toBe('Zahnarzt, 16:00–16:45, Mia');
+		expect(describeOccurrence(o, members, true, 'range')).toBe(
+			'16:00–16:45, Zahnarzt, Mia, Überschneidung'
+		);
+		expect(describeOccurrence(o, members, false, 'start')).toBe('16:00 Zahnarzt, bis 16:45, Mia');
 	});
 });

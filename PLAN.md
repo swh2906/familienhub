@@ -249,10 +249,16 @@ Umsetzungsnotizen:
 
 ## Schritt 9 – Heute-Ansicht
 
-- [ ] Startseite mit vier Karten: Termine heute (Uhrzeit, Personenfarbe), Mahlzeiten heute, Zahl offener Einkäufe mit Schnell-Eingabe, offene Aufgaben (eigene zuerst).
-- [ ] Desktop: Karten im Raster. Leere Zustände mit einem Satz und einem Knopf.
-- [ ] Jede Karte führt per Tipp in ihren Bereich.
-- [ ] E2E: Heute zeigt Daten aus allen vier Bereichen.
+- [x] Startseite mit vier Karten: Termine heute (Uhrzeit, Personenfarbe), Mahlzeiten heute, Zahl offener Einkäufe mit Schnell-Eingabe, offene Aufgaben (eigene zuerst).
+- [x] Desktop: Karten im Raster. Leere Zustände mit einem Satz und einem Knopf.
+- [x] Jede Karte führt per Tipp in ihren Bereich.
+- [x] E2E: Heute zeigt Daten aus allen vier Bereichen.
+
+Umsetzungsnotizen:
+- Begrüßung nach Tageszeit, Datum; Termine: nächster hervorgehoben, vergangene abgeschwächt, Konflikte markiert, Ausblick „Morgen: N Termine“.
+- Einkauf: Schnell-Eingabe und bis zu 6 Kacheln (Antippen = gekauft); Aufgaben: heute fällige und überfällige, eigene zuerst, höchstens 5, direkt abhaken mit Rückgängig.
+- Kartenkopf ist der Link in den Bereich; Knöpfe in leeren Zuständen haben eigene, handlungsorientierte Namen (keine doppelten Linknamen).
+- Daten live aus den bestehenden Modulen (keine doppelte Logik).
 
 **Fertig, wenn:** Ein Blick am Morgen genügt, ohne in andere Bereiche zu wechseln.
 

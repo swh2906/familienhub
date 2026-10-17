@@ -30,7 +30,8 @@
 		"sync-check": "node scripts/claude-tools.ts sync-check",
 		"clean": "node scripts/claude-tools.ts clean",
 		"index": "node scripts/claude-tools.ts index",
-		"icons": "node scripts/icons.ts"
+		"icons": "node scripts/icons.ts",
+		"docker:smoke": "node scripts/docker-smoke.ts"
 	},
 	"dependencies": {
 		"dexie": "^4.4.6",

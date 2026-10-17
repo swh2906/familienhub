@@ -60,6 +60,7 @@ Beim ersten Start zeigt PocketBase in der Konsole einen Link zum Anlegen des Adm
 | `pnpm test:e2e`         | E2E-Tests (Playwright, Handy + Desktop, eigenes PocketBase auf Port 8091) |
 | `pnpm pb:download`      | PocketBase herunterladen (`--force` lädt neu)                             |
 | `pnpm seed`             | Demo-Familie anlegen (PocketBase muss laufen)                             |
+| `pnpm docker:smoke`     | Docker-Image bauen und mit 128 MB RAM testen (Docker nötig)               |
 | `pnpm icons`            | App-Icons (PNG) in `static/icons/` neu erzeugen                           |
 
 Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketbase serve` und dann http://127.0.0.1:8090 öffnen.
@@ -145,6 +146,9 @@ flowchart LR
 │  ├─ bin/                heruntergeladene PocketBase (nicht im Git)
 │  ├─ pb_data/            Datenbank (nicht im Git)
 │  └─ pb_public/          gebaute App (nicht im Git)
+├─ Dockerfile             Image für den Server (PocketBase + App)
+├─ deploy/zimaos/         Compose-Datei für ZimaOS (mit Tailscale für HTTPS)
+├─ .github/workflows/     baut das Docker-Image bei jedem Merge auf main
 ├─ scripts/               Hilfsskripte in TypeScript (laufen direkt mit Node 24)
 ├─ tests/e2e/             Playwright-Tests
 ├─ tests/integration/     Rechte-Tests gegen echtes PocketBase (Vitest)
@@ -170,3 +174,38 @@ Hinweis: Paraglide lädt seine Plugins beim Kompilieren einmalig von jsdelivr (s
 1. Changelog lesen: https://github.com/pocketbase/pocketbase/releases
 2. Neue Version in `pocketbase/VERSION` eintragen.
 3. `pnpm pb:download` ausführen und alle Tests laufen lassen.
+4. Nach dem Merge baut GitHub ein neues Docker-Image; auf dem Server die App aktualisieren (siehe unten).
+
+## Betrieb auf ZimaOS
+
+Die App läuft als ZimaOS-App aus zwei Containern (zusammen ca. 50 MB RAM):
+
+- **familienhub**: PocketBase mit der gebauten App, Image `ghcr.io/swh2906/familienhub:latest` (x86 und ARM, gebaut von `.github/workflows/docker.yml` bei jedem Merge auf `main`).
+- **tailscale**: macht die App per HTTPS unter `https://familienhub.<euer-tailnet>.ts.net` erreichbar. HTTPS ist nötig, damit sich die App installieren lässt und offline startet. Am Router muss nichts freigegeben werden.
+
+Ohne Tailscale ist die App im Heimnetz unter `http://<zima-ip>:8090` erreichbar, aber nur im Browser (ohne Installation und Offline-Start).
+
+### Einmalig einrichten
+
+1. **Image öffentlich machen** (nur beim allerersten Mal): GitHub → Profil → Packages → `familienhub` → Package settings → „Change visibility“ → Public. Das Image enthält nur den App-Code, keine Daten oder Zugangsdaten.
+2. **Tailscale vorbereiten**: Konto unter https://login.tailscale.com anlegen. Unter DNS „MagicDNS“ und „HTTPS Certificates“ aktivieren. Unter Settings → Keys einen Auth-Key erzeugen („Pre-approved“ an, „Reusable“ aus).
+3. **App installieren**: ZimaOS → App-Store → „+“ → „Benutzerdefinierte App installieren“ → „Importieren“ → Inhalt von `deploy/zimaos/docker-compose.yml` einfügen, `tskey-auth-HIER-EINTRAGEN` durch den Auth-Key ersetzen, installieren.
+4. **Admin-Konto für PocketBase anlegen**: im ZimaOS-Terminal (oder per SSH)
+   `docker exec familienhub /pb/pocketbase superuser upsert eure@email.de EIN-LANGES-PASSWORT --dir /pb/pb_data`
+   Die Admin-Oberfläche liegt unter `https://familienhub.<tailnet>.ts.net/_/` bzw. `http://<zima-ip>:8090/_/`.
+5. **Geräte einbinden**: Auf jedem Familiengerät die Tailscale-App installieren und im selben Tailnet anmelden (Kinder-Geräte: Familienmitglied einladen oder mit dem eigenen Konto anmelden). Dann die Adresse im Browser öffnen, registrieren bzw. einladen und „Zum Startbildschirm hinzufügen“ bzw. „App installieren“.
+
+### Aktualisieren
+
+ZimaOS → App `familienhub` → „Aktualisieren“ (oder `docker compose pull && docker compose up -d`). Migrationen laufen beim Start automatisch. Vorher in der Admin-Oberfläche ein Backup erstellen.
+
+### Backups
+
+- PocketBase erstellt täglich um 4 Uhr ein Backup (ZIP der Datenbank), die letzten 14 bleiben in `/DATA/AppData/familienhub/pb_data/backups`.
+- Von Hand: Admin-Oberfläche → Settings → Backups → „Initialize new backup“; dort lässt sich jedes Backup auch herunterladen.
+- **Zurückspielen**: Admin-Oberfläche → Settings → Backups → beim gewünschten Backup „Restore“. PocketBase startet danach neu. Einmal testweise durchspielen, z. B. direkt nach der Einrichtung.
+- Eine Kopie außer Haus (z. B. verschlüsselt auf eine USB-Platte) ist für später geplant; bis dahin gelegentlich ein Backup herunterladen.
+
+### Testlauf vor einem Release
+
+`pnpm docker:smoke` baut das Image lokal, startet es mit 128 MB RAM und prüft App, API, Migrationen und dass Daten einen Neustart überstehen.

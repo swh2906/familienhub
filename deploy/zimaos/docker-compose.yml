@@ -1,0 +1,80 @@
+# FamilienHub für ZimaOS: App-Store → „+“ → „Benutzerdefinierte App installieren“ → „Importieren“,
+# diese Datei einfügen, TS_AUTHKEY eintragen, installieren. Anleitung: README → „Betrieb auf ZimaOS“.
+#
+# - familienhub: PocketBase mit der App (ca. 20 MB RAM). Daten unter /DATA/AppData/familienhub.
+# - tailscale:   stellt die App per HTTPS unter https://familienhub.<euer-tailnet>.ts.net bereit
+#                (nötig für Installation als App und Offline-Start). Kein Port am Router nötig.
+# Ohne Tailscale ist die App im Heimnetz unter http://<zima-ip>:8090 erreichbar (ohne Offline-Start).
+name: familienhub
+
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: familienhub-tailscale
+    hostname: familienhub
+    restart: unless-stopped
+    environment:
+      # Auth-Key aus https://login.tailscale.com/admin/settings/keys (wiederverwendbar aus,
+      # „Pre-approved“ an). Nach der ersten Anmeldung wird er nicht mehr gebraucht.
+      TS_AUTHKEY: 'tskey-auth-HIER-EINTRAGEN'
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - /DATA/AppData/familienhub/tailscale:/var/lib/tailscale
+    configs:
+      - source: serve
+        target: /config/serve.json
+    ports:
+      # Heimnetz ohne Tailscale (und PocketBase-Admin unter /_/).
+      - '8090:8090'
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  familienhub:
+    image: ghcr.io/swh2906/familienhub:latest
+    container_name: familienhub
+    restart: unless-stopped
+    # Teilt das Netz mit Tailscale, damit HTTPS-Anfragen auf 127.0.0.1:8090 ankommen.
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    environment:
+      TZ: Europe/Berlin
+    volumes:
+      - /DATA/AppData/familienhub/pb_data:/pb/pb_data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+configs:
+  serve:
+    # HTTPS auf Port 443 → PocketBase. ${TS_CERT_DOMAIN} setzt Tailscale selbst ein ($$ = wörtliches $).
+    content: |
+      {
+        "TCP": { "443": { "HTTPS": true } },
+        "Web": {
+          "$${TS_CERT_DOMAIN}:443": {
+            "Handlers": { "/": { "Proxy": "http://127.0.0.1:8090" } }
+          }
+        },
+        "AllowFunnel": { "$${TS_CERT_DOMAIN}:443": false }
+      }
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: familienhub
+  category: Utilities
+  port_map: '8090'
+  scheme: http
+  index: /
+  title:
+    en_us: FamilienHub
+  tagline:
+    en_us: Essensplan, Einkauf, Kalender und Aufgaben
+  description:
+    en_us: Familien-App mit Offline-Betrieb und Live-Abgleich zwischen allen Geräten.

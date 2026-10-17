@@ -275,12 +275,9 @@ In drei PRs: **10a** App-Qualität (PWA, Offline, Barrierefreiheit), **10b** Dat
 - [x] Barrierefreiheit: axe-Prüfung aller Seiten in Hell und Dunkel, Tastaturbedienung, Fokus sichtbar, Kurzbefehl N für „Neu“.
 - [x] Datenschutz: Datenexport als JSON, Konto löschen (Einträge zeigen dann „Ehemaliges Mitglied“), Familienraum löschen. Geräte ohne Zugriff (Familienraum gelöscht, Mitglied entfernt) verwerfen ihre lokalen Daten.
 - [x] Aufräum-Job (PocketBase-Cron, täglich 3:30 Uhr): Einträge mit `deleted_at` älter als 30 Tage endgültig löschen (Mitgliedschaften bleiben); die Apps räumen lokal ebenso auf.
-- [ ] Deployment:
-  - `Dockerfile` (PocketBase plus gebaute App in `pb_public`) und `docker-compose.yml` mit Volume für `pb_data`.
-  - Alternative ohne Docker: Anleitung für einen systemd-Dienst (z. B. Raspberry Pi).
-  - Beispiel-`Caddyfile` für HTTPS auf einem VPS, Hinweis zu Tailscale für Geräte zu Hause.
-- [ ] Backups: tägliches PocketBase-Backup per Zeitplan, Anleitung für eine verschlüsselte Kopie außer Haus.
-- [ ] README-Abschnitt „Betrieb“: Installieren, Aktualisieren, Backup zurückspielen.
+- [x] Deployment auf ZimaOS (Mini-PC): `Dockerfile` (PocketBase + App, x86/ARM), Image per GitHub Action nach `ghcr.io`, `deploy/zimaos/docker-compose.yml` mit Tailscale-Beiwagen für HTTPS im Heimnetz, Daten unter `/DATA/AppData/familienhub`.
+- [x] Backups: täglich 4 Uhr per PocketBase (letzte 14), Zurückspielen über die Admin-Oberfläche. Kopie außer Haus: später.
+- [x] README-Abschnitt „Betrieb auf ZimaOS“: Einrichten, Aktualisieren, Backup zurückspielen; `pnpm docker:smoke` als Testlauf.
 
 **Fertig, wenn:**
 - Die App läuft auf dem Zielserver per HTTPS und ist auf Handy, Tablet und Desktop installiert.

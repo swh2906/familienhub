@@ -146,6 +146,15 @@ describe('Repository', () => {
 		expect(remote.records.get(`shopping_items/${item.id}`)?.deleted_at).not.toBe('');
 	});
 
+	it('speichert auch Svelte-Zustand (Proxy-Listen), den IndexedDB sonst ablehnt', async () => {
+		const tasks = new Repository(db, 'tasks');
+		const assignees = new Proxy(['m1', 'm2'], {});
+		const task = await tasks.create({ household: HOUSEHOLD, title: 'Müll', assignees });
+		expect((await tasks.get(task.id))?.assignees).toEqual(['m1', 'm2']);
+		await tasks.update(task.id, { assignees: new Proxy(['m3'], {}) });
+		expect((await tasks.get(task.id))?.assignees).toEqual(['m3']);
+	});
+
 	it('Server-Felder lassen sich nicht setzen', async () => {
 		const item = await items.create({ household: HOUSEHOLD, name: 'Milch' });
 		await engine.push();

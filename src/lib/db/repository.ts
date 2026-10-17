@@ -24,9 +24,17 @@ function notifyChange(): void {
 	localChanges.dispatchEvent(new Event('change'));
 }
 
+/**
+ * Einfache Kopie der Daten. Svelte-Zustand (z. B. eine Liste aus `$state`) ist ein Proxy, den
+ * IndexedDB nicht speichern kann; alle Felder sind JSON-kompatibel, daher genügt dieser Weg.
+ */
+function plain<T>(data: T): T {
+	return JSON.parse(JSON.stringify(data)) as T;
+}
+
 /** Entfernt Server-Felder und die ID aus den zu sendenden Feldern. */
 function editableFields(data: Record<string, unknown>): Record<string, unknown> {
-	const fields = { ...data };
+	const fields = plain(data);
 	delete fields.id;
 	for (const key of SERVER_FIELDS) delete fields[key];
 	return fields;
@@ -80,7 +88,7 @@ export class Repository<N extends CollectionName> {
 	async create(data: Editable<N> & { id?: string }): Promise<CollectionTypes[N]> {
 		const id = data.id ?? newId();
 		const base: BaseRecord = { id, created: '', updated: '', updated_by: '', deleted_at: '' };
-		const record = { ...base, ...data, id } as CollectionTypes[N];
+		const record = { ...base, ...plain(data), id } as CollectionTypes[N];
 		const fields = { ...editableFields(data), id };
 
 		await this.db.transaction('rw', this.table, this.db.outbox, async () => {

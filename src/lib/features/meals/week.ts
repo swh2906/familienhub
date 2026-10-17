@@ -94,6 +94,18 @@ export function formatShortDate(value: string): string {
 	return date ? shortFormat.format(date) : value;
 }
 
+const compactFormat = new Intl.DateTimeFormat('de-DE', {
+	weekday: 'short',
+	day: 'numeric',
+	month: 'short'
+});
+
+/** „Fr., 23. Okt.“ */
+export function formatCompactDay(value: string): string {
+	const date = fromDateString(value);
+	return date ? compactFormat.format(date) : value;
+}
+
 /** „13. Okt. – 19. Okt.“ */
 export function formatWeekRange(monday: Date): string {
 	return `${shortFormat.format(monday)} – ${shortFormat.format(addDays(monday, 6))}`;

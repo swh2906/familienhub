@@ -96,8 +96,8 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 2. Datenmodell als Migrationen + Rechte-Regeln mit Tests ✓
 3. Anmeldung und Familienraum ✓
 4. Sync-Grundgerüst ✓ – danach vorgezogen: Schritt 8 Rezepte und Wochenplan ✓
-5. **Einkaufsliste** ← aktueller Schritt
-6. Aufgaben
+5. Einkaufsliste ✓
+6. **Aufgaben** ← aktueller Schritt
 7. Kalender
 8. Essensplan und Rezepte
 9. Heute-Ansicht

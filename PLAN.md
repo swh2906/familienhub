@@ -185,11 +185,20 @@ Umsetzungsnotizen:
 
 **Abhängigkeiten:** `rrule`.
 
-- [ ] Reiter: Meine, Alle, Erledigt. Eigene oben, überfällige markiert.
-- [ ] Editor: Titel, Notiz, Zuständige (Mehrfachauswahl), Fälligkeit, Wiederholung als einfache Vorlagen (täglich, wöchentlich an Tagen X, monatlich), intern als RRULE gespeichert.
-- [ ] Abhaken: Eintrag in `task_completions`. Bei Wiederholung springt `due_date` auf das nächste Datum, sonst Status `done`.
-- [ ] Rechte für Kinder wie in CLAUDE.md, Oberfläche passend.
-- [ ] Tests: Berechnung des nächsten Fälligkeitsdatums inklusive Monatsende und Zeitumstellung. E2E: anlegen, zuweisen, abhaken.
+- [x] Reiter: Meine, Alle, Erledigt. Eigene oben, überfällige markiert.
+- [x] Editor: Titel, Notiz, Zuständige (Mehrfachauswahl), Fälligkeit, Wiederholung als einfache Vorlagen (täglich, wöchentlich an Tagen X, monatlich), intern als RRULE gespeichert.
+- [x] Abhaken: Eintrag in `task_completions`. Bei Wiederholung springt `due_date` auf das nächste Datum, sonst Status `done`.
+- [x] Rechte für Kinder wie in CLAUDE.md, Oberfläche passend.
+- [x] Tests: Berechnung des nächsten Fälligkeitsdatums inklusive Monatsende und Zeitumstellung. E2E: anlegen, zuweisen, abhaken.
+
+Umsetzungsnotizen:
+- „Meine“ = mir zugewiesen oder niemandem zugewiesen. Vorlagen: keine, täglich, wöchentlich an Tagen, alle 2 Wochen, monatlich am Tag X; unbekannte RRULEs bleiben als „eigene Regel“ erhalten.
+- Nächstes Datum = erstes Vorkommen nach dem späteren von Fälligkeit und heute (früh erledigt → übernächstes Mal, überfällig → nächstes kommendes). Rhythmus bleibt am Fälligkeitsdatum verankert; Rechnung in UTC-Kalendertagen.
+- „Monatlich am 31.“ = `BYMONTHDAY=28,29,30,31;BYSETPOS=-1` (letzter vorhandener Tag ≤ 31).
+- Migration `1792500001`: Kinder dürfen `due_date` nur bei wiederkehrenden Aufgaben (rrule gesetzt) weiterrücken.
+- Abhaken und Löschen mit „Rückgängig“; „Erledigt“ zeigt wer und wann, einmalige Aufgaben lassen sich wieder öffnen.
+- Repository wandelt zu speichernde Daten in einfache Objekte um (Svelte-Zustand als Proxy kann IndexedDB nicht speichern).
+- Später (Phase 2): Punkte/Belohnungen über `points`.
 
 **Fertig, wenn:** Wiederkehrende Aufgaben rücken nach dem Abhaken korrekt weiter (getestet).
 

@@ -15,6 +15,10 @@ async function openRecipes(page: Page) {
 		.getByRole('navigation', { name: 'Hauptnavigation' })
 		.getByRole('link', { name: 'Essen' })
 		.click();
+	await page
+		.getByRole('navigation', { name: 'Bereiche im Essen' })
+		.getByRole('link', { name: 'Rezepte' })
+		.click();
 	await expect(page.getByRole('heading', { level: 1, name: 'Rezepte' })).toBeVisible();
 }
 

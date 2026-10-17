@@ -119,12 +119,31 @@ async function main(): Promise<void> {
 		tags: ['schnell', 'Kinder']
 	});
 
-	const dinner = await adult.pb
+	const dinner = await adult.pb.collection('meal_plan_entries').create({
+		household: h,
+		date: day(),
+		slot: 'dinner',
+		title: 'Gemüse-Lasagne',
+		recipe: lasagne.id,
+		servings: 4
+	});
+	await admin.pb.collection('meal_plan_entries').create({
+		household: h,
+		date: day(1),
+		slot: 'lunch',
+		title: 'Pfannkuchen',
+		recipe: pancakes.id
+	});
+	await admin.pb.collection('meal_plan_entries').create({
+		household: h,
+		date: day(1),
+		slot: 'dinner',
+		title: 'Linsen-Dal',
+		recipe_url: 'https://rezepte.example.de/linsen-dal'
+	});
+	await adult.pb
 		.collection('meal_plan_entries')
-		.create({ household: h, date: day(), slot: 'dinner', recipe: lasagne.id, servings: 4 });
-	await admin.pb
-		.collection('meal_plan_entries')
-		.create({ household: h, date: day(1), slot: 'lunch', recipe: pancakes.id });
+		.create({ household: h, date: day(2), slot: 'breakfast', title: 'Müsli mit Obst' });
 
 	await adult.pb.collection('shopping_items').create({
 		household: h,

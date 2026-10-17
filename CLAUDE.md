@@ -54,7 +54,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | `invites` | `token_hash`, `code_hash`, `role`, `expires_at`, `uses_left`, `revoked` | `households`, `memberships` |
 | `recipes` | `title`, `servings`, `instructions`, `tags[]`, `is_favorite` | `households` |
 | `recipe_ingredients` | `name`, `amount`, `unit`, `category`, `sort` | `recipes` |
-| `meal_plan_entries` | `date`, `slot` (breakfast, lunch, dinner), `note`, `servings` | `households`, `recipes` (optional) |
+| `meal_plan_entries` | `date`, `slot` (breakfast, lunch, dinner), `title`, `recipe_url`, `note`, `servings` | `households`, `recipes` (optional) |
 | `shopping_items` | `name`, `amount`, `unit`, `category`, `checked`, `checked_at` | `households`, `memberships` (added_by, checked_by), `meal_plan_entries` (optional) |
 | `events` | `title`, `start`, `end`, `all_day`, `location`, `rrule`, `exdates[]`, `reminder_minutes` | `households`, `memberships` (participants) |
 | `tasks` | `title`, `notes`, `due_date`, `status`, `rrule`, `points` | `households`, `memberships` (assignees) |

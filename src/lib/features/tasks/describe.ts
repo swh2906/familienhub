@@ -29,6 +29,8 @@ export function describeRrule(rrule: string): string {
 		}
 		case 'monthly':
 			return m.repeat_desc_monthly({ day: preset.day });
+		case 'yearly':
+			return m.repeat_desc_yearly();
 		case 'custom':
 			return m.repeat_desc_custom();
 	}

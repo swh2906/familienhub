@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Task, TaskCompletion } from '#lib/db/types.js';
 import { canComplete, dueKind, isOverdue, recentCompletions, tasksForTab } from './list.js';
-import { nextDueDate, presetToRrule, rruleToPreset, type Preset } from './recurrence.js';
+import {
+	nextDueDate,
+	presetToRrule,
+	rruleToPreset,
+	shiftRrule,
+	type Preset
+} from './recurrence.js';
 
 const base = { created: '', updated: '', updated_by: '', deleted_at: '' };
 
@@ -40,6 +46,17 @@ describe('Vorlagen ↔ RRULE', () => {
 		const expected =
 			preset.kind === 'weekly' ? { ...preset, days: [...preset.days].sort() } : preset;
 		expect(rruleToPreset(rrule)).toEqual(expected);
+	});
+
+	it('verschiebt Wochentage und Monatstag mit der Serie', () => {
+		expect(shiftRrule('FREQ=WEEKLY;BYDAY=MO,TH', 1)).toBe('FREQ=WEEKLY;BYDAY=TU,FR');
+		expect(shiftRrule('FREQ=WEEKLY;BYDAY=SU', 1)).toBe('FREQ=WEEKLY;BYDAY=MO');
+		expect(shiftRrule('FREQ=WEEKLY;INTERVAL=2;BYDAY=MO', -1)).toBe(
+			'FREQ=WEEKLY;INTERVAL=2;BYDAY=SU'
+		);
+		expect(shiftRrule('FREQ=MONTHLY;BYMONTHDAY=15', 2)).toBe('FREQ=MONTHLY;BYMONTHDAY=17');
+		expect(shiftRrule('FREQ=DAILY', 3)).toBe('FREQ=DAILY');
+		expect(shiftRrule('FREQ=WEEKLY;BYDAY=MO', 0)).toBe('FREQ=WEEKLY;BYDAY=MO');
 	});
 
 	it('unbekannte Regeln bleiben als „custom“ erhalten', () => {

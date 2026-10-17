@@ -1,4 +1,5 @@
-// Wiederholungen von Aufgaben: einfache Vorlagen ↔ RRULE (RFC 5545) und das nächste Fälligkeitsdatum.
+// Wiederholungen (Aufgaben und Kalender): einfache Vorlagen ↔ RRULE (RFC 5545) und das nächste
+// Fälligkeitsdatum von Aufgaben.
 // Gerechnet wird mit Kalendertagen in UTC, damit die Zeitumstellung keinen Tag verschiebt.
 import { RRule } from 'rrule';
 
@@ -10,6 +11,7 @@ export type Preset =
 	| { kind: 'daily' }
 	| { kind: 'weekly'; days: number[]; interval: 1 | 2 }
 	| { kind: 'monthly'; day: number }
+	| { kind: 'yearly' }
 	| { kind: 'custom'; rrule: string };
 
 /** Vorlage → RRULE (ohne „RRULE:“-Präfix); leer bei „keine Wiederholung“. */
@@ -31,6 +33,8 @@ export function presetToRrule(preset: Preset): string {
 			const candidates = Array.from({ length: day - 27 }, (_, i) => 28 + i);
 			return `FREQ=MONTHLY;BYMONTHDAY=${candidates.join(',')};BYSETPOS=-1`;
 		}
+		case 'yearly':
+			return 'FREQ=YEARLY';
 		case 'custom':
 			return preset.rrule;
 	}
@@ -54,6 +58,7 @@ export function rruleToPreset(rrule: string): Preset {
 	const known = (keys: string[]) => [...p.keys()].every((k) => keys.includes(k));
 
 	if (freq === 'DAILY' && interval === 1 && known(['FREQ'])) return { kind: 'daily' };
+	if (freq === 'YEARLY' && interval === 1 && known(['FREQ'])) return { kind: 'yearly' };
 
 	if (
 		freq === 'WEEKLY' &&
@@ -84,6 +89,25 @@ export function rruleToPreset(rrule: string): Preset {
 	}
 
 	return { kind: 'custom', rrule };
+}
+
+/**
+ * Regel um `days` Tage verschieben (wenn eine Serie auf einen anderen Tag gelegt wird):
+ * Wochentage wandern mit, ebenso der Monatstag. Täglich/jährlich hängen nur am Startdatum,
+ * eigene Regeln bleiben unverändert.
+ */
+export function shiftRrule(rrule: string, days: number): string {
+	if (!days) return rrule;
+	const preset = rruleToPreset(rrule);
+	if (preset.kind === 'weekly') {
+		const shift = ((days % 7) + 7) % 7;
+		return presetToRrule({ ...preset, days: preset.days.map((d) => (d + shift) % 7) });
+	}
+	if (preset.kind === 'monthly') {
+		const day = preset.day + days;
+		return day >= 1 && day <= 31 ? presetToRrule({ ...preset, day }) : rrule;
+	}
+	return rrule;
 }
 
 function toUtc(date: string): Date {

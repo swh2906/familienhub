@@ -8,7 +8,7 @@
 	import { presetToRrule, rruleToPreset, type Preset } from './recurrence.js';
 	import { saveTask } from './store.js';
 
-	type Mode = 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
+	type Mode = 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly' | 'custom';
 
 	let {
 		open,
@@ -121,7 +121,8 @@
 		{ value: 'daily', label: m.repeat_daily },
 		{ value: 'weekly', label: m.repeat_weekly },
 		{ value: 'biweekly', label: m.repeat_biweekly },
-		{ value: 'monthly', label: m.repeat_monthly }
+		{ value: 'monthly', label: m.repeat_monthly },
+		{ value: 'yearly', label: m.repeat_yearly }
 	];
 </script>
 

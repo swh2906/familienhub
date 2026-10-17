@@ -3,6 +3,8 @@
 // sofort mitgesetzt, damit die Anzeige nicht auf den Abgleich warten muss.
 import { repo } from '#lib/db/index.js';
 import type { Membership, ShoppingItem } from '#lib/db/types.js';
+import { m } from '#lib/paraglide/messages.js';
+import { withFormerMembers } from '#lib/ui/members.js';
 import { suggestCategory } from './categorize.js';
 import type { QuickInput } from './list.js';
 
@@ -11,8 +13,10 @@ export function itemsOf(household: string): Promise<ShoppingItem[]> {
 	return repo('shopping_items').table.where('household').equals(household).toArray();
 }
 
-export function membersOf(household: string): Promise<Membership[]> {
-	return repo('memberships').table.where('household').equals(household).toArray();
+/** Alle Mitglieder inkl. ehemaliger (für die Zuordnung alter Einträge); diese heißen „Ehemaliges Mitglied“. */
+export async function membersOf(household: string): Promise<Membership[]> {
+	const list = await repo('memberships').table.where('household').equals(household).toArray();
+	return withFormerMembers(list, m.member_former());
 }
 
 export async function addItem(

@@ -27,6 +27,16 @@ function asRemoteError(error: unknown): RemoteError {
 	return error instanceof RemoteError ? error : new RemoteError('network', String(error));
 }
 
+/** Wie der Aufräum-Job auf dem Server (pocketbase/pb_hooks/lib/familienhub.js). */
+export const PURGE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** `deleted_at` gesetzt und älter als 30 Tage? Versteht ISO- und PocketBase-Format. */
+export function isOlderTombstone(deletedAt: string | undefined, now: number): boolean {
+	if (!deletedAt) return false;
+	const time = Date.parse(deletedAt.replace(' ', 'T'));
+	return Number.isFinite(time) && time < now - PURGE_AFTER_MS;
+}
+
 export class SyncEngine {
 	constructor(
 		private readonly db: FamilyDb,
@@ -153,6 +163,35 @@ export class SyncEngine {
 				await this.db.meta.put({ key, value: newest });
 			});
 		}
+	}
+
+	/** Ist der Familienraum noch sichtbar? false = gelöscht oder eigene Mitgliedschaft entfernt. */
+	async hasAccess(): Promise<boolean> {
+		return (await this.remote.fetchOne('households', this.household)) !== null;
+	}
+
+	/**
+	 * Entfernt lokal Einträge, die vor mehr als 30 Tagen gelöscht wurden – der Server löscht sie dann
+	 * endgültig und meldet das nicht mehr. Mitgliedschaften bleiben („Ehemaliges Mitglied“),
+	 * ebenso Einträge mit noch nicht gesendeten Änderungen. Gibt die Anzahl zurück.
+	 */
+	async purgeTombstones(now = Date.now()): Promise<number> {
+		let removed = 0;
+		for (const { name } of COLLECTIONS) {
+			if (name === 'memberships' || name === 'households') continue;
+			const table = this.db.collection(name);
+			await this.db.transaction('rw', table, this.db.outbox, async () => {
+				const old = await table
+					.filter((row) => isOlderTombstone(row.deleted_at, now))
+					.primaryKeys();
+				for (const id of old) {
+					if ((await this.pendingFor(name, id).count()) > 0) continue;
+					await table.delete(id);
+					removed += 1;
+				}
+			});
+		}
+		return removed;
 	}
 
 	/** Live-Änderung vom Server übernehmen. */

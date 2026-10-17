@@ -76,6 +76,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 - Kinder: vom Admin angelegt, Login mit Benutzername + Passwort, keine E-Mail.
 - Einladungslink: zufälliges Token, nur Hash gespeichert, 7 Tage gültig, Rolle fest, widerrufbar.
 - Einladungscode: 8 Zeichen, 24 Stunden gültig, Fehlversuche gedrosselt.
+- Mitgliedschaften entstehen nur über eigene Routen (Haushalt, Einladung, Kinderkonto). Konto löschen lässt die Mitgliedschaft ohne Konto und Namen stehen („Ehemaliges Mitglied“); Familienraum löschen nur über `/api/fh/households/delete`.
 
 ## MVP-Umfang
 

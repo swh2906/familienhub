@@ -79,11 +79,16 @@ async function main(): Promise<void> {
 		['adult', adult],
 		['child', child]
 	] as const) {
-		membership[role] = (
-			await admin.pb
-				.collection('memberships')
-				.create({ user: user.id, household: household.id, role })
-		).id;
+		// Wie in der App: Einladung erzeugen und einlösen (direktes Anlegen ist gesperrt).
+		const invite = await admin.pb.send<{ token: string }>('/api/fh/invites', {
+			method: 'POST',
+			body: { household: household.id, role }
+		});
+		const joined = await user.pb.send<{ membership: { id: string } }>('/api/fh/invites/redeem', {
+			method: 'POST',
+			body: { token: invite.token }
+		});
+		membership[role] = joined.membership.id;
 	}
 	for (const role of Object.keys(accounts) as Role[]) {
 		await admin.pb.collection('memberships').update(membership[role], {

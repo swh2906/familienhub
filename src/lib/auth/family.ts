@@ -98,3 +98,25 @@ export async function createChild(data: {
 }): Promise<void> {
 	await getPocketBase().send('/api/fh/children', { method: 'POST', body: data });
 }
+
+/** Hat der Server das Konto-Löschen abgelehnt, weil es der letzte Admin ist? */
+export function isLastAdminError(error: unknown): boolean {
+	if (!(error instanceof ClientResponseError)) return false;
+	const data = (error.response as { data?: { household?: { code?: unknown } } }).data;
+	return data?.household?.code === 'last_admin';
+}
+
+/** Löscht das eigene Konto (Passwort zur Bestätigung) und meldet ab; lokale Daten werden gelöscht. */
+export async function deleteAccount(password: string): Promise<void> {
+	await getPocketBase().send('/api/fh/account/delete', { method: 'POST', body: { password } });
+	await session.logout();
+}
+
+/** Admin: Familienraum mit allen Daten löschen (Name zur Bestätigung). */
+export async function deleteHousehold(household: string, name: string): Promise<void> {
+	await getPocketBase().send('/api/fh/households/delete', {
+		method: 'POST',
+		body: { household, name }
+	});
+	await session.leaveHousehold();
+}

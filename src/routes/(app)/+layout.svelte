@@ -22,6 +22,13 @@
 		return () => void stopSync();
 	});
 
+	// Familienraum gelöscht oder aus der Familie entfernt: lokale Daten verwerfen und weiter zum
+	// nächsten Familienraum bzw. zum Onboarding (die Umleitung übernimmt der Seiten-Schutz).
+	$effect(() => {
+		if (!syncStatus.accessLost) return;
+		void session.leaveHousehold().then(() => goto(home, { replace: true, refreshAll: true }));
+	});
+
 	// Nur im Test-Build für Playwright (VITE_E2E=1); im normalen Build entfällt dieser Code ganz.
 	if (import.meta.env.VITE_E2E === '1') {
 		void import('#lib/testing/e2e-hook.js').then((hook) => hook.install());

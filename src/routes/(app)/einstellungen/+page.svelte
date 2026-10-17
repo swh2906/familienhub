@@ -8,6 +8,7 @@
 	import ChildForm from '#lib/features/household/ChildForm.svelte';
 	import FamilyMembers from '#lib/features/household/FamilyMembers.svelte';
 	import InvitePanel from '#lib/features/household/InvitePanel.svelte';
+	import PrivacySection from '#lib/features/privacy/PrivacySection.svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import { appearance } from '#lib/ui/appearance.svelte.js';
 	import { ACCENTS, type Accent, type ThemePreference } from '#lib/ui/theme.js';
@@ -144,6 +145,11 @@
 			})}
 		</p>
 		<button class="btn logout" type="button" onclick={logout}>{m.logout()}</button>
+	</section>
+
+	<section class="card" aria-labelledby="privacy-heading">
+		<h2 id="privacy-heading">{m.privacy_title()}</h2>
+		<PrivacySection {household} householdName={session.householdName} isAdmin={session.isAdmin} />
 	</section>
 </div>
 

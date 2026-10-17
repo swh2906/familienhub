@@ -29,7 +29,7 @@ function category(page: Page, name: string) {
 
 /** Offene Kachel (Name ohne Menge reicht, die Menge steht vorne im Label). */
 function openTile(page: Page, name: string) {
-	return page.getByRole('button', { name: new RegExp(`${name} als gekauft markieren`) });
+	return page.getByRole('button', { name: new RegExp(`^${name}( [^,]+)? als gekauft markieren`) });
 }
 
 function recentTile(page: Page, name: string) {
@@ -53,7 +53,7 @@ test('zwei Geräte: hinzufügen, kaufen, wieder auf die Liste', async ({ browser
 	await add(a, 'Äpfel');
 	await expect(a.getByLabel('Was braucht ihr?')).toBeFocused();
 	await expect(
-		category(a, 'Kühlregal').getByRole('button', { name: /^2 l Milch als gekauft markieren/ })
+		category(a, 'Kühlregal').getByRole('button', { name: /^Milch 2 l als gekauft markieren/ })
 	).toBeVisible();
 	await expect(category(a, 'Obst & Gemüse').getByText('Äpfel')).toBeVisible();
 	await expect(a.getByText('2 offen')).toBeVisible();
@@ -87,7 +87,7 @@ test('Vorschläge, Bearbeiten-Modus, Kategorie merken, Löschen mit Rückgängig
 		.getByRole('button', { name: 'Milch hinzufügen', exact: true })
 		.click();
 	await expect(
-		page.getByRole('button', { name: /^2 l Milch als gekauft markieren/ })
+		page.getByRole('button', { name: /^Milch 2 l als gekauft markieren/ })
 	).toBeVisible();
 	await expect(page.getByRole('button', { name: /Milch/ })).toHaveCount(1);
 

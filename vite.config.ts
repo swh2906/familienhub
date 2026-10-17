@@ -15,7 +15,10 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			// Reine SPA: alle unbekannten Pfade landen in index.html, das Routing macht der Browser.
-			adapter: adapter({ fallback: 'index.html' })
+			adapter: adapter({ fallback: 'index.html' }),
+			// Absolute Pfade (/_app/…): Der Service Worker liefert dieselbe Hülle für jede Seite aus,
+			// auch für verschachtelte wie /essen/wochenplan. Relative Pfade würden dort ins Leere zeigen.
+			paths: { relative: false }
 		}),
 
 		paraglideVitePlugin({

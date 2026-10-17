@@ -60,6 +60,7 @@ Beim ersten Start zeigt PocketBase in der Konsole einen Link zum Anlegen des Adm
 | `pnpm test:e2e`         | E2E-Tests (Playwright, Handy + Desktop, eigenes PocketBase auf Port 8091) |
 | `pnpm pb:download`      | PocketBase herunterladen (`--force` lädt neu)                             |
 | `pnpm seed`             | Demo-Familie anlegen (PocketBase muss laufen)                             |
+| `pnpm icons`            | App-Icons (PNG) in `static/icons/` neu erzeugen                           |
 
 Nach `pnpm build` liefert PocketBase die App selbst aus: `pocketbase/bin/pocketbase serve` und dann http://127.0.0.1:8090 öffnen.
 
@@ -80,6 +81,14 @@ flowchart LR
 - Konflikte: pro Feld gewinnt die zuletzt beim Server angekommene Änderung.
 - Lehnt der Server eine Änderung ab (z. B. fehlende Rechte), wird sie zurückgesetzt und ein Hinweis angezeigt.
 - Abmelden löscht die lokale Datenbank.
+
+## App installieren (PWA) und Barrierefreiheit
+
+- Die gebaute App ist installierbar (Manifest `static/manifest.webmanifest`, Icons aus `pnpm icons`). Installation und Service Worker brauchen HTTPS (oder `localhost`).
+- Der Service Worker (`src/service-worker/`) speichert beim ersten Besuch die komplette App, danach startet sie auch ohne Netz. Die Daten kommen nie aus diesem Cache, sondern aus der lokalen Datenbank; `/api` und `/_/` gehen immer direkt an PocketBase.
+- Nach einem Update erscheint „Neue Version verfügbar“. Erst „Neu laden“ aktiviert sie, damit keine Eingaben verloren gehen.
+- Tastatur: Der erste Tab-Stopp ist „Zum Inhalt springen“; die Taste **N** startet „Neu“ (Aufgabe, Termin, Rezept, Einkaufsfeld).
+- `pnpm test:e2e` prüft alle Seiten mit axe (WCAG 2.1 AA) in Hell und Dunkel sowie den Offline-Start.
 
 ## Datenmodell und Rechte
 
@@ -112,6 +121,7 @@ flowchart LR
 │  │  ├─ features/        household, shopping, tasks, calendar, meals, today
 │  │  ├─ ui/              gemeinsame Komponenten, Theme (CSS-Variablen Hell/Dunkel, Akzentfarben)
 │  │  └─ paraglide/       generierte Übersetzungsfunktionen (nicht bearbeiten)
+│  ├─ service-worker/   Offline-Cache der App (eigene tsconfig mit WebWorker-Typen)
 │  └─ routes/
 │     ├─ (app)/           mit Navigation, Anmeldung nötig: / (Heute), /essen (/rezepte, /wochenplan), /einkauf, /kalender, /aufgaben, /einstellungen
 │     └─ (auth)/          ohne Navigation: /login, /register, /onboarding, /join/[token]
@@ -127,7 +137,7 @@ flowchart LR
 ├─ scripts/               Hilfsskripte in TypeScript (laufen direkt mit Node 24)
 ├─ tests/e2e/             Playwright-Tests
 ├─ tests/integration/     Rechte-Tests gegen echtes PocketBase (Vitest)
-└─ static/                statische Dateien
+└─ static/                statische Dateien: Manifest, Icons
 ```
 
 ## Texte und Übersetzungen

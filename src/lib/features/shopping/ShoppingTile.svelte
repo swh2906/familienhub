@@ -51,31 +51,35 @@
 	}
 </script>
 
-<button
-	type="button"
-	class="tile {variant}"
-	aria-label={label}
-	onclick={click}
-	onpointerdown={startPress}
-	onpointerup={cancelPress}
-	onpointerleave={cancelPress}
-	onpointercancel={cancelPress}
-	oncontextmenu={(event) => {
-		if (!onlongpress) return;
-		event.preventDefault();
-		cancelPress();
-		onlongpress();
-	}}
->
-	<span class="emoji" aria-hidden="true">{emojiFor(name, category)}</span>
-	<span class="name" aria-hidden="true">{name}</span>
-	{#if quantity}<span class="quantity" aria-hidden="true">{quantity}</span>{/if}
+<div class="wrap">
+	<button
+		type="button"
+		class="tile {variant}"
+		aria-label={label}
+		onclick={click}
+		onpointerdown={startPress}
+		onpointerup={cancelPress}
+		onpointerleave={cancelPress}
+		onpointercancel={cancelPress}
+		oncontextmenu={(event) => {
+			if (!onlongpress) return;
+			event.preventDefault();
+			cancelPress();
+			onlongpress();
+		}}
+	>
+		<span class="emoji" aria-hidden="true">{emojiFor(name, category)}</span>
+		<span class="name" aria-hidden="true">{name}</span>
+		{#if quantity}<span class="quantity" aria-hidden="true">{quantity}</span>{/if}
+	</button>
+	<!-- Neben dem Button: Die Initiale wäre sonst sichtbarer Text, der im Button-Namen fehlt (WCAG 2.5.3).
+	Wer hinzugefügt hat, steht bereits im Namen (label). -->
 	{#if adder}
 		<span class="adder" aria-hidden="true">
 			<MemberAvatar name={adder.name} color={adder.color} size={20} />
 		</span>
 	{/if}
-</button>
+</div>
 
 <style>
 	.tile {
@@ -161,8 +165,13 @@
 		opacity: 0.9;
 	}
 
+	.wrap {
+		position: relative;
+	}
+
 	.adder {
 		position: absolute;
+		pointer-events: none;
 		top: 5px;
 		right: 5px;
 		display: inline-flex;

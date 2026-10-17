@@ -266,11 +266,13 @@ Umsetzungsnotizen:
 
 ## Schritt 10 – Feinschliff, Betrieb, Deployment
 
-**Abhängigkeiten:** `vite-plugin-pwa` (SvelteKit-Integration), für Tests `@axe-core/playwright`.
+In drei PRs: **10a** App-Qualität (PWA, Offline, Barrierefreiheit), **10b** Datenschutz und Aufräum-Job, **10c** Betrieb (Alter PC / Mini-PC, nur im WLAN zu Hause).
 
-- [ ] PWA: Manifest, Icons, Service Worker mit Vorab-Cache, Hinweis „Neue Version verfügbar“.
-- [ ] Offline-E2E: App im Flugmodus starten, alle Bereiche bedienbar.
-- [ ] Barrierefreiheit: axe-Prüfung aller Seiten in Hell und Dunkel, Tastaturbedienung, Fokus sichtbar, Kurzbefehl N für „Neu“.
+**Abhängigkeiten:** für Tests `@axe-core/playwright`. Statt `vite-plugin-pwa` den eingebauten Service Worker von SvelteKit (`src/service-worker/`): Das Plugin erzeugt mit SvelteKit 3 keinen Service Worker, und so entfällt eine Abhängigkeit.
+
+- [x] PWA: Manifest, Icons (`pnpm icons`), Service Worker mit Vorab-Cache, Hinweis „Neue Version verfügbar“.
+- [x] Offline-E2E: App im Flugmodus starten, alle Bereiche bedienbar.
+- [x] Barrierefreiheit: axe-Prüfung aller Seiten in Hell und Dunkel, Tastaturbedienung, Fokus sichtbar, Kurzbefehl N für „Neu“.
 - [ ] Datenschutz: Datenexport als JSON, Konto löschen (Einträge zeigen dann „Ehemaliges Mitglied“), Familienraum löschen.
 - [ ] Aufräum-Job (PocketBase-Cron): Einträge mit `deleted_at` älter als 30 Tage endgültig löschen.
 - [ ] Deployment:

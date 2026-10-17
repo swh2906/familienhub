@@ -23,6 +23,10 @@
 		today: string;
 		onopen?: (o: Occurrence) => void;
 	} = $props();
+
+	function participantsOf(o: Occurrence): Membership[] {
+		return (o.event.participants ?? []).flatMap((id) => members.get(id) ?? []);
+	}
 </script>
 
 <div class="agenda">
@@ -36,19 +40,33 @@
 				<ul>
 					{#each list as o (o.key)}
 						{@const conflict = conflicts.has(o.key)}
-						<li style:--event-color={occurrenceColor(o, members)}>
+						{@const people = participantsOf(o)}
+						<li
+							style:--event-color={occurrenceColor(o, members)}
+							style:--people-space={people.length
+								? `${24 + (people.length - 1) * 18 + 12}px`
+								: '0px'}
+						>
 							{#if onopen}
 								<button
 									type="button"
 									class="item"
 									class:conflict
-									aria-label={describeOccurrence(o, members, conflict)}
+									aria-label={describeOccurrence(o, members, conflict, 'range')}
 									onclick={() => onopen?.(o)}
 								>
 									{@render content(o, conflict)}
 								</button>
 							{:else}
 								<div class="item" class:conflict>{@render content(o, conflict)}</div>
+							{/if}
+							<!-- Außerhalb des Buttons: Initialen sind sichtbarer Text, die Namen stehen schon im Label. -->
+							{#if people.length}
+								<span class="people" aria-hidden="true">
+									{#each people as person (person.id)}
+										<MemberAvatar name={person.display_name} color={person.color} size={24} />
+									{/each}
+								</span>
 							{/if}
 						</li>
 					{/each}
@@ -67,12 +85,6 @@
 			{#if conflict}<span class="warn" title={m.cal_conflict()}>⚠</span>{/if}
 		</span>
 		{#if o.event.location}<span class="location">{o.event.location}</span>{/if}
-	</span>
-	<span class="people" aria-hidden="true">
-		{#each o.event.participants ?? [] as id (id)}
-			{@const person = members.get(id)}
-			{#if person}<MemberAvatar name={person.display_name} color={person.color} size={24} />{/if}
-		{/each}
 	</span>
 {/snippet}
 
@@ -171,9 +183,21 @@
 		font-size: 0.8125rem;
 	}
 
+	li {
+		position: relative;
+	}
+
+	.item {
+		padding-right: calc(var(--space-3) + var(--people-space));
+	}
+
 	.people {
+		position: absolute;
+		top: 50%;
+		right: var(--space-3);
 		display: flex;
-		flex: none;
+		pointer-events: none;
+		transform: translateY(-50%);
 	}
 
 	.people :global(.avatar + .avatar) {

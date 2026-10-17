@@ -260,7 +260,6 @@
 	"today_tasks_empty": "Heute ist nichts fällig.",
 	"today_tasks_open": "Alle Aufgaben ansehen",
 	"today_tasks_more": "{count} weitere fällig",
-	"today_open_area": "{area} öffnen",
 	"plan_title": "Wochenplan",
 	"plan_week": "KW {week}",
 	"plan_week_label": "Woche {week}, {range}",
@@ -347,5 +346,9 @@
 	"editor_paste_label": "Text mit Zutaten",
 	"editor_paste_preview": "Erkannt: {count} Zutaten",
 	"editor_paste_apply": "Übernehmen",
-	"editor_paste_none": "Noch keine Zutaten erkannt."
+	"editor_paste_none": "Noch keine Zutaten erkannt.",
+	"update_available": "Neue Version verfügbar.",
+	"update_reload": "Neu laden",
+	"update_later": "Später",
+	"cal_until": "bis {time}"
 }

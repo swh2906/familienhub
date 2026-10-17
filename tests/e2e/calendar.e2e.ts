@@ -26,8 +26,10 @@ async function openCalendar(page: Page) {
 	await expect(page.getByRole('heading', { level: 1, name: 'Kalender' })).toBeVisible();
 }
 
+/** Termin-Button in jeder Ansicht: Woche/Tag beginnen mit dem Titel, die Liste (Handy) mit der Zeit. */
 function eventButton(page: Page, title: string, time?: string) {
-	return page.getByRole('button', { name: new RegExp(`^${title}, ${time ?? ''}`) });
+	const name = time ? `^(${title}, ${time}|${time}, ${title}, )` : `(^|, )${title}, `;
+	return page.getByRole('button', { name: new RegExp(name) });
 }
 
 async function weekForward(page: Page) {

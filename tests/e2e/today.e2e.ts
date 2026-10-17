@@ -70,7 +70,7 @@ test('Heute zeigt alle vier Bereiche; Hinzufügen und Abhaken kommen live an', a
 	await card(a, 'Einkauf').getByLabel('Was braucht ihr?').fill('2 l Milch');
 	await card(a, 'Einkauf').getByLabel('Was braucht ihr?').press('Enter');
 	await expect(card(a, 'Einkauf').getByText('2 offen')).toBeVisible();
-	await expect(b.getByRole('button', { name: /^2 l Milch als gekauft markieren/ })).toBeVisible({
+	await expect(b.getByRole('button', { name: /^Milch 2 l als gekauft markieren/ })).toBeVisible({
 		timeout: 10_000
 	});
 
@@ -80,8 +80,8 @@ test('Heute zeigt alle vier Bereiche; Hinzufügen und Abhaken kommen live an', a
 	await a.getByRole('button', { name: 'Rückgängig' }).click();
 	await expect(card(a, 'Aufgaben').getByText('Blumen gießen')).toBeVisible();
 
-	// Kartenkopf führt in den Bereich.
-	await a.getByRole('link', { name: 'Kalender öffnen' }).click();
+	// Kartenkopf führt in den Bereich (Name = sichtbare Überschrift, WCAG 2.5.3).
+	await a.getByRole('link', { name: 'Termine heute' }).click();
 	await expect(a).toHaveURL(/\/kalender\?ansicht=tag/);
 });
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { shortcut } from '#lib/ui/shortcut.js';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { live } from '#lib/db/live.svelte.js';
 	import type { Membership, Task, TaskCompletion } from '#lib/db/types.js';
@@ -131,6 +132,7 @@
 		<button
 			class="btn btn-primary new"
 			type="button"
+			{@attach shortcut('n')}
 			onclick={() => {
 				editing = null;
 				dialogOpen = true;

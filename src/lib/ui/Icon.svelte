@@ -16,7 +16,9 @@
 		| 'error'
 		| 'up'
 		| 'down'
-		| 'close';
+		| 'close'
+		| 'edit'
+		| 'plus';
 
 	let { name, size = 24 }: { name: IconName; size?: number } = $props();
 </script>
@@ -75,6 +77,11 @@
 		<path d="M12 19V5M6 11l6-6 6 6" />
 	{:else if name === 'down'}
 		<path d="M12 5v14M6 13l6 6 6-6" />
+	{:else if name === 'edit'}
+		<path d="M4 20h4L19 9l-4-4L4 16z" />
+		<path d="m13.5 6.5 4 4" />
+	{:else if name === 'plus'}
+		<path d="M12 5v14M5 12h14" />
 	{:else if name === 'close'}
 		<path d="M6 6l12 12M18 6 6 18" />
 	{:else if name === 'error'}

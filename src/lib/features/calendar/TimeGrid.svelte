@@ -173,8 +173,12 @@
 		box-shadow: var(--shadow-card);
 	}
 
+	/* Kopf, Ganztags-Zeile und Zeitachse reservieren gleich viel Platz für die Scrollleiste,
+	   sonst sind die Spalten unten (mit Scrollleiste) schmaler als oben. */
 	.head,
 	.allday {
+		overflow-y: hidden;
+		scrollbar-gutter: stable;
 		display: grid;
 		grid-template-columns: var(--label) repeat(var(--days), minmax(0, 1fr));
 		border-bottom: 1px solid var(--color-border);
@@ -216,6 +220,7 @@
 	.scroller {
 		max-height: min(68dvh, 40rem);
 		overflow-y: auto;
+		scrollbar-gutter: stable;
 	}
 
 	.body {

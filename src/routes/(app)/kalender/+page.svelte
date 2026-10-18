@@ -12,7 +12,8 @@
 	import { expandEvents, type Occurrence } from '#lib/features/calendar/expand.js';
 	import MonthView from '#lib/features/calendar/MonthView.svelte';
 	import { daysFor, parseView, shiftDate, VIEWS, type View } from '#lib/features/calendar/range.js';
-	import { eventsOf, type EventTarget } from '#lib/features/calendar/store.js';
+	import type { DragResult } from '#lib/features/calendar/grid.js';
+	import { eventsOf, moveOccurrence, type EventTarget } from '#lib/features/calendar/store.js';
 	import TimeGrid from '#lib/features/calendar/TimeGrid.svelte';
 	import { deviceTimeZone } from '#lib/features/calendar/tz.js';
 	import {
@@ -90,13 +91,33 @@
 		target = { date: day, time };
 	}
 
-	function deleted(undo: () => Promise<void>, onlyOne: boolean) {
+	function showToast(text: string, undo: () => Promise<void>) {
 		if (toast) clearTimeout(toast.timer);
-		toast = {
-			text: onlyOne ? m.cal_deleted_one() : m.cal_deleted(),
-			undo,
-			timer: setTimeout(() => (toast = null), 8000)
-		};
+		toast = { text, undo, timer: setTimeout(() => (toast = null), 8000) };
+	}
+
+	function deleted(undo: () => Promise<void>, onlyOne: boolean) {
+		showToast(onlyOne ? m.cal_deleted_one() : m.cal_deleted(), undo);
+	}
+
+	// ---- Ziehen: Einzeltermin sofort speichern, bei Serien erst fragen ----
+	let pendingMove: { o: Occurrence; result: DragResult } | null = $state(null);
+	let scopeDialog: HTMLDialogElement | undefined = $state();
+
+	$effect(() => {
+		if (pendingMove && scopeDialog && !scopeDialog.open) scopeDialog.showModal();
+	});
+
+	function moved(o: Occurrence, result: DragResult) {
+		if (o.recurring) pendingMove = { o, result };
+		else void applyMove(o, result, 'series');
+	}
+
+	async function applyMove(o: Occurrence, result: DragResult, scope: 'one' | 'series') {
+		pendingMove = null;
+		scopeDialog?.close();
+		const undo = await moveOccurrence(o, result, scope, timeZone);
+		showToast(m.cal_moved(), undo);
 	}
 
 	async function runUndo() {
@@ -218,6 +239,7 @@
 			{timeZone}
 			onopen={canEdit ? open : undefined}
 			oncreate={canEdit ? create : undefined}
+			onmove={canEdit ? moved : undefined}
 		/>
 	</div>
 	<div class="narrow">
@@ -240,6 +262,7 @@
 		{timeZone}
 		onopen={canEdit ? open : undefined}
 		oncreate={canEdit ? create : undefined}
+		onmove={canEdit ? moved : undefined}
 	/>
 {/if}
 
@@ -251,6 +274,30 @@
 {/if}
 
 {#if canEdit}
+	<dialog
+		class="scope"
+		bind:this={scopeDialog}
+		aria-labelledby="move-scope-title"
+		onclose={() => (pendingMove = null)}
+	>
+		<h2 id="move-scope-title">{m.cal_move_title()}</h2>
+		<p>{m.cal_scope_label()}</p>
+		<div class="scope-actions">
+			{#if pendingMove}
+				{@const move = pendingMove}
+				<button
+					class="btn btn-primary"
+					type="button"
+					onclick={() => applyMove(move.o, move.result, 'one')}>{m.cal_scope_this()}</button
+				>
+				<button class="btn" type="button" onclick={() => applyMove(move.o, move.result, 'series')}
+					>{m.cal_scope_all()}</button
+				>
+			{/if}
+			<button class="btn" type="button" onclick={() => scopeDialog?.close()}>{m.cancel()}</button>
+		</div>
+	</dialog>
+
 	<EventDialog
 		{target}
 		{household}
@@ -263,6 +310,35 @@
 {/if}
 
 <style>
+	.scope {
+		width: min(28rem, calc(100vw - 2 * var(--space-4)));
+		padding: var(--space-6);
+		border: 0;
+		border-radius: var(--radius-card);
+		background: var(--color-surface);
+		color: var(--color-text);
+		box-shadow: 0 20px 50px rgb(0 0 0 / 0.3);
+	}
+
+	.scope::backdrop {
+		background: rgb(0 0 0 / 0.45);
+	}
+
+	.scope h2 {
+		margin: 0 0 var(--space-2);
+		font-size: 1.25rem;
+	}
+
+	.scope p {
+		margin: 0 0 var(--space-4);
+	}
+
+	.scope-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+	}
+
 	.head {
 		display: flex;
 		flex-wrap: wrap;

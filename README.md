@@ -91,6 +91,14 @@ flowchart LR
 - Tastatur: Der erste Tab-Stopp ist „Zum Inhalt springen“; die Taste **N** startet „Neu“ (Aufgabe, Termin, Rezept, Einkaufsfeld).
 - `pnpm test:e2e` prüft alle Seiten mit axe (WCAG 2.1 AA) in Hell und Dunkel sowie den Offline-Start.
 
+## Kalender: Termine ziehen
+
+In Tag- und Wochenansicht lassen sich Termine ziehen (Maus sofort, Finger nach langem Drücken): verschieben auf andere Uhrzeit oder anderen Tag, am unteren Rand die Dauer ändern; Raster 15 Minuten. Bei Serien fragt Homi „Nur dieser Termin / Alle Termine“, bei Einzelterminen gibt es „Rückgängig“. Kinder können nicht ziehen. Ist heute zu sehen, springt die Zeitachse zur aktuellen Uhrzeit.
+
+## Feedback (Testphase)
+
+Unter **Aufgaben → Feedback** schreibt die Familie Rückmeldungen (Text, Bereich, grobe Gerätebeschreibung); Admins und Erwachsene markieren sie als erledigt. Gespeichert in der Collection `feedback`, lesbar auch unter `/_/`. Eingeschaltet über die Umgebungsvariable `HOMI_FEEDBACK=1` (in `pnpm dev`, den Tests und den ZimaOS-Compose-Dateien gesetzt); für die fertige Version `HOMI_FEEDBACK: '0'` setzen – dann verschwindet der Reiter und der Server nimmt nichts mehr an.
+
 ## Kochansicht
 
 Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (Prinzip aus der COOK-App): bildschirmfüllend, große Schrift, Portionen umrechnen, Zutaten abhaken (nur lokal), Bildschirm bleibt an (Wake Lock, wo der Browser es kann). Schwierigkeit (Kochmützen) und Dauer setzen Admins und Erwachsene; die Handschrift „Patrick Hand“ liegt lokal in `static/fonts/` (SIL Open Font License, keine externen Schriften).

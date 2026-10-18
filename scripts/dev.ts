@@ -36,14 +36,20 @@ if (!(await isPortFree(PB_PORT))) {
 const children: ChildProcess[] = [];
 let shuttingDown = false;
 
-start('pb', PB_BINARY, [
-	'serve',
-	`--http=127.0.0.1:${PB_PORT}`,
-	`--dir=${path.join(PB_DIR, 'pb_data')}`,
-	`--migrationsDir=${path.join(PB_DIR, 'pb_migrations')}`,
-	`--hooksDir=${path.join(PB_DIR, 'pb_hooks')}`,
-	`--publicDir=${path.join(PB_DIR, 'pb_public')}`
-]);
+// Testphasen-Feedback ist in der Entwicklung immer an (HOMI_FEEDBACK=0 schaltet es aus).
+start(
+	'pb',
+	PB_BINARY,
+	[
+		'serve',
+		`--http=127.0.0.1:${PB_PORT}`,
+		`--dir=${path.join(PB_DIR, 'pb_data')}`,
+		`--migrationsDir=${path.join(PB_DIR, 'pb_migrations')}`,
+		`--hooksDir=${path.join(PB_DIR, 'pb_hooks')}`,
+		`--publicDir=${path.join(PB_DIR, 'pb_public')}`
+	],
+	{ HOMI_FEEDBACK: process.env.HOMI_FEEDBACK ?? '1' }
+);
 
 // Vite direkt über Node starten statt über eine Shell: funktioniert überall gleich.
 start('web', process.execPath, [path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'dev']);
@@ -51,8 +57,17 @@ start('web', process.execPath, [path.join(ROOT, 'node_modules', 'vite', 'bin', '
 process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
-function start(name: string, command: string, args: string[]): void {
-	const child = spawn(command, args, { cwd: ROOT, stdio: ['inherit', 'pipe', 'pipe'] });
+function start(
+	name: string,
+	command: string,
+	args: string[],
+	env: Record<string, string> = {}
+): void {
+	const child = spawn(command, args, {
+		cwd: ROOT,
+		env: { ...process.env, ...env },
+		stdio: ['inherit', 'pipe', 'pipe']
+	});
 	children.push(child);
 	child.stdout?.on('data', (chunk: Buffer) => write(process.stdout, name, chunk));
 	child.stderr?.on('data', (chunk: Buffer) => write(process.stderr, name, chunk));

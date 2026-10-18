@@ -13,6 +13,7 @@ const SAME_HOUSEHOLD_REFS = {
 		meal_plan_entry: 'meal_plan_entries'
 	},
 	events: { participants: 'memberships' },
+	feedback: { created_by: 'memberships' },
 	tasks: { assignees: 'memberships' },
 	task_completions: { membership: 'memberships' }
 };
@@ -456,6 +457,7 @@ const HOUSEHOLD_DELETE_ORDER = [
 	['recipes', 'household = {:h}'],
 	['events', 'household = {:h}'],
 	['invites', 'household = {:h}'],
+	['feedback', 'household = {:h}'],
 	['memberships', 'household = {:h}']
 ];
 
@@ -522,7 +524,29 @@ function purgeDeleted(app, now) {
 	return removed;
 }
 
+/** Feedback ist nur in der Testphase an: Server mit HOMI_FEEDBACK=1 starten. */
+function feedbackEnabled() {
+	return $os.getenv('HOMI_FEEDBACK') === '1';
+}
+
+/** GET /api/fh/features: welche Testphasen-Funktionen eingeschaltet sind. */
+function features(e) {
+	return e.json(200, { feedback: feedbackEnabled() });
+}
+
+/** Neues Feedback: nur bei eingeschaltetem Schalter; Absender setzt der Server. */
+function stampFeedback(e) {
+	if (!feedbackEnabled()) throw new BadRequestError('Feedback ist ausgeschaltet.');
+	const membership = isUser(e)
+		? findMembership(e.app, e.auth.id, e.record.getString('household'))
+		: null;
+	if (membership) e.record.set('created_by', membership.id);
+	e.record.set('done', false);
+}
+
 module.exports = {
+	features,
+	stampFeedback,
 	deleteAccount,
 	deleteHousehold,
 	purgeDeleted,

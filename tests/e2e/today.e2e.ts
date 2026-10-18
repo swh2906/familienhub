@@ -19,12 +19,15 @@ async function seed(admin: string, household: string) {
 	// In zwei Stunden, aber spätestens 23 Uhr – sonst rutscht der Termin abends auf morgen.
 	const lateToday = new Date();
 	lateToday.setHours(23, 0, 0, 0);
+	const endOfDay = new Date();
+	endOfDay.setHours(23, 59, 0, 0);
 	const start = new Date(Math.min(Date.now() + 2 * 3_600_000, lateToday.getTime()));
 	await apiCreate(token, 'events', {
 		household,
 		title: 'Elterngespräch',
 		start: start.toISOString(),
-		end: new Date(start.getTime() + 30 * 60_000).toISOString(),
+		// Bis kurz vor Mitternacht: auch spät abends noch „als Nächstes“ (läuft noch).
+		end: endOfDay.toISOString(),
 		exdates: []
 	});
 	await apiCreate(token, 'meal_plan_entries', {

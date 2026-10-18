@@ -317,6 +317,13 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 
 **Fertig, wenn:** Mit den Mengen oben lädt jede Seite gedrosselt in unter 1,5 s, die Rezeptsuche reagiert in unter 300 ms.
 
+### Vor dem Familientest (10h) – erledigt
+
+- [x] Termine ziehen (verschieben, Dauer ändern, Serie: nur dieser/alle, Touch per langem Drücken).
+- [x] Feedback-Reiter unter Aufgaben, nur in der Testphase (`HOMI_FEEDBACK=1`).
+- [x] Tag/Woche springt zur aktuellen Uhrzeit.
+- [ ] Vor dem Abschluss der Testphase: Feedback auswerten, `HOMI_FEEDBACK` auf '0' setzen.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

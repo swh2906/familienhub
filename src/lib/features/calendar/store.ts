@@ -3,6 +3,8 @@
 // Ganztägig: `start`/`end` = erster/letzter Tag als UTC-Mitternacht (siehe tz.ts).
 import { repo } from '#lib/db/index.js';
 import type { CalendarEvent } from '#lib/db/types.js';
+import type { Occurrence } from './expand.js';
+import { minutesToTime, type DragResult } from './grid.js';
 import { shiftRrule } from '#lib/features/tasks/recurrence.js';
 import { addDaysTo } from './expand.js';
 import { allDayToDate, dateToAllDay, parseUtc, toUtcString, utcToZoned, zonedToUtc } from './tz.js';
@@ -147,21 +149,57 @@ export async function updateSeries(
 	await repo('events').update(event.id, changes);
 }
 
-/** „Nur dieser Termin“: Tag in die Ausnahmen der Serie, dazu ein Einzeltermin. */
+/** „Nur dieser Termin“: Tag in die Ausnahmen der Serie, dazu ein Einzeltermin. Gibt dessen ID zurück. */
 export async function updateOnlyThis(
 	event: CalendarEvent,
 	occurrenceDate: string,
 	form: EventForm,
 	timeZone: string
-): Promise<void> {
+): Promise<string> {
 	await repo('events').update(event.id, {
 		exdates: [...new Set([...(event.exdates ?? []), occurrenceDate])]
 	});
-	await repo('events').create({
+	const created = await repo('events').create({
 		household: event.household,
 		...fields({ ...form, rrule: '' }, timeZone),
 		exdates: []
 	});
+	return created.id;
+}
+
+/**
+ * Termin per Ziehen verschoben oder in der Dauer geändert (Tag/Woche). Bei Serien entscheidet
+ * `scope`: nur dieses Vorkommen oder die ganze Serie. Gibt eine Rückgängig-Funktion zurück.
+ */
+export async function moveOccurrence(
+	o: Occurrence,
+	to: DragResult,
+	scope: 'one' | 'series',
+	timeZone: string
+): Promise<() => Promise<void>> {
+	const form = formFromEvent(o.event, o.occurrenceDate, timeZone);
+	const moved: EventForm = {
+		...form,
+		date: to.date,
+		startTime: minutesToTime(to.start),
+		// Ende genau um Mitternacht: „00:00“ landet über formTimes am Folgetag.
+		endTime: minutesToTime((to.start + to.duration) % (24 * 60))
+	};
+	const before = {
+		start: o.event.start,
+		end: o.event.end,
+		rrule: o.event.rrule ?? '',
+		exdates: [...(o.event.exdates ?? [])]
+	};
+	if (o.recurring && scope === 'one') {
+		const id = await updateOnlyThis(o.event, o.occurrenceDate, moved, timeZone);
+		return async () => {
+			await repo('events').remove(id);
+			await repo('events').update(o.event.id, { exdates: before.exdates });
+		};
+	}
+	await updateSeries(o.event, o.occurrenceDate, moved, timeZone);
+	return () => repo('events').update(o.event.id, before);
 }
 
 /** Löschen: ganze Serie bzw. Einzeltermin, oder nur ein Vorkommen (als Ausnahme). */

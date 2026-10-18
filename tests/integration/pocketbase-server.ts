@@ -28,7 +28,10 @@ async function freePort(): Promise<number> {
 }
 
 /** Startet PocketBase auf `fixedPort` oder, ohne Angabe, auf einem freien Port. */
-export async function startPocketBase(fixedPort?: number): Promise<TestServer> {
+export async function startPocketBase(
+	fixedPort?: number,
+	env: Record<string, string> = { HOMI_FEEDBACK: '1' }
+): Promise<TestServer> {
 	if (!existsSync(PB_BINARY)) {
 		throw new Error('PocketBase fehlt. Bitte zuerst ausführen: pnpm pb:download');
 	}
@@ -61,7 +64,7 @@ export async function startPocketBase(fixedPort?: number): Promise<TestServer> {
 			`--migrationsDir=${path.join(PB_DIR, 'pb_migrations')}`,
 			`--hooksDir=${path.join(PB_DIR, 'pb_hooks')}`
 		],
-		{ stdio: ['ignore', 'pipe', 'pipe'] }
+		{ env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] }
 	);
 	let output = '';
 	child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));

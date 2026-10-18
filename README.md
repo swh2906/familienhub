@@ -1,6 +1,6 @@
-# FamilienHub
+# Homi – euer Familienplaner
 
-Familien-Organisations-App: Essensplan, Einkaufsliste, Kalender und Aufgaben. Läuft offline und synchronisiert live zwischen allen Geräten der Familie.
+Familien-Organisations-App (technischer Name: `familienhub` – Repo, Docker-Image, Datenbank): Essensplan, Einkaufsliste, Kalender und Aufgaben. Läuft offline und synchronisiert live zwischen allen Geräten der Familie.
 
 Konzept und Entscheidungen: [CLAUDE.md](CLAUDE.md) · Umsetzungsplan: [PLAN.md](PLAN.md)
 

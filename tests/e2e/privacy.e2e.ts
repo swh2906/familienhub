@@ -31,7 +31,7 @@ test('Datenexport enthält die Daten der Familie als JSON', async ({ page }) => 
 	const download = page.waitForEvent('download');
 	await page.getByRole('button', { name: 'Daten exportieren' }).click();
 	const file = await download;
-	expect(file.suggestedFilename()).toMatch(/^familienhub-familie-e2e-\d{4}-\d{2}-\d{2}\.json$/);
+	expect(file.suggestedFilename()).toMatch(/^homi-familie-e2e-\d{4}-\d{2}-\d{2}\.json$/);
 	const data = JSON.parse(readFileSync(await file.path(), 'utf8'));
 	expect(data).toMatchObject({ format: 'familienhub-export', household: family.household });
 	expect(data.data.shopping_items.map((item: { name: string }) => item.name)).toEqual(['Brot']);

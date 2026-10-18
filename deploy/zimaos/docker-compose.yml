@@ -1,4 +1,4 @@
-# FamilienHub für ZimaOS: App-Store → „+“ → „Benutzerdefinierte App installieren“ → „Importieren“,
+# Homi (technisch: familienhub) für ZimaOS: App-Store → „+“ → „Benutzerdefinierte App installieren“ → „Importieren“,
 # diese Datei einfügen, TS_AUTHKEY eintragen, installieren. Anleitung: README → „Betrieb auf ZimaOS“.
 #
 # - familienhub: PocketBase mit der App (ca. 20 MB RAM). Daten unter /DATA/AppData/familienhub.
@@ -73,8 +73,8 @@ x-casaos:
   scheme: http
   index: /
   title:
-    en_us: FamilienHub
+    en_us: Homi
   tagline:
-    en_us: Essensplan, Einkauf, Kalender und Aufgaben
+    en_us: Euer Familienplaner
   description:
     en_us: Familien-App mit Offline-Betrieb und Live-Abgleich zwischen allen Geräten.

@@ -54,7 +54,7 @@ export function normalizeRecipeUrl(input: string): string | null {
 	}
 }
 
-/** Gerichte für die Eingabe-Vorschläge: häufig geplante zuerst, danach FamilienHub-Rezepte. */
+/** Gerichte für die Eingabe-Vorschläge: häufig geplante zuerst, danach Homi-Rezepte. */
 export function dishSuggestions(
 	entries: readonly MealPlanEntry[],
 	recipes: readonly Recipe[]
@@ -74,7 +74,7 @@ export function dishSuggestions(
 		.map((s) => s.title);
 }
 
-/** FamilienHub-Rezept mit genau diesem Titel (ohne Groß-/Kleinschreibung), sonst undefined. */
+/** Homi-Rezept mit genau diesem Titel (ohne Groß-/Kleinschreibung), sonst undefined. */
 export function matchRecipe(title: string, recipes: readonly Recipe[]): Recipe | undefined {
 	const key = normalize(title);
 	return key ? recipes.find((r) => !r.deleted_at && normalize(r.title) === key) : undefined;

@@ -1,4 +1,4 @@
-# FamilienHub als ein Container: PocketBase liefert API und die gebaute App (pb_public) aus.
+# Homi (technisch: familienhub) als ein Container: PocketBase liefert API und die gebaute App (pb_public) aus.
 # Daten liegen in /pb/pb_data (als Volume einbinden). Version von PocketBase: pocketbase/VERSION.
 
 # ---- 1. App bauen (läuft nur einmal auf der Build-Plattform, auch beim ARM-Image) ----
@@ -32,7 +32,7 @@ COPY pocketbase/pb_migrations /pb/pb_migrations
 COPY pocketbase/pb_hooks /pb/pb_hooks
 COPY --from=app /src/build /pb/pb_public
 
-LABEL org.opencontainers.image.title="FamilienHub" \
+LABEL org.opencontainers.image.title="Homi" \
 	org.opencontainers.image.description="Essensplan, Einkaufsliste, Kalender und Aufgaben für die Familie" \
 	org.opencontainers.image.source="https://github.com/swh2906/familienhub"
 

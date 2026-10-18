@@ -30,8 +30,8 @@ describe('Datenexport', () => {
 
 	it('Dateiname aus Familienname und Datum', () => {
 		expect(exportFileName('Familie Müller & Söhne', now)).toBe(
-			'familienhub-familie-mueller-soehne-2026-10-17.json'
+			'homi-familie-mueller-soehne-2026-10-17.json'
 		);
-		expect(exportFileName('!!!', now)).toBe('familienhub-familie-2026-10-17.json');
+		expect(exportFileName('!!!', now)).toBe('homi-familie-2026-10-17.json');
 	});
 });

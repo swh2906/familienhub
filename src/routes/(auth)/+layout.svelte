@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Logo from '#lib/ui/Logo.svelte';
 	// Schlichter Rahmen für Anmelden, Registrieren, Onboarding und Beitreten: ohne Navigation.
 	import { m } from '#lib/paraglide/messages.js';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
@@ -14,7 +15,7 @@
 
 	<main id="main" tabindex="-1">
 		<div class="brand">
-			<span class="logo" aria-hidden="true">F</span>
+			<span class="logo" aria-hidden="true"><Logo size={32} /></span>
 			<div>
 				<p class="name">{m.app_name()}</p>
 				<p class="tagline">{m.auth_tagline()}</p>

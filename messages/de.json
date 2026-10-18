@@ -1,6 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"app_name": "FamilienHub",
+	"app_name": "Homi",
 	"skip_to_content": "Zum Inhalt springen",
 	"nav_label": "Hauptnavigation",
 	"nav_today": "Heute",
@@ -285,7 +285,7 @@
 	"plan_link": "Link zum Rezept (optional)",
 	"plan_link_hint": "Adresse des Rezepts, z. B. aus eurer Rezept-App.",
 	"plan_link_invalid": "Bitte eine Webadresse angeben, die mit http:// oder https:// beginnt.",
-	"plan_link_internal": "Passt zum FamilienHub-Rezept „{title}“ – es wird verknüpft.",
+	"plan_link_internal": "Passt zum Homi-Rezept „{title}“ – es wird verknüpft.",
 	"plan_day": "Tag",
 	"plan_slot": "Mahlzeit",
 	"plan_save": "Speichern",

@@ -561,7 +561,7 @@
 		gap: 2px;
 	}
 
-	/* Ganzes Gericht antippbar: FamilienHub-Rezept → Kochansicht, externer Link → Rezept-App. */
+	/* Ganzes Gericht antippbar: Homi-Rezept → Kochansicht, externer Link → Rezept-App. */
 	.dish {
 		display: flex;
 		align-items: center;

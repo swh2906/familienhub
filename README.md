@@ -91,6 +91,10 @@ flowchart LR
 - Tastatur: Der erste Tab-Stopp ist „Zum Inhalt springen“; die Taste **N** startet „Neu“ (Aufgabe, Termin, Rezept, Einkaufsfeld).
 - `pnpm test:e2e` prüft alle Seiten mit axe (WCAG 2.1 AA) in Hell und Dunkel sowie den Offline-Start.
 
+## Kochansicht
+
+Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (Prinzip aus der COOK-App): bildschirmfüllend, große Schrift, Portionen umrechnen, Zutaten abhaken (nur lokal), Bildschirm bleibt an (Wake Lock, wo der Browser es kann). Schwierigkeit (Kochmützen) und Dauer setzen Admins und Erwachsene; die Handschrift „Patrick Hand“ liegt lokal in `static/fonts/` (SIL Open Font License, keine externen Schriften).
+
 ## Datenschutz
 
 - **Datenexport** (Einstellungen → Daten und Konto): alle Daten der Familie als JSON-Datei, direkt aus der lokalen Datenbank (geht auch offline). Gelöschte Einträge und Einladungen sind nicht enthalten.

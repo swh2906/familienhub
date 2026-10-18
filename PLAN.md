@@ -279,6 +279,8 @@ In drei PRs: **10a** App-Qualität (PWA, Offline, Barrierefreiheit), **10b** Dat
 - [x] Backups: täglich 4 Uhr per PocketBase (letzte 14), Zurückspielen über die Admin-Oberfläche. Kopie außer Haus: später.
 - [x] README-Abschnitt „Betrieb auf ZimaOS“: Einrichten, Aktualisieren, Backup zurückspielen; `pnpm docker:smoke` als Testlauf.
 
+- [x] Kochansicht (10d): Rezept als Karteikarte nach dem Vorbild der COOK-App, neue Felder `prep_minutes` und `difficulty`, Handschrift lokal mitgeliefert.
+
 **Fertig, wenn:**
 - Die App läuft auf dem Zielserver per HTTPS und ist auf Handy, Tablet und Desktop installiert.
 - Ein Backup wurde einmal testweise zurückgespielt.

@@ -36,8 +36,8 @@
 	let now = $state(Date.now());
 
 	onMount(() => {
-		// Auf 7 Uhr scrollen, damit der Tag sichtbar ist.
-		if (scroller) scroller.scrollTop = 7 * HOUR_PX;
+		// Auf 6:30 scrollen: 7 Uhr ist sichtbar, mit etwas Luft unter der Ganztags-Zeile.
+		if (scroller) scroller.scrollTop = 6.5 * HOUR_PX;
 		const timer = setInterval(() => (now = Date.now()), 60_000);
 		return () => clearInterval(timer);
 	});
@@ -95,7 +95,7 @@
 	</div>
 
 	<div class="scroller" bind:this={scroller}>
-		<div class="body" style:height="{24 * HOUR_PX}px">
+		<div class="body" style:height="calc({24 * HOUR_PX}px + var(--pad))">
 			<div class="hours" aria-hidden="true">
 				{#each hours as h (h)}
 					<span style:top="{h * HOUR_PX}px">{String(h).padStart(2, '0')}:00</span>
@@ -163,7 +163,9 @@
 
 <style>
 	.grid {
-		--label: 3.25rem;
+		--label: 3.75rem;
+		/* Luft über 0 Uhr, damit die oberste Uhrzeit (mittig auf ihrer Linie) nicht abgeschnitten wird. */
+		--pad: 0.625rem;
 		display: grid;
 		overflow: hidden;
 		border-radius: var(--radius-card);
@@ -196,7 +198,7 @@
 
 	.allday .label {
 		align-self: center;
-		padding: 0 var(--space-1);
+		padding: 0 var(--space-2) 0 2px;
 		color: var(--color-text-muted);
 		font-size: 0.6875rem;
 		text-align: right;
@@ -220,8 +222,7 @@
 		position: relative;
 		display: grid;
 		grid-template-columns: var(--label) repeat(var(--days), minmax(0, 1fr));
-		background-image: linear-gradient(var(--color-border) 1px, transparent 1px);
-		background-size: 100% 48px;
+		padding-top: var(--pad);
 	}
 
 	.hours {
@@ -230,25 +231,25 @@
 
 	.hours span {
 		position: absolute;
-		right: var(--space-1);
-		/* Knapp unter der Stundenlinie, damit oben nichts abgeschnitten wird. */
-		transform: translateY(2px);
+		right: var(--space-2);
+		/* Mittig auf der Stundenlinie. */
+		transform: translateY(-50%);
+		line-height: 1;
 		color: var(--color-text-muted);
 		font-size: 0.6875rem;
 		font-variant-numeric: tabular-nums;
 	}
 
-	.hours span:first-child {
-		display: none;
-	}
-
+	/* Stundenlinien nur in den Tagesspalten, damit sie die Uhrzeiten links nicht durchstreichen. */
 	.column {
 		position: relative;
 		border-left: 1px solid var(--color-border);
+		background-image: linear-gradient(var(--color-border) 1px, transparent 1px);
+		background-size: 100% 48px;
 	}
 
 	.column.today {
-		background: color-mix(in srgb, var(--color-primary-soft) 35%, transparent);
+		background-color: color-mix(in srgb, var(--color-primary-soft) 35%, transparent);
 	}
 
 	.slot {

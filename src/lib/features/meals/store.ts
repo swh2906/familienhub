@@ -1,6 +1,7 @@
 // Rezepte lesen und schreiben – nur über die lokale Datenbank; der Sync erledigt den Rest.
 import { repo } from '#lib/db/index.js';
 import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+import { clampDifficulty, clampMinutes } from './cooking.js';
 import { cleanTags, diffIngredients, type IngredientDraft } from './recipes.js';
 
 export interface RecipeForm {
@@ -9,6 +10,8 @@ export interface RecipeForm {
 	tags: string[];
 	is_favorite: boolean;
 	instructions: string;
+	prep_minutes: number;
+	difficulty: number;
 }
 
 /** Alle Rezepte des Haushalts (auch gelöschte; die Liste filtert selbst). */
@@ -41,7 +44,9 @@ export async function saveRecipe(
 		servings: Math.max(1, Math.round(form.servings) || 1),
 		tags: cleanTags(form.tags),
 		is_favorite: form.is_favorite,
-		instructions: form.instructions.trim()
+		instructions: form.instructions.trim(),
+		prep_minutes: clampMinutes(form.prep_minutes),
+		difficulty: clampDifficulty(form.difficulty)
 	};
 
 	let id: string;
@@ -79,6 +84,11 @@ export async function deleteRecipe(recipe: Recipe): Promise<void> {
 		await repo('recipe_ingredients').remove(ingredient.id);
 	}
 	await repo('recipes').remove(recipe.id);
+}
+
+/** Schwierigkeit direkt in der Kochansicht setzen (nur Bearbeitende). */
+export async function setDifficulty(recipe: Recipe, difficulty: number): Promise<void> {
+	await repo('recipes').update(recipe.id, { difficulty: clampDifficulty(difficulty) });
 }
 
 export async function toggleFavorite(recipe: Recipe): Promise<void> {

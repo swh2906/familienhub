@@ -59,6 +59,12 @@
 					{#each recipe.tags ?? [] as tag (tag)}<li>{tag}</li>{/each}
 				</ul>
 			{/if}
+			<div class="actions">
+				<a
+					class="btn btn-primary"
+					href={resolve('/(app)/essen/rezepte/[id]/kochen', { id: recipe.id })}>{m.cook_start()}</a
+				>
+			</div>
 			{#if session.canEdit}
 				<div class="actions">
 					<a class="btn" href={resolve('/(app)/essen/rezepte/[id]/bearbeiten', { id: recipe.id })}

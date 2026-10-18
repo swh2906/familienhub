@@ -46,6 +46,8 @@
 	const initial = untrack(() => ({ recipe, ingredients }));
 	let title = $state(initial.recipe?.title ?? '');
 	let servings = $state(initial.recipe?.servings ?? 4);
+	let prepMinutes = $state(initial.recipe?.prep_minutes || null);
+	let difficulty = $state(String(initial.recipe?.difficulty ?? 0));
 	let tags = $state<string[]>([...(initial.recipe?.tags ?? [])]);
 	let favorite = $state(initial.recipe?.is_favorite ?? false);
 	let instructions = $state(initial.recipe?.instructions ?? '');
@@ -105,7 +107,15 @@
 			const id = await saveRecipe(
 				household,
 				initial.recipe,
-				{ title, servings, tags, is_favorite: favorite, instructions },
+				{
+					title,
+					servings,
+					tags,
+					is_favorite: favorite,
+					instructions,
+					prep_minutes: Number(prepMinutes) || 0,
+					difficulty: Number(difficulty)
+				},
 				rows.map((r) => ({
 					id: r.id,
 					name: r.name,
@@ -139,6 +149,30 @@
 				inputmode="numeric"
 				bind:value={servings}
 			/>
+		</label>
+	</div>
+
+	<div class="grid-2 cooking">
+		<label class="field">
+			<span>{m.editor_prep_minutes()}</span>
+			<input
+				id="recipe-prep"
+				type="number"
+				min="0"
+				max="1440"
+				step="5"
+				inputmode="numeric"
+				bind:value={prepMinutes}
+			/>
+		</label>
+		<label class="field">
+			<span>{m.editor_difficulty()}</span>
+			<select id="recipe-difficulty" bind:value={difficulty}>
+				<option value="0">{m.cook_difficulty_none()}</option>
+				<option value="1">{m.cook_difficulty_1()}</option>
+				<option value="2">{m.cook_difficulty_2()}</option>
+				<option value="3">{m.cook_difficulty_3()}</option>
+			</select>
 		</label>
 	</div>
 
@@ -293,6 +327,10 @@
 		display: grid;
 		grid-template-columns: 1fr 7rem;
 		gap: var(--space-3);
+	}
+
+	.grid-2.cooking {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
 	.title {

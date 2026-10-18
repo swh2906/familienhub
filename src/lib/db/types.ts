@@ -52,7 +52,7 @@ export interface MealPlanEntry extends BaseRecord {
 	title: string;
 	/** Link zum Rezept in einer anderen App (nur http/https). */
 	recipe_url: string;
-	/** Optional: FamilienHub-Rezept. */
+	/** Optional: Homi-Rezept. */
 	recipe: string;
 	note: string;
 	servings: number;

@@ -1,6 +1,6 @@
-# FamilienHub
+# Homi – euer Familienplaner
 
-Familien-Organisations-App (Arbeitstitel): Essensplan, Einkaufsliste, Kalender, Aufgaben.
+Familien-Organisations-App (früher Arbeitstitel FamilienHub; technischer Name `familienhub` bleibt für Repo, Docker-Image, Datenbank und Pfade). Logo: kleines Haus aus einem H (`src/lib/ui/Logo.svelte`, Icons per `pnpm icons`): Essensplan, Einkaufsliste, Kalender, Aufgaben.
 Zunächst nur für die eigene Familie. Muss offline laufen und zwischen allen Geräten live synchronisieren.
 
 Vollständiges Konzept (Architektur, Datenmodell, Sitemap): https://claude.ai/code/artifact/b4c6f53d-62d6-4e5d-b778-065028f162c0

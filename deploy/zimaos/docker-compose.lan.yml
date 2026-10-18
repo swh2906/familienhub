@@ -1,4 +1,4 @@
-# FamilienHub für ZimaOS, nur im Heimnetz (ohne Tailscale): http://<zima-ip>:8090
+# Homi (technisch: familienhub) für ZimaOS, nur im Heimnetz (ohne Tailscale): http://<zima-ip>:8090
 # ZimaOS → App-Store → „+“ → „Benutzerdefinierte App installieren“ → „Importieren“ → diese Datei einfügen.
 # Ohne HTTPS lässt sich die App nicht installieren und startet nicht offline; alles andere geht.
 # Später auf docker-compose.yml (mit Tailscale) wechseln – die Daten bleiben erhalten.
@@ -30,6 +30,6 @@ x-casaos:
   scheme: http
   index: /
   title:
-    en_us: FamilienHub
+    en_us: Homi
   tagline:
-    en_us: Essensplan, Einkauf, Kalender und Aufgaben
+    en_us: Euer Familienplaner

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Logo from '#lib/ui/Logo.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -55,7 +56,7 @@
 <div class="app">
 	<header class="header">
 		<a class="brand" href={home}>
-			<span class="logo" aria-hidden="true">F</span>
+			<span class="logo" aria-hidden="true"><Logo size={22} /></span>
 			<span class="brand-name">{m.app_name()}</span>
 		</a>
 		<div class="header-actions">

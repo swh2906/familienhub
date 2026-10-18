@@ -1,4 +1,4 @@
-// Erzeugt die App-Icons (PNG) für die PWA aus einer SVG-Vorlage.
+// Erzeugt die Homi-App-Icons (PNG) für die PWA aus einer SVG-Vorlage.
 // Nutzt das ohnehin installierte Playwright-Chromium, daher keine zusätzliche Bibliothek.
 // Aufruf: pnpm icons
 import { mkdirSync } from 'node:fs';
@@ -9,14 +9,13 @@ import { ROOT } from './lib/paths.ts';
 const PETROL = '#0e6e66';
 const OUT = path.join(ROOT, 'static', 'icons');
 
-/** „F“ aus Flächen (keine Schrift), Größe als Anteil der Kantenlänge. */
+/** Haus aus H (wie src/lib/ui/Logo.svelte), Größe als Anteil der Kantenlänge, mittig. */
 function letter(scale: number): string {
-	const s = (n: number) => (n * scale).toFixed(2);
 	const offset = (64 - 64 * scale) / 2;
-	return `<g fill="#fff" transform="translate(${offset} ${offset})">
-		<rect x="${s(21)}" y="${s(14)}" width="${s(8.5)}" height="${s(36)}" rx="${s(2)}"/>
-		<rect x="${s(21)}" y="${s(14)}" width="${s(24)}" height="${s(8)}" rx="${s(2)}"/>
-		<rect x="${s(21)}" y="${s(29)}" width="${s(19)}" height="${s(7.5)}" rx="${s(2)}"/>
+	return `<g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"
+		transform="translate(${offset} ${offset}) scale(${scale})">
+		<path d="M12 30 L32 13 L52 30" stroke-width="5"/>
+		<path d="M21 29 V51 M43 29 V51 M21 40 H43" stroke-width="6.5"/>
 	</g>`;
 }
 

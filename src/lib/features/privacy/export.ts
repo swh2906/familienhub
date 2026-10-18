@@ -33,7 +33,7 @@ export function buildExport(
 	};
 }
 
-/** „familienhub-familie-mueller-2026-10-17.json“ */
+/** „homi-familie-mueller-2026-10-17.json“ */
 export function exportFileName(householdName: string, now: Date): string {
 	const slug =
 		householdName
@@ -46,7 +46,7 @@ export function exportFileName(householdName: string, now: Date): string {
 			.replace(/^-|-$/g, '') || 'familie';
 	const pad = (n: number) => String(n).padStart(2, '0');
 	const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-	return `familienhub-${slug}-${date}.json`;
+	return `homi-${slug}-${date}.json`;
 }
 
 /** Liest alle Tabellen aus der lokalen Datenbank und baut den Export. */

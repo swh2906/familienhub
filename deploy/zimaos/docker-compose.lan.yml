@@ -1,0 +1,35 @@
+# FamilienHub für ZimaOS, nur im Heimnetz (ohne Tailscale): http://<zima-ip>:8090
+# ZimaOS → App-Store → „+“ → „Benutzerdefinierte App installieren“ → „Importieren“ → diese Datei einfügen.
+# Ohne HTTPS lässt sich die App nicht installieren und startet nicht offline; alles andere geht.
+# Später auf docker-compose.yml (mit Tailscale) wechseln – die Daten bleiben erhalten.
+name: familienhub
+
+services:
+  familienhub:
+    image: ghcr.io/swh2906/familienhub:latest
+    container_name: familienhub
+    restart: unless-stopped
+    ports:
+      - '8090:8090'
+    environment:
+      TZ: Europe/Berlin
+    volumes:
+      - /DATA/AppData/familienhub/pb_data:/pb/pb_data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  main: familienhub
+  category: Utilities
+  port_map: '8090'
+  scheme: http
+  index: /
+  title:
+    en_us: FamilienHub
+  tagline:
+    en_us: Essensplan, Einkauf, Kalender und Aufgaben

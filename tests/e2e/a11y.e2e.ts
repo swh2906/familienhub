@@ -95,6 +95,7 @@ for (const scheme of ['light', 'dark'] as const) {
 				'/essen/rezepte',
 				`/essen/rezepte/${recipe}`,
 				`/essen/rezepte/${recipe}/bearbeiten`,
+				`/essen/rezepte/${recipe}/kochen`,
 				'/essen/rezepte/neu',
 				'/einkauf',
 				'/kalender?ansicht=tag',

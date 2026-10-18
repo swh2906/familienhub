@@ -29,6 +29,10 @@ export interface Recipe extends BaseRecord {
 	instructions: string;
 	tags: string[] | null;
 	is_favorite: boolean;
+	/** Dauer in Minuten, 0 = keine Angabe (fehlt bei älteren Rezepten). */
+	prep_minutes?: number;
+	/** 1 leicht, 2 mittel, 3 schwer; 0 = keine Angabe. */
+	difficulty?: number;
 }
 
 export interface RecipeIngredient extends BaseRecord {

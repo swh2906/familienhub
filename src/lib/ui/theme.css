@@ -6,7 +6,15 @@
  */
 
 /* Akzentfarben: je ein Satz für Hell und Dunkel, der Modus wählt unten den passenden aus. */
+/* Handschrift für die Kochansicht, lokal mitgeliefert (SIL OFL, static/fonts/patrick-hand-OFL.txt). */
+@font-face {
+	font-family: 'Patrick Hand';
+	src: url('/fonts/patrick-hand.woff2') format('woff2');
+	font-display: swap;
+}
+
 :root {
+	--font-hand: 'Patrick Hand', 'Noteworthy', 'Bradley Hand', cursive;
 	--accent-light: #0e6e66;
 	--accent-light-on: #ffffff;
 	--accent-light-soft: #ddf1ee;
@@ -59,6 +67,13 @@
 	/* Hinweise */
 	--color-warning: #8a5a00;
 	--color-danger: #b42318;
+	--paper: #ebe7d9;
+	--paper-line: rgb(37 99 235 / 0.22);
+	--paper-margin: rgb(200 40 40 / 0.4);
+	--paper-text: #24221d;
+	--paper-heading: #9b2318;
+	--paper-meta: #1d4aa0;
+	--paper-tape: rgb(234 196 53 / 0.55);
 	--color-warning-bg: #fdf3dc;
 
 	/* Bereichsfarben: nur für kleine Symbole, nie für große Flächen */
@@ -122,6 +137,13 @@
 		--color-focus: var(--accent-dark);
 		--color-warning: #f5c76b;
 		--color-danger: #ff9b8f;
+		--paper: #2a2823;
+		--paper-line: rgb(140 170 255 / 0.2);
+		--paper-margin: rgb(255 120 110 / 0.4);
+		--paper-text: #eeeadf;
+		--paper-heading: #ff9b8f;
+		--paper-meta: #a9c1ff;
+		--paper-tape: rgb(234 196 53 / 0.35);
 		--color-warning-bg: #3a2e12;
 		--color-meals: #ffb48a;
 		--color-meals-bg: #3a2418;
@@ -153,6 +175,13 @@
 	--color-focus: var(--accent-dark);
 	--color-warning: #f5c76b;
 	--color-danger: #ff9b8f;
+	--paper: #2a2823;
+	--paper-line: rgb(140 170 255 / 0.2);
+	--paper-margin: rgb(255 120 110 / 0.4);
+	--paper-text: #eeeadf;
+	--paper-heading: #ff9b8f;
+	--paper-meta: #a9c1ff;
+	--paper-tape: rgb(234 196 53 / 0.35);
 	--color-warning-bg: #3a2e12;
 	--color-meals: #ffb48a;
 	--color-meals-bg: #3a2418;

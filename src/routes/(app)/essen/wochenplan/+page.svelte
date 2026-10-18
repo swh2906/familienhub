@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { session } from '#lib/auth/session.svelte.js';
@@ -63,6 +64,12 @@
 
 	let target: DialogTarget | null = $state(null);
 	let dragOver: string | null = $state(null);
+
+	// Handy: Tage stehen untereinander, „heute“ liegt oft weit unten – beim Öffnen dorthin springen.
+	onMount(() => {
+		if (key !== weekKey(new Date()) || !window.matchMedia('(max-width: 699px)').matches) return;
+		document.getElementById(`day-${today}`)?.closest('section')?.scrollIntoView({ block: 'start' });
+	});
 
 	function onDrop(event: DragEvent, date: string, slot: Slot) {
 		event.preventDefault();
@@ -131,17 +138,15 @@
 					ondragleave={() => (dragOver = null)}
 					ondrop={(event) => onDrop(event, day, slot)}
 				>
-					<div class="slot-head">
-						<span class="slot-label">{label}</span>
-						{#if session.canEdit && entries.length > 0}
-							<button
-								type="button"
-								class="add-small"
-								aria-label={addLabel}
-								onclick={() => (target = { date: day, slot })}>+</button
-							>
-						{/if}
-					</div>
+					<span class="slot-label">{label}</span>
+					{#if session.canEdit && entries.length > 0}
+						<button
+							type="button"
+							class="add-small"
+							aria-label={addLabel}
+							onclick={() => (target = { date: day, slot })}>+</button
+						>
+					{/if}
 
 					{#each entries as entry (entry.id)}
 						<div class="entry">
@@ -166,22 +171,23 @@
 							{#if entry.recipe_url}
 								<!-- eslint-disable svelte/no-navigation-without-resolve -- externer Link in eine andere App -->
 								<a
-									class="recipe-link"
+									class="recipe-link external"
 									href={entry.recipe_url}
 									target="_blank"
 									rel="noopener noreferrer"
 									aria-label={m.plan_open_recipe_label({ title: entry.title })}
+									title={m.plan_open_recipe_label({ title: entry.title })}
 								>
-									{m.plan_open_recipe()} ↗
+									<span aria-hidden="true">↗</span>
 								</a>
 								<!-- eslint-enable svelte/no-navigation-without-resolve -->
 							{:else if entry.recipe}
 								<a
-									class="recipe-link"
-									href={resolve('/(app)/essen/rezepte/[id]', { id: entry.recipe })}
-									aria-label={m.plan_open_recipe_label({ title: entry.title })}
+									class="recipe-link cook"
+									href={resolve('/(app)/essen/rezepte/[id]/kochen', { id: entry.recipe })}
+									aria-label={m.today_meal_cook({ title: entry.title })}
 								>
-									{m.plan_open_recipe()}
+									{m.cook_start()}
 								</a>
 							{/if}
 						</div>
@@ -307,43 +313,34 @@
 		letter-spacing: 0.04em;
 	}
 
+	/* Handy: eine schlanke Zeile pro Mahlzeit – Bezeichnung, Gericht(e), „+“ am Ende. */
 	.slot {
+		position: relative;
 		display: grid;
-		grid-template-columns: 5.5rem 1fr;
+		grid-template-columns: 5.5rem minmax(0, 1fr) var(--touch-target);
 		align-items: center;
 		gap: var(--space-1) var(--space-2);
-		min-height: 56px;
+		min-height: var(--touch-target);
 		padding: var(--space-1) 0;
 		border-top: 1px solid var(--color-border);
-		border-radius: var(--radius);
 	}
 
 	.slot.over {
+		border-radius: var(--radius);
 		background: var(--color-primary-soft);
 		outline: 2px dashed var(--color-primary);
 	}
 
-	/* Kopf (Bezeichnung + kleines „+“) steht links neben dem ersten Eintrag. */
-	.slot-head {
+	.slot-label {
 		grid-column: 1;
 		grid-row: 1;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.slot-label {
 		color: var(--color-text-muted);
 		font-size: 0.8125rem;
 		font-weight: 600;
 	}
 
-	.entry,
-	.add {
-		grid-column: 2;
-	}
-
 	.entry {
+		grid-column: 2;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -377,35 +374,52 @@
 	.recipe-link {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
+		min-width: var(--touch-target);
 		min-height: var(--touch-target);
-		padding: 0 var(--space-2);
 		color: var(--color-primary-strong);
 		font-size: 0.875rem;
 		font-weight: 600;
+		text-decoration: none;
 	}
 
+	.recipe-link.cook {
+		padding: 0 var(--space-2);
+	}
+
+	.recipe-link:hover {
+		text-decoration: underline;
+	}
+
+	.recipe-link.external {
+		font-size: 1rem;
+	}
+
+	/* „+“: auf dem Handy immer am Zeilenende (leer und gefüllt gleich). */
 	.add,
 	.add-small {
-		min-width: var(--touch-target);
-		min-height: var(--touch-target);
+		grid-column: 3;
+		grid-row: 1;
+		justify-self: end;
+		width: var(--touch-target);
+		height: var(--touch-target);
+		padding: 0;
 		border: 1px dashed var(--color-border);
 		border-radius: var(--radius);
 		background: transparent;
 		color: var(--color-text-muted);
 		font: inherit;
+		font-size: 1.25rem;
+		line-height: 1;
 		cursor: pointer;
-	}
-
-	.add {
-		justify-self: start;
-		padding: 0 var(--space-4);
-		font-size: 0.875rem;
 	}
 
 	.add-small {
 		border-color: transparent;
-		font-size: 1.25rem;
-		line-height: 1;
+	}
+
+	.add-text {
+		display: none;
 	}
 
 	.add:hover,
@@ -419,7 +433,11 @@
 		margin-top: var(--space-3);
 	}
 
-	/* ---- Tablet: die drei Mahlzeiten eines Tages nebeneinander ---- */
+	.day {
+		scroll-margin-top: calc(var(--header-height, 4rem) + var(--space-3));
+	}
+
+	/* ---- Tablet: die drei Mahlzeiten eines Tages nebeneinander, als Kästen ---- */
 	@media (min-width: 700px) {
 		.day {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -433,24 +451,49 @@
 
 		.slot {
 			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: var(--touch-target);
+			grid-auto-rows: auto;
 			align-content: start;
 			align-items: start;
 			padding: var(--space-2);
 			border: 1px solid var(--color-border);
+			border-radius: var(--radius);
 		}
 
-		.slot-head {
-			grid-row: auto;
-			min-height: var(--touch-target);
+		.slot-label {
+			align-self: center;
 		}
 
-		.entry,
-		.add {
+		.entry {
 			grid-column: 1;
 		}
 
+		/* Leer: das ganze Feld ist der Hinzufügen-Button. */
+		.slot.empty {
+			grid-template-rows: var(--touch-target) 1fr;
+		}
+
 		.add {
+			grid-column: 1;
+			grid-row: 2;
 			justify-self: stretch;
+			align-self: stretch;
+			width: auto;
+			height: auto;
+			min-height: var(--touch-target);
+			font-size: 1rem;
+		}
+
+		.add-text {
+			display: inline;
+			font-size: 0.875rem;
+		}
+
+		/* Gefüllt: kleines „+“ oben rechts im Kasten. */
+		.add-small {
+			position: absolute;
+			top: var(--space-1);
+			right: var(--space-1);
 		}
 	}
 
@@ -479,6 +522,12 @@
 		.badge {
 			justify-self: start;
 			margin-top: var(--space-1);
+		}
+
+		/* Schmale Spalten: etwas kleinere Chips, damit kurze Gerichte in eine Zeile passen. */
+		.dish {
+			padding: var(--space-1) var(--space-2);
+			font-size: 0.875rem;
 		}
 
 		.add-text {

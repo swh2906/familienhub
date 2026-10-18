@@ -81,3 +81,25 @@ test('Kinder sehen die Kochansicht ohne Bearbeiten', async ({ page }) => {
 	await page.getByRole('button', { name: 'Eine Portion mehr' }).click();
 	await expect(page.getByText('375 g Mehl')).toBeVisible();
 });
+
+test('Auf „Heute“ führt ein geplantes Rezept direkt in die Kochansicht', async ({ page }) => {
+	const family = await createFamily();
+	const id = await seed(family.email, family.household);
+	const pad = (n: number) => String(n).padStart(2, '0');
+	const now = new Date();
+	await apiCreate(await apiToken(family.email), 'meal_plan_entries', {
+		household: family.household,
+		date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+		slot: 'dinner',
+		title: 'Pfannkuchen',
+		recipe: id
+	});
+	await login(page, family.email);
+	await page.getByRole('link', { name: 'Pfannkuchen – kochen' }).click();
+	await expect(page).toHaveURL(new RegExp(`/essen/rezepte/${id}/kochen$`));
+
+	// Im Wochenplan genauso: „Kochen“ neben dem Gericht.
+	await page.goto('/essen/wochenplan');
+	await page.getByRole('link', { name: 'Pfannkuchen – kochen' }).click();
+	await expect(page).toHaveURL(new RegExp(`/essen/rezepte/${id}/kochen$`));
+});

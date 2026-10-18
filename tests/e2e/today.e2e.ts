@@ -16,12 +16,15 @@ function card(page: Page, name: string) {
 
 async function seed(admin: string, household: string) {
 	const token = await apiToken(admin);
-	const start = new Date(Date.now() + 2 * 3_600_000);
+	// In zwei Stunden, aber spätestens 23 Uhr – sonst rutscht der Termin abends auf morgen.
+	const lateToday = new Date();
+	lateToday.setHours(23, 0, 0, 0);
+	const start = new Date(Math.min(Date.now() + 2 * 3_600_000, lateToday.getTime()));
 	await apiCreate(token, 'events', {
 		household,
 		title: 'Elterngespräch',
 		start: start.toISOString(),
-		end: new Date(start.getTime() + 3_600_000).toISOString(),
+		end: new Date(start.getTime() + 30 * 60_000).toISOString(),
 		exdates: []
 	});
 	await apiCreate(token, 'meal_plan_entries', {

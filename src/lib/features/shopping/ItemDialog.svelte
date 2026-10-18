@@ -91,7 +91,9 @@
 		<div class="actions">
 			<button class="btn btn-primary" type="submit">{m.plan_save()}</button>
 			<button class="btn" type="button" onclick={() => dialog?.close()}>{m.cancel()}</button>
-			<button class="btn danger" type="button" onclick={remove}>{m.shopping_delete()}</button>
+			<button class="btn btn-danger danger" type="button" onclick={remove}
+				>{m.shopping_delete()}</button
+			>
 		</div>
 		<datalist id="item-units">
 			{#each UNITS as option (option)}<option value={option}></option>{/each}
@@ -136,8 +138,14 @@
 		gap: var(--space-3);
 	}
 
+	/* Breit genug: rechts in derselben Zeile; schmal (Handy): eigene Zeile, links bündig. */
 	.danger {
 		margin-left: auto;
-		color: var(--color-warning);
+	}
+
+	@media (max-width: 30rem) {
+		.danger {
+			margin-left: 0;
+		}
 	}
 </style>

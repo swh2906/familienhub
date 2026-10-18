@@ -221,26 +221,27 @@
 							<span class="slot">{slotLabels[slot]()}</span>
 							<span class="dishes">
 								{#each entries as entry (entry.id)}
-									<span class="dish">
-										{entry.title}
-										{#if entry.recipe_url}
-											<!-- eslint-disable svelte/no-navigation-without-resolve -- externer Link -->
-											<a
-												class="link"
-												href={entry.recipe_url}
-												target="_blank"
-												rel="noopener noreferrer"
-												aria-label={m.plan_open_recipe_label({ title: entry.title })}>↗</a
-											>
-											<!-- eslint-enable svelte/no-navigation-without-resolve -->
-										{:else if entry.recipe}
-											<a
-												class="link"
-												href={resolve('/(app)/essen/rezepte/[id]', { id: entry.recipe })}
-												aria-label={m.plan_open_recipe_label({ title: entry.title })}>↗</a
-											>
-										{/if}
-									</span>
+									{#if entry.recipe}
+										<a
+											class="dish"
+											href={resolve('/(app)/essen/rezepte/[id]/kochen', { id: entry.recipe })}
+											aria-label={m.today_meal_cook({ title: entry.title })}
+											>{entry.title}<span class="go" aria-hidden="true">›</span></a
+										>
+									{:else if entry.recipe_url}
+										<!-- eslint-disable svelte/no-navigation-without-resolve -- externer Link -->
+										<a
+											class="dish"
+											href={entry.recipe_url}
+											target="_blank"
+											rel="noopener noreferrer"
+											aria-label={m.today_meal_external({ title: entry.title })}
+											>{entry.title}<span class="go" aria-hidden="true">↗</span></a
+										>
+										<!-- eslint-enable svelte/no-navigation-without-resolve -->
+									{:else}
+										<span class="dish plain">{entry.title}</span>
+									{/if}
 								{/each}
 							</span>
 						</li>
@@ -265,7 +266,7 @@
 			<input
 				id="today-quick"
 				bind:value={quick}
-				placeholder={m.shopping_quick_placeholder()}
+				placeholder={m.today_shopping_placeholder()}
 				autocomplete="off"
 				enterkeyhint="done"
 			/>
@@ -544,12 +545,12 @@
 	}
 
 	.meal {
-		align-items: baseline !important;
+		padding: 0 !important;
 	}
 
 	.slot {
 		flex: none;
-		width: 5.25rem;
+		width: 4.75rem;
 		color: var(--color-text-muted);
 		font-size: 0.8125rem;
 		font-weight: 600;
@@ -560,17 +561,27 @@
 		gap: 2px;
 	}
 
+	/* Ganzes Gericht antippbar: FamilienHub-Rezept → Kochansicht, externer Link → Rezept-App. */
 	.dish {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: var(--touch-target);
+		color: var(--color-text);
 		font-weight: 600;
+		text-decoration: none;
 	}
 
-	.dish .link {
-		display: inline-grid;
-		place-items: center;
-		min-width: 32px;
-		min-height: 32px;
+	a.dish:hover {
+		text-decoration: underline;
+	}
+
+	.dish.plain {
+		min-height: 0;
+	}
+
+	.go {
 		color: var(--color-primary-strong);
-		text-decoration: none;
 	}
 
 	.quick {
@@ -669,7 +680,11 @@
 	@media (min-width: 700px) {
 		.cards {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-			align-items: start;
+		}
+
+		/* Karten einer Reihe gleich hoch, Inhalt oben. */
+		.cards > .card {
+			align-content: start;
 		}
 
 		.toast {

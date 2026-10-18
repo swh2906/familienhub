@@ -4,6 +4,7 @@
 	import { session } from '#lib/auth/session.svelte.js';
 	import { live } from '#lib/db/live.svelte.js';
 	import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+	import { recipeFacts } from '#lib/features/meals/cooking.js';
 	import { availableTags, filterRecipes } from '#lib/features/meals/recipes.js';
 	import { ingredientsOfRecipes, recipesOf, toggleFavorite } from '#lib/features/meals/store.js';
 	import { m } from '#lib/paraglide/messages.js';
@@ -87,10 +88,12 @@
 						{recipe.title}
 					</a>
 					<p class="meta">
-						{servings(recipe.servings || 1)}
-						{#if (recipe.tags ?? []).length > 0}
-							· {(recipe.tags ?? []).join(', ')}
-						{/if}
+						{[
+							...recipeFacts(recipe, servings(recipe.servings || 1)),
+							(recipe.tags ?? []).join(', ')
+						]
+							.filter(Boolean)
+							.join(' · ')}
 					</p>
 					{#if session.canEdit}
 						<button
@@ -149,6 +152,8 @@
 		overflow-x: auto;
 		padding-bottom: var(--space-1);
 		scrollbar-width: none;
+		/* Sanft ausblenden am rechten Rand: zeigt, dass man weiterwischen kann. */
+		mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
 	}
 
 	.chips > * {
@@ -159,6 +164,7 @@
 		.chips {
 			flex-wrap: wrap;
 			overflow-x: visible;
+			mask-image: none;
 		}
 	}
 

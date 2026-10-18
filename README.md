@@ -187,7 +187,7 @@ Die App läuft als ZimaOS-App aus zwei Containern (zusammen ca. 50 MB RAM):
 - **familienhub**: PocketBase mit der gebauten App, Image `ghcr.io/swh2906/familienhub:latest` (x86 und ARM, gebaut von `.github/workflows/docker.yml` bei jedem Merge auf `main`).
 - **tailscale**: macht die App per HTTPS unter `https://familienhub.<euer-tailnet>.ts.net` erreichbar. HTTPS ist nötig, damit sich die App installieren lässt und offline startet. Am Router muss nichts freigegeben werden.
 
-Ohne Tailscale ist die App im Heimnetz unter `http://<zima-ip>:8090` erreichbar, aber nur im Browser (ohne Installation und Offline-Start).
+Ohne Tailscale ist die App im Heimnetz unter `http://<zima-ip>:8090` erreichbar, aber nur im Browser (ohne Installation und Offline-Start). Dafür gibt es die schlanke Variante `deploy/zimaos/docker-compose.lan.yml` (nur FamilienHub, kein Tailscale-Key nötig).
 
 ### Einmalig einrichten
 

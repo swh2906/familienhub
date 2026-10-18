@@ -210,6 +210,7 @@
 						quantity={formatQuantity(item)}
 						category={item.category}
 						adder={adderOf(item)}
+						editable={editsOnTap(item)}
 						label={editsOnTap(item)
 							? m.shopping_edit({ name: item.name })
 							: tileLabel(item, m.shopping_tile_buy)}
@@ -235,6 +236,7 @@
 						label={editsOnTap(item)
 							? m.shopping_edit({ name: item.name })
 							: m.shopping_tile_readd({ name: item.name })}
+						editable={editsOnTap(item)}
 						onactivate={() => (editsOnTap(item) ? (editing = item) : reopenItem(item))}
 						onlongpress={canChange(item) ? () => (editing = item) : undefined}
 					/>
@@ -335,7 +337,13 @@
 	}
 
 	.group {
-		margin-bottom: var(--space-6);
+		margin-bottom: var(--space-4);
+	}
+
+	@media (min-width: 700px) {
+		.group {
+			margin-bottom: var(--space-6);
+		}
 	}
 
 	.group h2 {

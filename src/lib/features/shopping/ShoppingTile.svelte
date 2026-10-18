@@ -69,7 +69,7 @@
 		}}
 	>
 		<span class="emoji" aria-hidden="true">{emojiFor(name, category)}</span>
-		<span class="name" aria-hidden="true">{name}</span>
+		<span class="name" aria-hidden="true"><span>{name}</span></span>
 		{#if quantity}<span class="quantity" aria-hidden="true">{quantity}</span>{/if}
 	</button>
 	<!-- Neben dem Button: Die Initiale wäre sonst sichtbarer Text, der im Button-Namen fehlt (WCAG 2.5.3).
@@ -145,11 +145,15 @@
 		opacity: 0.85;
 	}
 
+	/* Außen ohne overflow, damit die Kachel für zwei Zeilen mitwächst; innen auf zwei Zeilen gekürzt. */
 	.name {
 		max-width: 100%;
 		font-size: 0.875rem;
 		font-weight: 650;
 		line-height: 1.2;
+	}
+
+	.name > span {
 		hyphens: auto;
 		overflow-wrap: break-word;
 		display: -webkit-box;

@@ -387,5 +387,8 @@
 	"cook_no_ingredients": "Keine Zutaten angegeben.",
 	"cook_no_instructions": "Keine Zubereitung angegeben.",
 	"editor_prep_minutes": "Dauer (Minuten)",
-	"editor_difficulty": "Schwierigkeit"
+	"editor_difficulty": "Schwierigkeit",
+	"today_meal_cook": "{title} – kochen",
+	"today_meal_external": "{title} – Rezept öffnen",
+	"today_shopping_placeholder": "z. B. 2 l Milch"
 }

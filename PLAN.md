@@ -287,6 +287,43 @@ In drei PRs: **10a** App-Qualität (PWA, Offline, Barrierefreiheit), **10b** Dat
 
 ---
 
+## Roadmap: als Nächstes
+
+### 1. Performance bei vielen Einträgen
+
+Lasttest am 18.10.2026 mit 10.000 Einträgen (1.000 Termine, davon 50 wöchentlich; 500 Rezepte mit 5.000 Zutaten; 2.000 Einkaufsartikel; 500 Aufgaben; 1.000 Essensplan-Einträge):
+
+| | Ergebnis |
+| --- | --- |
+| Server (PocketBase) | ca. 90 MB RAM (Spitze 110 MB), CPU im Ruhezustand ~0 %, Datenbank 2,7 MB |
+| Abgleich | neues Gerät holt alles in 0,5 s; laufender Abgleich 5 ms |
+| Gerät | lokale Datenbank ~8 MB, JS-Speicher 30–50 MB |
+
+Seitenzeiten (Rechner / CPU vierfach gedrosselt ≈ Mittelklasse-Handy):
+
+| Seite | Rechner | gedrosselt |
+| --- | --- | --- |
+| Heute, Kalender Woche/Monat | 0,1–0,2 s | 0,5–0,7 s |
+| Rezeptliste (500) | 0,9 s | 2,3 s |
+| Einkauf (1.000 offen) | 1,9 s | 6,4 s |
+| Aufgaben (500) | 1,4 s | 5,0 s |
+| Rezeptsuche über 5.000 Zutaten | 2,4 s | 14,8 s |
+
+Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realistischen Mengen (20–50 offene Artikel, 30–100 Aufgaben, 100–200 Rezepte) bleibt alles flüssig; die drei langsamen Seiten skalieren aber schlecht.
+
+- [ ] Rezeptsuche: Suchtext (Titel, Tags, Zutaten) einmal pro Datenänderung vorberechnen statt bei jeder Eingabe; Ursache der 2,4 s zuerst mit dem Profiler bestätigen.
+- [ ] Lange Listen in Abschnitten nachladen bzw. nur Sichtbares rendern: Einkauf (offen und „Zuletzt gekauft“), Aufgaben.
+- [ ] Lasttest als festes Skript (`pnpm perf`): Daten anlegen, Seiten mit CPU-Drossel messen, Grenzwerte prüfen, damit es nicht wieder langsamer wird.
+
+**Fertig, wenn:** Mit den Mengen oben lädt jede Seite gedrosselt in unter 1,5 s, die Rezeptsuche reagiert in unter 300 ms.
+
+### 2. Weitere offene Punkte
+
+- Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).
+- HTTPS im Heimnetz über Tailscale (`deploy/zimaos/docker-compose.yml`), damit Installation als App und Offline-Start gehen.
+- Abnahme Schritt 10 auf ZimaOS: App auf allen Familiengeräten im Einsatz, ein Backup testweise zurückgespielt.
+- Phase „Produkt“ für andere Familien (Ende-zu-Ende-Verschlüsselung, DSGVO/ISO 27001) – erst nach dem Familientest entscheiden.
+
 ## Danach: Phase 2
 
 Push-Benachrichtigungen für Erinnerungen, Punkte und Belohnungen, ICS-Kalender-Abo, Rezept-Import per Link und Fotos, native Apps über Capacitor.

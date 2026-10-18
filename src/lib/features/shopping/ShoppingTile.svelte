@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Eine Kachel im Bring-Stil: Emoji, Name, Menge. Antippen löst die Hauptaktion aus
 	// (kaufen, wieder auf die Liste, hinzufügen); langes Drücken oder Rechtsklick öffnet Details.
+	import Icon from '#lib/ui/Icon.svelte';
 	import MemberAvatar from '#lib/ui/MemberAvatar.svelte';
 	import { emojiFor } from './emoji.js';
 
@@ -11,6 +12,7 @@
 		variant,
 		label,
 		adder = null,
+		editable = false,
 		onactivate,
 		onlongpress
 	}: {
@@ -20,6 +22,8 @@
 		variant: 'open' | 'recent' | 'suggestion';
 		label: string;
 		adder?: { name: string; color: string } | null;
+		/** Bearbeiten-Modus: Antippen öffnet den Dialog statt abzuhaken (sichtbar markiert). */
+		editable?: boolean;
 		onactivate: () => void;
 		onlongpress?: () => void;
 	} = $props();
@@ -55,6 +59,7 @@
 	<button
 		type="button"
 		class="tile {variant}"
+		class:editable
 		aria-label={label}
 		onclick={click}
 		onpointerdown={startPress}
@@ -72,6 +77,9 @@
 		<span class="name" aria-hidden="true"><span>{name}</span></span>
 		{#if quantity}<span class="quantity" aria-hidden="true">{quantity}</span>{/if}
 	</button>
+	{#if editable}
+		<span class="pencil" aria-hidden="true"><Icon name="edit" size={14} /></span>
+	{/if}
 	<!-- Neben dem Button: Die Initiale wäre sonst sichtbarer Text, der im Button-Namen fehlt (WCAG 2.5.3).
 	Wer hinzugefügt hat, steht bereits im Namen (label). -->
 	{#if adder}
@@ -171,6 +179,26 @@
 
 	.wrap {
 		position: relative;
+	}
+
+	/* Bearbeiten-Modus: gestrichelter Rand und Stift oben links. */
+	.tile.editable {
+		outline: 2px dashed currentColor;
+		outline-offset: -6px;
+	}
+
+	.pencil {
+		position: absolute;
+		top: 8px;
+		left: 8px;
+		display: grid;
+		place-items: center;
+		width: 22px;
+		height: 22px;
+		border-radius: 999px;
+		background: var(--color-surface);
+		color: var(--color-text);
+		pointer-events: none;
 	}
 
 	.adder {

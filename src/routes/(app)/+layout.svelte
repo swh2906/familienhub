@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { features } from '#lib/auth/features.svelte.js';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { startSync, stopSync } from '#lib/sync/service.js';
@@ -21,6 +22,11 @@
 		if (!household) return;
 		startSync(household);
 		return () => void stopSync();
+	});
+
+	// Testphasen-Schalter (z. B. Feedback) beim Start einmal vom Server holen.
+	$effect(() => {
+		void features.load();
 	});
 
 	// Familienraum gelöscht oder aus der Familie entfernt: lokale Daten verwerfen und weiter zum

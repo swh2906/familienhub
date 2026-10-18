@@ -42,6 +42,8 @@ services:
       - tailscale
     environment:
       TZ: Europe/Berlin
+      # Testphase: Reiter „Feedback“ unter Aufgaben. Für die fertige Version auf '0' setzen.
+      HOMI_FEEDBACK: '1'
     volumes:
       - /DATA/AppData/familienhub/pb_data:/pb/pb_data
     deploy:

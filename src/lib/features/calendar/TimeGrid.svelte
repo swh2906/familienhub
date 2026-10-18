@@ -1,11 +1,12 @@
 <script lang="ts">
 	// Zeitachse für einen oder mehrere Tage: ganztägige Termine oben, Termine nach Uhrzeit,
 	// überlappende nebeneinander. Klick auf eine freie Stelle legt dort einen Termin an.
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import type { Membership } from '#lib/db/types.js';
 	import { formatShortDate, formatWeekday } from '#lib/features/meals/week.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { layoutColumns } from './conflicts.js';
+	import { HOUR_PX, initialScrollTop } from './grid.js';
 	import { onDay, type Occurrence } from './expand.js';
 	import { describeOccurrence, occurrenceColor, timeRange } from './label.js';
 	import { utcToZoned } from './tz.js';
@@ -30,14 +31,25 @@
 		oncreate?: (date: string, time: string) => void;
 	} = $props();
 
-	const HOUR_PX = 48;
 	const hours = Array.from({ length: 24 }, (_, h) => h);
 	let scroller: HTMLDivElement | undefined = $state();
 	let now = $state(Date.now());
 
+	// Beim Öffnen und beim Blättern: heute → aktuelle Uhrzeit im oberen Drittel, sonst 6:30.
+	$effect(() => {
+		const key = days.join(',');
+		untrack(() => {
+			if (!scroller || !key) return;
+			const zoned = utcToZoned(Date.now(), timeZone);
+			scroller.scrollTop = initialScrollTop(
+				days.includes(zoned.date),
+				zoned.minutes,
+				scroller.clientHeight
+			);
+		});
+	});
+
 	onMount(() => {
-		// Auf 6:30 scrollen: 7 Uhr ist sichtbar, mit etwas Luft unter der Ganztags-Zeile.
-		if (scroller) scroller.scrollTop = 6.5 * HOUR_PX;
 		const timer = setInterval(() => (now = Date.now()), 60_000);
 		return () => clearInterval(timer);
 	});
@@ -94,7 +106,15 @@
 		{/each}
 	</div>
 
-	<div class="scroller" bind:this={scroller}>
+	<!-- Fokussierbar, damit man die Zeitachse auch per Tastatur scrollen kann. -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<div
+		class="scroller"
+		bind:this={scroller}
+		tabindex="0"
+		role="region"
+		aria-label={m.cal_timeline()}
+	>
 		<div class="body" style:height="calc({24 * HOUR_PX}px + var(--pad))">
 			<div class="hours" aria-hidden="true">
 				{#each hours as h (h)}

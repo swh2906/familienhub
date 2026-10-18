@@ -12,7 +12,8 @@ const FAMILY_COLLECTIONS = [
 	'shopping_items',
 	'events',
 	'tasks',
-	'task_completions'
+	'task_completions',
+	'feedback'
 ];
 
 // ---- Eigene Routen (nur angemeldete Konten der Collection `users`) ----
@@ -92,6 +93,13 @@ onRecordUpdateRequest(
 	...FAMILY_COLLECTIONS
 );
 
+routerAdd('GET', '/api/fh/features', (e) => require(`${__hooks}/lib/familienhub.js`).features(e));
+
+onRecordCreateRequest((e) => {
+	require(`${__hooks}/lib/familienhub.js`).stampFeedback(e);
+	e.next();
+}, 'feedback');
+
 onRecordCreateRequest((e) => {
 	require(`${__hooks}/lib/familienhub.js`).stampShoppingItem(e, true);
 	e.next();
@@ -122,5 +130,6 @@ onRecordValidate(
 	'shopping_items',
 	'events',
 	'tasks',
-	'task_completions'
+	'task_completions',
+	'feedback'
 );

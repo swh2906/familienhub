@@ -15,6 +15,7 @@ export class FamilyDb extends Dexie {
 	events!: Table<CollectionTypes['events'], string>;
 	tasks!: Table<CollectionTypes['tasks'], string>;
 	task_completions!: Table<CollectionTypes['task_completions'], string>;
+	feedback!: Table<CollectionTypes['feedback'], string>;
 	outbox!: Table<OutboxEntry, number>;
 	meta!: Table<MetaEntry, string>;
 
@@ -34,6 +35,8 @@ export class FamilyDb extends Dexie {
 			outbox: '++seq, [collection+recordId]',
 			meta: 'key'
 		});
+		// Version 2: Feedback der Testphase.
+		this.version(2).stores({ feedback: 'id, household, updated' });
 	}
 
 	/** Tabelle einer Collection; der Rückgabetyp passt zur Collection. */

@@ -102,6 +102,7 @@ for (const scheme of ['light', 'dark'] as const) {
 				'/kalender?ansicht=woche',
 				'/kalender?ansicht=monat',
 				'/aufgaben',
+				'/aufgaben/feedback',
 				'/einstellungen'
 			];
 			for (const path of pages) {

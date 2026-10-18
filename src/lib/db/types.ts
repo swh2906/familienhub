@@ -95,6 +95,19 @@ export interface Task extends BaseRecord {
 	assignees: string[];
 }
 
+/** Testphase: Rückmeldung aus der Familie (Reiter „Feedback“ unter Aufgaben). */
+export interface Feedback extends BaseRecord {
+	household: string;
+	text: string;
+	/** Bereich der App, z. B. „Einkauf“. */
+	area: string;
+	/** Kurzbeschreibung des Geräts, z. B. „Handy · Android · Chrome“. */
+	device: string;
+	done: boolean;
+	/** Mitgliedschaft der Person, die es geschrieben hat (setzt der Server). */
+	created_by: string;
+}
+
 export interface TaskCompletion extends BaseRecord {
 	task: string;
 	membership: string;
@@ -113,6 +126,7 @@ export interface CollectionTypes {
 	events: CalendarEvent;
 	tasks: Task;
 	task_completions: TaskCompletion;
+	feedback: Feedback;
 }
 
 export type CollectionName = keyof CollectionTypes;
@@ -130,7 +144,8 @@ export const COLLECTIONS: readonly { name: CollectionName; scope: string }[] = [
 	{ name: 'shopping_items', scope: 'household' },
 	{ name: 'events', scope: 'household' },
 	{ name: 'tasks', scope: 'household' },
-	{ name: 'task_completions', scope: 'task.household' }
+	{ name: 'task_completions', scope: 'task.household' },
+	{ name: 'feedback', scope: 'household' }
 ];
 
 /** Felder, die nur der Server setzt; der Client schickt sie nie mit. */

@@ -14,7 +14,7 @@
 </script>
 
 {#if features.feedback || onFeedback}
-	<nav class="tabs" aria-label={m.tasks_tabs_label()}>
+	<nav class="tabs" aria-label={m.tasks_sections_label()}>
 		<a href={tasksHref} aria-current={onFeedback ? undefined : 'page'}>{m.tasks_tab_tasks()}</a>
 		<a href={feedbackHref} aria-current={onFeedback ? 'page' : undefined}
 			>{m.tasks_tab_feedback()}</a

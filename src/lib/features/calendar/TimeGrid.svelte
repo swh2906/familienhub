@@ -1,12 +1,21 @@
 <script lang="ts">
 	// Zeitachse für einen oder mehrere Tage: ganztägige Termine oben, Termine nach Uhrzeit,
 	// überlappende nebeneinander. Klick auf eine freie Stelle legt dort einen Termin an.
+	// Termine ziehen (Maus sofort, Touch nach langem Drücken): verschieben, unterer Rand = Dauer.
 	import { onMount, untrack } from 'svelte';
 	import type { Membership } from '#lib/db/types.js';
 	import { formatShortDate, formatWeekday } from '#lib/features/meals/week.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { layoutColumns } from './conflicts.js';
-	import { HOUR_PX, initialScrollTop } from './grid.js';
+	import {
+		HOUR_PX,
+		initialScrollTop,
+		minutesToTime,
+		moveTo,
+		resizeTo,
+		snapMinutes,
+		type DragResult
+	} from './grid.js';
 	import { onDay, type Occurrence } from './expand.js';
 	import { describeOccurrence, occurrenceColor, timeRange } from './label.js';
 	import { utcToZoned } from './tz.js';
@@ -19,7 +28,8 @@
 		today,
 		timeZone,
 		onopen,
-		oncreate
+		oncreate,
+		onmove
 	}: {
 		days: string[];
 		occurrences: Occurrence[];
@@ -29,6 +39,8 @@
 		timeZone: string;
 		onopen?: (o: Occurrence) => void;
 		oncreate?: (date: string, time: string) => void;
+		/** Termin gezogen (nur für Bearbeitende gesetzt). */
+		onmove?: (o: Occurrence, result: DragResult) => void;
 	} = $props();
 
 	const hours = Array.from({ length: 24 }, (_, h) => h);
@@ -70,6 +82,141 @@
 	function toMinutes(time: string): number {
 		const [h, mi] = time.split(':').map(Number);
 		return h * 60 + mi;
+	}
+
+	// ---- Ziehen ----
+	const LONG_PRESS_MS = 350;
+	interface Drag {
+		o: Occurrence;
+		mode: 'move' | 'resize';
+		pointerId: number;
+		touch: boolean;
+		x: number;
+		y: number;
+		dayIndex: number;
+		start: number;
+		duration: number;
+		colWidth: number;
+		active: boolean;
+		deltaMin: number;
+		dayOffset: number;
+		timer: ReturnType<typeof setTimeout> | null;
+	}
+	let drag: Drag | null = $state.raw(null);
+	// Nach dem Ziehen kommt noch ein „click“ – der soll keinen Dialog öffnen.
+	let suppressClick = false;
+
+	/** Nur Termine innerhalb eines Tages lassen sich ziehen. */
+	function draggable(o: Occurrence): boolean {
+		return !!onmove && !o.allDay && o.startDate === o.endDate;
+	}
+
+	function result(d: Drag): DragResult {
+		return d.mode === 'move'
+			? moveTo(days[d.dayIndex + d.dayOffset], d.start, d.duration, d.deltaMin)
+			: resizeTo(days[d.dayIndex], d.start, d.duration, d.deltaMin);
+	}
+
+	function pointerDown(event: PointerEvent, o: Occurrence, mode: 'move' | 'resize', day: string) {
+		if (!draggable(o) || event.button !== 0) return;
+		if (mode === 'resize') event.stopPropagation();
+		const target = event.currentTarget as HTMLElement;
+		const column = target.closest('.column');
+		const d: Drag = {
+			o,
+			mode,
+			pointerId: event.pointerId,
+			touch: event.pointerType !== 'mouse',
+			x: event.clientX,
+			y: event.clientY,
+			dayIndex: days.indexOf(day),
+			start: toMinutes(o.startTime),
+			duration: Math.max(15, Math.round((o.end - o.start) / 60_000)),
+			colWidth: column?.getBoundingClientRect().width ?? 0,
+			active: false,
+			deltaMin: 0,
+			dayOffset: 0,
+			timer: null
+		};
+		if (d.touch) {
+			// Touch: erst nach langem Drücken ziehen, sonst scrollt man wie gewohnt.
+			d.timer = setTimeout(() => {
+				if (drag !== d) return;
+				drag = { ...d, active: true };
+				navigator.vibrate?.(10);
+			}, LONG_PRESS_MS);
+		}
+		drag = d;
+		// Am ganzen Fenster mithören: Der Zeiger verlässt den Termin beim Ziehen schnell.
+		window.addEventListener('pointermove', pointerMove);
+		window.addEventListener('pointerup', pointerUp);
+		window.addEventListener('pointercancel', cancelDrag);
+	}
+
+	function stopListening() {
+		window.removeEventListener('pointermove', pointerMove);
+		window.removeEventListener('pointerup', pointerUp);
+		window.removeEventListener('pointercancel', cancelDrag);
+	}
+
+	function pointerMove(event: PointerEvent) {
+		const d = drag;
+		if (!d || event.pointerId !== d.pointerId) return;
+		const dx = event.clientX - d.x;
+		const dy = event.clientY - d.y;
+		if (!d.active) {
+			if (d.touch) {
+				// Vor dem langen Drücken bewegt: das ist Scrollen, kein Ziehen.
+				if (Math.hypot(dx, dy) > 8) cancelDrag();
+				return;
+			}
+			if (Math.hypot(dx, dy) < 4) return;
+		}
+		const maxOffset = days.length - 1 - d.dayIndex;
+		const dayOffset =
+			d.mode === 'move' && days.length > 1 && d.colWidth > 0
+				? Math.min(Math.max(Math.round(dx / d.colWidth), -d.dayIndex), maxOffset)
+				: 0;
+		drag = { ...d, active: true, deltaMin: snapMinutes(dy), dayOffset };
+	}
+
+	function pointerUp(event: PointerEvent) {
+		const d = drag;
+		if (!d || event.pointerId !== d.pointerId) return;
+		if (d.timer) clearTimeout(d.timer);
+		drag = null;
+		stopListening();
+		if (!d.active) return;
+		suppressClick = true;
+		setTimeout(() => (suppressClick = false), 0);
+		const next = result(d);
+		if (next.date !== d.o.startDate || next.start !== d.start || next.duration !== d.duration) {
+			onmove?.(d.o, next);
+		}
+	}
+
+	function cancelDrag() {
+		if (drag?.timer) clearTimeout(drag.timer);
+		drag = null;
+		stopListening();
+	}
+
+	onMount(() => stopListening);
+
+	/** Während des Ziehens auf Touch nicht scrollen (passive: false nötig). */
+	function blockScroll(node: HTMLElement) {
+		const onTouchMove = (event: TouchEvent) => {
+			if (drag?.active) event.preventDefault();
+		};
+		node.addEventListener('touchmove', onTouchMove, { passive: false });
+		return () => node.removeEventListener('touchmove', onTouchMove);
+	}
+
+	/** Vorschau-Uhrzeit während des Ziehens. */
+	function preview(o: Occurrence): string | null {
+		if (!drag?.active || drag.o.key !== o.key) return null;
+		const r = result(drag);
+		return `${minutesToTime(r.start)}–${minutesToTime((r.start + r.duration) % (24 * 60))}`;
 	}
 
 	function createAt(event: MouseEvent, day: string) {
@@ -123,16 +270,28 @@
 			</div>
 			{#each days as day (day)}
 				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-				<div class="column" class:today={day === today} onclick={(e) => createAt(e, day)}>
+				<div
+					class="column"
+					class:today={day === today}
+					onclick={(e) => createAt(e, day)}
+					{@attach blockScroll}
+				>
 					{#each placed(day) as p (p.occurrence.key)}
+						{@const dragging = drag?.active && drag.o.key === p.occurrence.key ? drag : null}
 						<div
 							class="slot"
+							class:dragging
 							style:top="{(p.top / 60) * HOUR_PX}px"
-							style:height="{(p.height / 60) * HOUR_PX}px"
+							style:height="{((p.height + (dragging?.mode === 'resize' ? dragging.deltaMin : 0)) /
+								60) *
+								HOUR_PX}px"
 							style:left="{(p.column / p.columns) * 100}%"
 							style:width="{100 / p.columns}%"
+							style:transform={dragging?.mode === 'move'
+								? `translate(${dragging.dayOffset * dragging.colWidth}px, ${(dragging.deltaMin / 60) * HOUR_PX}px)`
+								: undefined}
 						>
-							{@render chip(p.occurrence, false)}
+							{@render chip(p.occurrence, false, day)}
 						</div>
 					{/each}
 					{#if day === nowZoned.date}
@@ -144,7 +303,7 @@
 	</div>
 </div>
 
-{#snippet chip(o: Occurrence, allDay: boolean)}
+{#snippet chip(o: Occurrence, allDay: boolean, day = '')}
 	{@const conflict = conflicts.has(o.key)}
 	{@const label = describeOccurrence(o, members, conflict)}
 	{#if onopen}
@@ -154,12 +313,25 @@
 			class:allday-event={allDay}
 			class:conflict
 			style:--event-color={occurrenceColor(o, members)}
+			class:draggable={!allDay && draggable(o)}
 			aria-label={label}
 			title={label}
-			onclick={() => onopen?.(o)}
+			onclick={() => {
+				if (!suppressClick) onopen?.(o);
+			}}
+			onpointerdown={(e) => !allDay && pointerDown(e, o, 'move', day)}
+			oncontextmenu={(e) => !allDay && draggable(o) && e.preventDefault()}
 		>
 			{@render text(o, conflict)}
 		</button>
+		{#if !allDay && draggable(o)}
+			<!-- Unterer Rand: Dauer ändern (nur Zeigegerät; per Tastatur im Dialog). -->
+			<span
+				class="resize"
+				aria-hidden="true"
+				onpointerdown={(e) => pointerDown(e, o, 'resize', day)}
+			></span>
+		{/if}
 	{:else}
 		<div
 			class="event"
@@ -178,7 +350,7 @@
 		>{#if conflict}⚠
 		{/if}{o.event.title}</span
 	>
-	{#if !o.allDay}<span class="event-time">{timeRange(o)}</span>{/if}
+	{#if !o.allDay}<span class="event-time">{preview(o) ?? timeRange(o)}</span>{/if}
 {/snippet}
 
 <style>
@@ -280,6 +452,52 @@
 	.slot {
 		position: absolute;
 		padding: 1px 2px;
+	}
+
+	.slot.dragging {
+		z-index: 5;
+		opacity: 0.9;
+		filter: drop-shadow(0 6px 12px rgb(0 0 0 / 0.25));
+	}
+
+	.event.draggable {
+		cursor: grab;
+		touch-action: pan-y;
+		-webkit-touch-callout: none;
+		user-select: none;
+	}
+
+	.slot.dragging .event {
+		cursor: grabbing;
+	}
+
+	/* Griff am unteren Rand: sichtbar als kurzer Strich, Fläche 10 px hoch. */
+	.resize {
+		position: absolute;
+		left: 2px;
+		right: 2px;
+		bottom: 0;
+		height: 10px;
+		cursor: ns-resize;
+		touch-action: none;
+	}
+
+	.resize::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		bottom: 3px;
+		width: 18px;
+		height: 3px;
+		border-radius: 2px;
+		background: var(--event-color, var(--color-border));
+		opacity: 0;
+		transform: translateX(-50%);
+	}
+
+	.slot:hover .resize::after,
+	.slot.dragging .resize::after {
+		opacity: 0.7;
 	}
 
 	.event {

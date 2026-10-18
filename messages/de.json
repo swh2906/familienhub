@@ -144,7 +144,7 @@
 	"shopping_name_required": "Bitte einen Namen angeben.",
 	"tasks_title": "Aufgaben",
 	"tasks_open_count": "{count} offen",
-	"tasks_tabs_label": "Bereiche unter Aufgaben",
+	"tasks_tabs_label": "Aufgaben filtern",
 	"tasks_tab_mine": "Meine",
 	"tasks_tab_all": "Alle",
 	"tasks_tab_done": "Erledigt",
@@ -410,5 +410,8 @@
 	"feedback_mark_done": "„{text}“ als erledigt markieren",
 	"feedback_mark_open": "„{text}“ wieder öffnen",
 	"feedback_meta": "{person} · {date}",
-	"cal_timeline": "Zeitachse"
+	"cal_timeline": "Zeitachse",
+	"cal_moved": "Termin verschoben.",
+	"cal_move_title": "Termin verschieben",
+	"tasks_sections_label": "Bereiche unter Aufgaben"
 }

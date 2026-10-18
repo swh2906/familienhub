@@ -7,6 +7,7 @@ import {
 	deleteEvent,
 	eventsOf,
 	formFromEvent,
+	moveOccurrence,
 	updateOnlyThis,
 	updateSeries,
 	type EventForm
@@ -36,6 +37,70 @@ async function occurrences(from = '2026-10-19', to = '2026-11-08') {
 
 afterEach(async () => {
 	await deleteLocalData();
+});
+
+describe('Termine ziehen', () => {
+	it('Einzeltermin auf anderen Tag und Uhrzeit; Rückgängig stellt ihn wieder her', async () => {
+		await createEvent(H, { ...swimming, rrule: '' }, BERLIN);
+		const [o] = expandEvents(await eventsOf(H), '2026-10-19', '2026-10-25', BERLIN);
+		const undo = await moveOccurrence(
+			o,
+			{ date: '2026-10-21', start: 17 * 60, duration: 90 },
+			'series',
+			BERLIN
+		);
+		expect(await occurrences()).toEqual(['Schwimmen 2026-10-21 17:00-18:30']);
+		await undo();
+		expect(await occurrences()).toEqual(['Schwimmen 2026-10-19 15:00-16:30']);
+	});
+
+	it('Dauer ändern bis Mitternacht', async () => {
+		await createEvent(H, { ...swimming, rrule: '', startTime: '22:00', endTime: '23:00' }, BERLIN);
+		const [o] = expandEvents(await eventsOf(H), '2026-10-19', '2026-10-25', BERLIN);
+		await moveOccurrence(
+			o,
+			{ date: '2026-10-19', start: 22 * 60, duration: 120 },
+			'series',
+			BERLIN
+		);
+		const [event] = await eventsOf(H);
+		expect(event.end).toBe('2026-10-19T22:00:00.000Z'); // 0:00 MESZ
+	});
+
+	it('Serie: nur dieses Vorkommen oder alle; Rückgängig für „nur dieses“', async () => {
+		await createEvent(H, swimming, BERLIN);
+		const [, o] = expandEvents(await eventsOf(H), '2026-10-19', '2026-11-01', BERLIN);
+		const undo = await moveOccurrence(
+			o,
+			{ date: '2026-10-27', start: 16 * 60, duration: 90 },
+			'one',
+			BERLIN
+		);
+		expect(await occurrences('2026-10-19', '2026-11-08')).toEqual([
+			'Schwimmen 2026-10-19 15:00-16:30',
+			'Schwimmen 2026-10-27 16:00-17:30',
+			'Schwimmen 2026-11-02 15:00-16:30'
+		]);
+		await undo();
+		expect(await occurrences('2026-10-19', '2026-11-08')).toEqual([
+			'Schwimmen 2026-10-19 15:00-16:30',
+			'Schwimmen 2026-10-26 15:00-16:30',
+			'Schwimmen 2026-11-02 15:00-16:30'
+		]);
+
+		const [first] = expandEvents(await eventsOf(H), '2026-10-19', '2026-10-19', BERLIN);
+		await moveOccurrence(
+			first,
+			{ date: '2026-10-20', start: 15 * 60, duration: 60 },
+			'series',
+			BERLIN
+		);
+		expect(await occurrences('2026-10-19', '2026-11-08')).toEqual([
+			'Schwimmen 2026-10-20 15:00-16:00',
+			'Schwimmen 2026-10-27 15:00-16:00',
+			'Schwimmen 2026-11-03 15:00-16:00'
+		]);
+	});
 });
 
 describe('Termine speichern', () => {

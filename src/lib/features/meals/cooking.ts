@@ -1,5 +1,6 @@
 // Reine Logik der Kochansicht (Karteikarte): Dauer, Schwierigkeit, Kategorie, Zutaten-Zeilen.
 import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+import { m } from '#lib/paraglide/messages.js';
 import { formatAmount, scaleAmount } from './amounts.js';
 
 export const DIFFICULTY_LEVELS = [1, 2, 3] as const;
@@ -42,4 +43,34 @@ export function ingredientLine(
 	return [formatAmount(amount), ingredient.amount ? ingredient.unit : '', ingredient.name]
 		.filter(Boolean)
 		.join(' ');
+}
+
+const LEVEL_LABELS = [m.cook_difficulty_1, m.cook_difficulty_2, m.cook_difficulty_3];
+
+/** „leicht“, „mittel“, „schwer“ oder „keine Angabe“. */
+export function difficultyName(level: number | null | undefined): string {
+	const n = clampDifficulty(level);
+	return n === 0 ? m.cook_difficulty_none() : LEVEL_LABELS[n - 1]();
+}
+
+/** „45 Min.“, „1 Std.“, „1 Std. 30 Min.“ oder leer ohne Angabe. */
+export function formatDuration(minutes: number | null | undefined): string {
+	const d = splitDuration(minutes);
+	if (!d) return '';
+	if (d.hours === 0) return m.cook_minutes({ minutes: d.minutes });
+	if (d.minutes === 0) return m.cook_hours({ hours: d.hours });
+	return m.cook_hours_minutes({ hours: d.hours, minutes: d.minutes });
+}
+
+/** Kurzinfo für Liste und Rezeptseite: „4 Portionen · 1 Std. 15 Min. · mittel“. */
+export function recipeFacts(
+	recipe: Pick<Recipe, 'servings' | 'prep_minutes' | 'difficulty'>,
+	servingsText: string
+): string[] {
+	const level = clampDifficulty(recipe.difficulty);
+	return [
+		servingsText,
+		formatDuration(recipe.prep_minutes),
+		level ? difficultyName(level) : ''
+	].filter(Boolean);
 }

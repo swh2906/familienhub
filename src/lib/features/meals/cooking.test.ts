@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
 	clampDifficulty,
 	clampMinutes,
+	difficultyName,
+	formatDuration,
 	ingredientLine,
 	recipeCategory,
+	recipeFacts,
 	splitDuration
 } from './cooking.js';
 
@@ -36,5 +39,20 @@ describe('Kochansicht', () => {
 		expect(ingredientLine(mehl, 4, 4)).toBe('300 g Mehl');
 		expect(ingredientLine(mehl, 4, 2)).toBe('150 g Mehl');
 		expect(ingredientLine({ amount: 0, unit: 'g', name: 'Salz' }, 4, 2)).toBe('Salz');
+	});
+
+	it('Texte für Dauer, Schwierigkeit und Kurzinfo', () => {
+		expect(formatDuration(45)).toBe('45 Min.');
+		expect(formatDuration(60)).toBe('1 Std.');
+		expect(formatDuration(75)).toBe('1 Std. 15 Min.');
+		expect(formatDuration(0)).toBe('');
+		expect(difficultyName(2)).toBe('mittel');
+		expect(difficultyName(0)).toBe('keine Angabe');
+		expect(recipeFacts({ servings: 4, prep_minutes: 75, difficulty: 2 }, '4 Portionen')).toEqual([
+			'4 Portionen',
+			'1 Std. 15 Min.',
+			'mittel'
+		]);
+		expect(recipeFacts({ servings: 4 }, '4 Portionen')).toEqual(['4 Portionen']);
 	});
 });

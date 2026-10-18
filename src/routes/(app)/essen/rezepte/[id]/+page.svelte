@@ -6,6 +6,7 @@
 	import { repo } from '#lib/db/index.js';
 	import type { RecipeIngredient } from '#lib/db/types.js';
 	import { formatAmount, scaleAmount } from '#lib/features/meals/amounts.js';
+	import { difficultyName, formatDuration } from '#lib/features/meals/cooking.js';
 	import { deleteRecipe, ingredientsOf } from '#lib/features/meals/store.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { PageProps } from './$types';
@@ -26,6 +27,14 @@
 	let chosen: number | null = $state(null);
 	const portions = $derived(chosen ?? baseServings);
 	let confirming = $state(false);
+	const facts = $derived(
+		recipe
+			? [
+					formatDuration(recipe.prep_minutes),
+					recipe.difficulty ? difficultyName(recipe.difficulty) : ''
+				].filter(Boolean)
+			: []
+	);
 
 	function amountText(ingredient: RecipeIngredient): string {
 		const amount = scaleAmount(ingredient.amount, baseServings, portions);
@@ -54,6 +63,7 @@
 				{recipe.title}
 				{#if recipe.is_favorite}<span class="star" title={m.recipe_favorite()}>★</span>{/if}
 			</h1>
+			{#if facts.length > 0}<p class="facts">{facts.join(' · ')}</p>{/if}
 			{#if (recipe.tags ?? []).length > 0}
 				<ul class="tags">
 					{#each recipe.tags ?? [] as tag (tag)}<li>{tag}</li>{/each}
@@ -64,30 +74,12 @@
 					class="btn btn-primary"
 					href={resolve('/(app)/essen/rezepte/[id]/kochen', { id: recipe.id })}>{m.cook_start()}</a
 				>
-			</div>
-			{#if session.canEdit}
-				<div class="actions">
+				{#if session.canEdit}
 					<a class="btn" href={resolve('/(app)/essen/rezepte/[id]/bearbeiten', { id: recipe.id })}
 						>{m.recipe_edit()}</a
 					>
-					<button class="btn" type="button" onclick={() => (confirming = true)}
-						>{m.recipe_delete()}</button
-					>
-				</div>
-				{#if confirming}
-					<div class="confirm" role="group" aria-label={m.recipe_delete()}>
-						<p>{m.recipe_delete_confirm({ title: recipe.title })}</p>
-						<div class="actions">
-							<button class="btn btn-primary" type="button" onclick={remove}
-								>{m.recipe_delete_yes()}</button
-							>
-							<button class="btn" type="button" onclick={() => (confirming = false)}
-								>{m.cancel()}</button
-							>
-						</div>
-					</div>
 				{/if}
-			{/if}
+			</div>
 		</header>
 
 		<section class="card" aria-labelledby="ingredients-heading">
@@ -133,6 +125,28 @@
 				<p class="instructions">{recipe.instructions}</p>
 			</section>
 		{/if}
+		{#if session.canEdit}
+			<!-- Löschen am Seitenende, abgesetzt von „Kochen“ und „Bearbeiten“. -->
+			<div class="danger">
+				{#if confirming}
+					<div class="confirm" role="group" aria-label={m.recipe_delete()}>
+						<p>{m.recipe_delete_confirm({ title: recipe.title })}</p>
+						<div class="actions">
+							<button class="btn btn-primary" type="button" onclick={remove}
+								>{m.recipe_delete_yes()}</button
+							>
+							<button class="btn" type="button" onclick={() => (confirming = false)}
+								>{m.cancel()}</button
+							>
+						</div>
+					</div>
+				{:else}
+					<button class="btn btn-danger" type="button" onclick={() => (confirming = true)}
+						>{m.recipe_delete()}</button
+					>
+				{/if}
+			</div>
+		{/if}
 	</article>
 {/if}
 
@@ -161,6 +175,18 @@
 		font-size: 2rem;
 		letter-spacing: -0.02em;
 		text-wrap: balance;
+	}
+
+	.facts {
+		margin: 0;
+		color: var(--color-text-muted);
+		font-weight: 600;
+	}
+
+	.danger {
+		display: grid;
+		justify-items: start;
+		margin-top: var(--space-2);
 	}
 
 	.star {

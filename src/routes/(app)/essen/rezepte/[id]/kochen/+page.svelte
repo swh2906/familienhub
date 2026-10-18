@@ -14,7 +14,8 @@
 		DIFFICULTY_LEVELS,
 		ingredientLine,
 		recipeCategory,
-		splitDuration
+		difficultyName,
+		formatDuration
 	} from '#lib/features/meals/cooking.js';
 	import { ingredientsOf, setDifficulty } from '#lib/features/meals/store.js';
 	import { m } from '#lib/paraglide/messages.js';
@@ -38,21 +39,10 @@
 	let chosen: number | null = $state(null);
 	const portions = $derived(chosen ?? baseServings);
 	const difficulty = $derived(clampDifficulty(recipe?.difficulty));
-	const duration = $derived(splitDuration(recipe?.prep_minutes));
+	const duration = $derived(formatDuration(recipe?.prep_minutes) || '–');
 	const category = $derived(recipe ? recipeCategory(recipe) : '');
 	let done: string[] = $state([]);
 	let awake = $state(false);
-
-	const levelLabels = [m.cook_difficulty_1, m.cook_difficulty_2, m.cook_difficulty_3];
-	const levelName = (level: number) =>
-		level >= 1 && level <= 3 ? levelLabels[level - 1]() : m.cook_difficulty_none();
-
-	function durationText(): string {
-		if (!duration) return '–';
-		if (duration.hours === 0) return m.cook_minutes({ minutes: duration.minutes });
-		if (duration.minutes === 0) return m.cook_hours({ hours: duration.hours });
-		return m.cook_hours_minutes({ hours: duration.hours, minutes: duration.minutes });
-	}
 
 	function toggle(id: string) {
 		done = done.includes(id) ? done.filter((x) => x !== id) : [...done, id];
@@ -135,7 +125,7 @@
 									{#each DIFFICULTY_LEVELS as level (level)}
 										<button
 											type="button"
-											aria-label={m.cook_difficulty_set({ level: levelName(level) })}
+											aria-label={m.cook_difficulty_set({ level: difficultyName(level) })}
 											aria-pressed={difficulty === level}
 											onclick={() => setDifficulty(recipe, level)}
 										>
@@ -144,7 +134,7 @@
 									{/each}
 								</div>
 							{:else}
-								<span class="hats static" role="img" aria-label={levelName(difficulty)}>
+								<span class="hats static" role="img" aria-label={difficultyName(difficulty)}>
 									{#each DIFFICULTY_LEVELS as level (level)}<ChefHat
 											filled={level <= difficulty}
 										/>{/each}
@@ -154,7 +144,7 @@
 					</div>
 					<div class="meta-row">
 						<dt>{m.cook_duration()}</dt>
-						<dd>{durationText()}</dd>
+						<dd>{duration}</dd>
 					</div>
 					<div class="meta-row">
 						<dt>{m.cook_servings()}</dt>

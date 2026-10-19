@@ -10,6 +10,7 @@ export class FamilyDb extends Dexie {
 	memberships!: Table<CollectionTypes['memberships'], string>;
 	recipes!: Table<CollectionTypes['recipes'], string>;
 	ingredients!: Table<CollectionTypes['ingredients'], string>;
+	parse_corrections!: Table<CollectionTypes['parse_corrections'], string>;
 	recipe_ingredients!: Table<CollectionTypes['recipe_ingredients'], string>;
 	meal_plan_entries!: Table<CollectionTypes['meal_plan_entries'], string>;
 	shopping_items!: Table<CollectionTypes['shopping_items'], string>;
@@ -43,6 +44,8 @@ export class FamilyDb extends Dexie {
 			ingredients: 'id, household, key, updated',
 			recipe_ingredients: 'id, recipe, ingredient, updated'
 		});
+		// Version 4: gelernte Korrekturen der Zutatenerkennung.
+		this.version(4).stores({ parse_corrections: 'id, household, key, updated' });
 	}
 
 	/** Tabelle einer Collection; der Rückgabetyp passt zur Collection. */

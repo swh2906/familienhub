@@ -90,6 +90,35 @@ test('Rezept mit Zutaten aus Text anlegen, live auf Gerät B, bearbeiten und lö
 	await expect(b.getByText('Dieses Rezept gibt es nicht (mehr).')).toBeVisible({ timeout: 10_000 });
 });
 
+test('Korrigierte Zeile beim Einfügen wird gelernt', async ({ page }) => {
+	const { email } = await createFamily();
+	await login(page, email);
+	await openRecipes(page);
+
+	// Erstes Rezept: „1 Schuss Milch“ einfügen und auf 50 ml korrigieren.
+	await page.getByRole('link', { name: 'Neues Rezept' }).click();
+	await page.getByLabel('Titel').fill('Kakao');
+	await page.getByRole('button', { name: 'Zutaten aus Text einfügen' }).click();
+	await page.getByLabel('Text mit Zutaten').fill('1 Schuss Milch');
+	await page.getByRole('button', { name: 'Übernehmen' }).click();
+	await page.getByLabel('Zutat 1', { exact: true }).fill('Milch');
+	await page.getByLabel('Menge (Zutat 1)').fill('50');
+	await page.getByLabel('Einheit (Zutat 1)').fill('ml');
+	await page.getByRole('button', { name: 'Speichern' }).click();
+	await expect(page.getByRole('heading', { level: 1, name: 'Kakao' })).toBeVisible();
+
+	// Zweites Rezept: dieselbe Zeile wird gleich richtig erkannt.
+	await openRecipes(page);
+	await page.getByRole('link', { name: 'Neues Rezept' }).click();
+	await page.getByRole('button', { name: 'Zutaten aus Text einfügen' }).click();
+	await page.getByLabel('Text mit Zutaten').fill('1 schuss Milch');
+	const preview = page.locator('#paste-panel').getByRole('listitem');
+	await expect(preview).toHaveText(/50 ml Milch.*gelernt/);
+	await page.getByRole('button', { name: 'Übernehmen' }).click();
+	await expect(page.getByLabel('Menge (Zutat 1)')).toHaveValue('50');
+	await expect(page.getByLabel('Einheit (Zutat 1)')).toHaveValue('ml');
+});
+
 test('Suche und Tag-Filter', async ({ page }) => {
 	const { email, household } = await createFamily();
 	const token = await apiToken(email);

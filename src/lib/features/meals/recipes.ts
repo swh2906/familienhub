@@ -84,6 +84,8 @@ export interface IngredientDraft {
 	category: string;
 	/** Basisartikel; setzt das Speichern (siehe pantry/store.ts). */
 	ingredient?: string;
+	/** Von Hand gewählter Basisartikel (Name); leer = automatisch. Wird gelernt, nicht gespeichert. */
+	base?: string;
 	optional?: boolean;
 	alternatives?: string[];
 	amount_kind?: AmountKind | '';

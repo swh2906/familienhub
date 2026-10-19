@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
 import { formatAmount, parseAmount, scaleAmount } from './amounts.js';
-import { parseIngredientLine, parseIngredientText } from './paste.js';
+import { parseIngredientLine, parseIngredientText, parsePastedLines } from './paste.js';
 import { availableTags, cleanTags, diffIngredients, filterRecipes } from './recipes.js';
 
 const base = { created: '', updated: '', updated_by: '', deleted_at: '' };
@@ -193,5 +193,35 @@ describe('Zutaten aus Text (Einfügen)', () => {
 	it('überspringt leere Zeilen und Überschriften', () => {
 		const text = 'Für den Teig:\n300 g Mehl\n\n  \nFür die Füllung:\n2 Äpfel\r\n';
 		expect(parseIngredientText(text).map((d) => d.name)).toEqual(['Mehl', 'Äpfel']);
+	});
+});
+
+describe('Einfügen mit gelernten Korrekturen', () => {
+	it('ersetzt bekannte Zeilen und markiert sie als gelernt', () => {
+		const learned = new Map([
+			[
+				'1 schuss milch',
+				[
+					{
+						name: 'Milch',
+						amount: 50,
+						unit: 'ml',
+						amountKind: 'exact' as const,
+						optional: false,
+						alternatives: [],
+						note: ''
+					}
+				]
+			]
+		]);
+		const lines = parsePastedLines('1 Schuss Milch\n300 g Mehl', learned, (l) =>
+			l.toLowerCase().trim()
+		);
+		expect(lines).toHaveLength(2);
+		expect(lines[0]).toMatchObject({ raw: '1 Schuss Milch', learned: true });
+		expect(lines[0].items[0]).toMatchObject({ name: 'Milch', amount: 50, unit: 'ml' });
+		expect(lines[0].automatic[0].unit).not.toBe('ml');
+		expect(lines[1]).toMatchObject({ learned: false });
+		expect(lines[1].items[0]).toMatchObject({ name: 'Mehl', amount: 300 });
 	});
 });

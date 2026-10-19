@@ -56,6 +56,25 @@ export interface RecipeIngredient extends BaseRecord {
 	note?: string;
 }
 
+/** Eine erkannte Zutat, wie sie nach einer Korrektur gespeichert wird. */
+export interface CorrectedIngredient {
+	name: string;
+	amount: number;
+	unit: string;
+	amountKind: AmountKind;
+	optional: boolean;
+	alternatives: string[];
+	note: string;
+}
+
+/** Gelernte Korrektur einer eingefügten Zeile (Schlüssel = normalisierte Zeile). */
+export interface ParseCorrection extends BaseRecord {
+	household: string;
+	key: string;
+	input: string;
+	result: CorrectedIngredient[] | null;
+}
+
 /** Basisartikel einer Familie: alle Schreibweisen einer Zutat (Grundlage für Vorrat und Einkauf). */
 export interface Ingredient extends BaseRecord {
 	household: string;
@@ -146,6 +165,7 @@ export interface CollectionTypes {
 	memberships: Membership;
 	recipes: Recipe;
 	ingredients: Ingredient;
+	parse_corrections: ParseCorrection;
 	recipe_ingredients: RecipeIngredient;
 	meal_plan_entries: MealPlanEntry;
 	shopping_items: ShoppingItem;
@@ -166,6 +186,7 @@ export const COLLECTIONS: readonly { name: CollectionName; scope: string }[] = [
 	{ name: 'memberships', scope: 'household' },
 	{ name: 'recipes', scope: 'household' },
 	{ name: 'ingredients', scope: 'household' },
+	{ name: 'parse_corrections', scope: 'household' },
 	{ name: 'recipe_ingredients', scope: 'recipe.household' },
 	{ name: 'meal_plan_entries', scope: 'household' },
 	{ name: 'shopping_items', scope: 'household' },

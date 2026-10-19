@@ -9,6 +9,7 @@ const FAMILY_COLLECTIONS = [
 	'recipes',
 	'recipe_ingredients',
 	'ingredients',
+	'parse_corrections',
 	'meal_plan_entries',
 	'shopping_items',
 	'events',

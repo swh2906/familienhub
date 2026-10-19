@@ -566,3 +566,28 @@ describe('Basisartikel (ingredients)', () => {
 		);
 	});
 });
+
+describe('Gelernte Korrekturen (parse_corrections)', () => {
+	it('Erwachsene lernen, Kinder nicht; Schlüssel je Familie eindeutig, fremde unsichtbar', async () => {
+		const result = [{ name: 'Milch', amount: 50, unit: 'ml' }];
+		const created = await as.adult
+			.collection('parse_corrections')
+			.create({ household: householdA, key: '1 schuss milch', input: '1 Schuss Milch', result });
+		expect(created.result).toEqual(result);
+		await expectDenied(
+			as.child
+				.collection('parse_corrections')
+				.create({ household: householdA, key: 'etwas salz', result })
+		);
+		await expectDenied(
+			as.admin
+				.collection('parse_corrections')
+				.create({ household: householdA, key: '1 schuss milch', result })
+		);
+		await expectDenied(
+			as.adult.collection('parse_corrections').update(created.id, { household: householdB })
+		);
+		await expectDenied(as.adult.collection('parse_corrections').delete(created.id));
+		await expectDenied(as.outsider.collection('parse_corrections').getOne(created.id), [404]);
+	});
+});

@@ -7,7 +7,17 @@
 	import Icon from '#lib/ui/Icon.svelte';
 	import { formatAmount, parseAmount } from './amounts.js';
 	import { CATEGORIES, UNITS } from './catalog.js';
-	import { parseIngredientText } from './paste.js';
+	import { live } from '#lib/db/live.svelte.js';
+	import type { CorrectedIngredient } from '#lib/db/types.js';
+	import { matchIngredient } from '#lib/features/pantry/catalog.js';
+	import {
+		correctionKey,
+		correctionMap,
+		correctionsOf,
+		learnCorrection
+	} from '#lib/features/pantry/learn.js';
+	import { baseIngredientsOf } from '#lib/features/pantry/store.js';
+	import { parsePastedLines, type PastedIngredient } from './paste.js';
 	import { saveRecipe } from './store.js';
 	import TagPicker from './TagPicker.svelte';
 
@@ -39,6 +49,8 @@
 		alternatives: string;
 		amountKind: AmountKind;
 		note: string;
+		/** Von Hand gewählter Basisartikel; leer = automatisch. */
+		base: string;
 	}
 
 	let nextKey = 0;
@@ -54,9 +66,56 @@
 			alternatives: '',
 			amountKind: 'exact',
 			note: '',
+			base: '',
 			...data
 		};
 	}
+
+	// Basisartikel der Familie (Vorschlag „gehört zu“) und gelernte Zeilen-Korrekturen.
+	const known = live(() => household, baseIngredientsOf, []);
+	const corrections = live(() => household, correctionsOf, []);
+	const knownList = $derived(
+		known.current.map((i) => ({ id: i.id, name: i.name, aliases: i.aliases ?? [] }))
+	);
+
+	function automaticBase(name: string): string {
+		return name.trim() ? matchIngredient(name, knownList).name : '';
+	}
+
+	function rowData(draft: PastedIngredient): Partial<Omit<Row, 'key'>> {
+		return {
+			name: draft.name,
+			amountText: formatAmount(draft.amount),
+			unit: draft.unit,
+			optional: draft.optional,
+			alternatives: draft.alternatives.join(', '),
+			amountKind: draft.amountKind,
+			note: draft.note === 'nach Geschmack' ? '' : draft.note
+		};
+	}
+
+	function alternativesOf(text: string): string[] {
+		return text
+			.split(',')
+			.map((a) => a.trim())
+			.filter(Boolean);
+	}
+
+	/** Zeile so, wie sie als Korrektur gelernt wird. */
+	function corrected(r: Omit<Row, 'key'>): CorrectedIngredient {
+		return {
+			name: r.name.trim(),
+			amount: parseAmount(r.amountText),
+			unit: r.unit.trim(),
+			amountKind: r.amountKind,
+			optional: r.optional,
+			alternatives: alternativesOf(r.alternatives),
+			note: r.note.trim()
+		};
+	}
+
+	/** Eingefügte Zeilen merken, um Korrekturen beim Speichern zu lernen. */
+	const pasteSources: { raw: string; automatic: CorrectedIngredient[]; keys: number[] }[] = [];
 
 	/** Hat die Zeile Zusatzangaben? (Dann ist „Mehr“ beim Öffnen aufgeklappt.) */
 	function hasExtras(r: Row): boolean {
@@ -94,7 +153,12 @@
 	let busy = $state(false);
 	let pasteOpen = $state(false);
 	let pasteText = $state('');
-	const pasted = $derived(parseIngredientText(pasteText));
+	const pastedLines = $derived(
+		parsePastedLines(pasteText, correctionMap(corrections.current), correctionKey)
+	);
+	const pasted = $derived(
+		pastedLines.flatMap((line) => line.items.map((draft) => ({ draft, learned: line.learned })))
+	);
 
 	function move(index: number, delta: number) {
 		const target = index + delta;
@@ -110,22 +174,34 @@
 
 	function applyPaste() {
 		const filled = rows.filter((r) => r.name.trim() || r.amountText.trim());
-		rows = [
-			...filled,
-			...pasted.map((draft) =>
-				row({
-					name: draft.name,
-					amountText: formatAmount(draft.amount),
-					unit: draft.unit,
-					optional: draft.optional,
-					alternatives: draft.alternatives.join(', '),
-					amountKind: draft.amountKind,
-					note: draft.note === 'nach Geschmack' ? '' : draft.note
-				})
-			)
-		];
+		const added: Row[] = [];
+		for (const line of pastedLines) {
+			const lineRows = line.items.map((draft) => row(rowData(draft)));
+			added.push(...lineRows);
+			pasteSources.push({
+				raw: line.raw,
+				automatic: line.automatic.map((draft) => corrected({ ...row(), ...rowData(draft) })),
+				keys: lineRows.map((r) => r.key)
+			});
+		}
+		rows = [...filled, ...added];
 		pasteText = '';
 		pasteOpen = false;
+	}
+
+	/** Eingefügte Zeilen, die jemand nachträglich geändert hat, als Korrektur merken. */
+	async function learnFromPaste() {
+		const byKey = new Map(rows.map((r) => [r.key, r]));
+		for (const source of pasteSources) {
+			const current = source.keys
+				.map((key) => byKey.get(key))
+				.filter((r): r is Row => !!r && !!r.name.trim());
+			// Ganz gelöschte Zeilen sind keine Korrektur, sondern „brauche ich nicht“.
+			if (current.length === 0) continue;
+			await learnCorrection(household, source.raw, source.automatic, current.map(corrected)).catch(
+				() => {}
+			);
+		}
 	}
 
 	async function submit(event: SubmitEvent) {
@@ -156,11 +232,13 @@
 					unit: r.unit,
 					category: r.category,
 					optional: r.optional,
-					alternatives: r.alternatives.split(',').map((a) => a.trim()),
+					alternatives: alternativesOf(r.alternatives),
 					amount_kind: r.amountKind,
-					note: r.note
+					note: r.note,
+					base: r.base
 				}))
 			);
+			await learnFromPaste();
 			onsaved(id);
 		} catch {
 			error = m.error_generic();
@@ -321,11 +399,27 @@
 									bind:value={item.note}
 								/>
 							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_base()}</span>
+								<input
+									maxlength="100"
+									list="known-ingredients"
+									placeholder={automaticBase(item.name)
+										? m.editor_placeholder_base({ name: automaticBase(item.name) })
+										: ''}
+									bind:value={item.base}
+								/>
+							</label>
 						</div>
 					</details>
 				</li>
 			{/each}
 		</ol>
+		<datalist id="known-ingredients">
+			{#each known.current as option (option.id)}
+				<option value={option.name}></option>
+			{/each}
+		</datalist>
 
 		<div class="ingredient-actions">
 			<button class="btn" type="button" onclick={() => (rows = [...rows, row()])}>
@@ -358,7 +452,7 @@
 				</p>
 				{#if pasted.length > 0}
 					<ul class="preview">
-						{#each pasted as draft, i (i)}
+						{#each pasted as { draft, learned }, i (i)}
 							<li>
 								<span
 									>{[formatAmount(draft.amount), draft.unit, draft.name]
@@ -378,7 +472,8 @@
 								{#if draft.note && draft.note !== 'nach Geschmack'}<span class="note"
 										>{draft.note}</span
 									>{/if}
-								{#if draft.confidence === 'low'}<span class="badge warn"
+								{#if learned}<span class="badge">{m.paste_badge_learned()}</span>{/if}
+								{#if draft.confidence === 'low' && !learned}<span class="badge warn"
 										>{m.paste_badge_unsure()}</span
 									>{/if}
 							</li>

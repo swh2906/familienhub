@@ -96,7 +96,8 @@ function input(canEdit: boolean): HintInput {
 		ingredients,
 		pantryEvents: [],
 		occurrences: expandEvents([training], TODAY, '2026-10-26', 'Europe/Berlin'),
-		adults: []
+		adults: [],
+		openItems: []
 	};
 }
 
@@ -108,8 +109,35 @@ describe('Hinweise zusammenstellen', () => {
 			'cooked:gestern',
 			'stock:platten'
 		]);
+		// Bestand unbekannt → Vorratsfrage statt Einkaufs-Hinweis (nur sicher Fehlendes).
 		const conflict = hints.find((h) => h.kind === 'conflict');
 		expect(conflict && conflict.kind === 'conflict' && conflict.prepareOn).toBe(TODAY);
+	});
+
+	it('bekannt leer: Einkaufs-Hinweis für morgen statt Vorratsfrage', () => {
+		const hints = buildHints({
+			...input(true),
+			pantryEvents: [
+				{
+					...base,
+					id: 'p1',
+					household: 'h',
+					ingredient: 'platten',
+					kind: 'set',
+					amount: 0,
+					unit: 'g',
+					at: `${TODAY}T08:00:00Z`,
+					ref: '',
+					source: 'manual'
+				}
+			]
+		});
+		const shopping = hints.find((h) => h.kind === 'shopping');
+		expect(shopping?.key).toBe('shopping:2026-10-20');
+		expect(shopping?.kind === 'shopping' && shopping.need.missing.map((l) => l.name)).toEqual([
+			'Nudelplatten'
+		]);
+		expect(hints.some((h) => h.kind === 'stock')).toBe(false);
 	});
 
 	it('Kinder: nur Vorratsfragen', () => {

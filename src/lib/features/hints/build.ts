@@ -6,9 +6,11 @@ import type {
 	MealPlanEntry,
 	PantryEvent,
 	Recipe,
-	RecipeIngredient
+	RecipeIngredient,
+	ShoppingItem
 } from '#lib/db/types.js';
 import type { Occurrence } from '#lib/features/calendar/expand.js';
+import { computeDemand } from '#lib/features/pantry/demand.js';
 import { stockMap } from '#lib/features/pantry/journal.js';
 import {
 	neededSoon,
@@ -24,6 +26,7 @@ import {
 	type CookingConflict
 } from './cooking.js';
 import { KIND_PRIORITY, type HintBase } from './engine.js';
+import { shoppingNeed, type ShoppingNeed } from './shopping.js';
 
 export interface ConflictHint extends HintBase {
 	kind: 'conflict';
@@ -43,7 +46,12 @@ export interface StockHint extends HintBase {
 	question: StockQuestion;
 }
 
-export type Hint = ConflictHint | CookedHint | StockHint;
+export interface ShoppingHint extends HintBase {
+	kind: 'shopping';
+	need: ShoppingNeed;
+}
+
+export type Hint = ConflictHint | CookedHint | StockHint | ShoppingHint;
 
 export interface HintInput {
 	today: string;
@@ -57,6 +65,8 @@ export interface HintInput {
 	pantryEvents: readonly PantryEvent[];
 	occurrences: readonly Occurrence[];
 	adults: readonly string[];
+	/** Offene Einkaufsartikel (für „steht schon auf der Liste“). */
+	openItems: readonly ShoppingItem[];
 }
 
 export function buildHints(input: HintInput): Hint[] {
@@ -94,8 +104,38 @@ export function buildHints(input: HintInput): Hint[] {
 		}
 	}
 
-	// Vorratsfragen: alle unsicheren, bald gebrauchten (die Steuerung begrenzt die Anzeige).
 	const stocks = stockMap(input.ingredients, input.pantryEvents, input.now);
+
+	// Einkauf: fehlt für heute (vor dem Essen) oder morgen etwas, das nicht auf der Liste steht?
+	const soon = computeDemand({
+		today: input.today,
+		days: 2,
+		entries: input.entries,
+		recipes: input.recipes,
+		rows: input.rows,
+		ingredients: input.ingredients,
+		stocks,
+		openItems: input.openItems
+	});
+	const need = shoppingNeed(
+		soon,
+		input.today,
+		input.occurrences,
+		input.adults,
+		input.nowMinutes ?? 0,
+		new Map(input.entries.map((e) => [e.id, e.slot]))
+	);
+	if (need) {
+		hints.push({
+			key: `shopping:${need.date}`,
+			kind: 'shopping',
+			priority: KIND_PRIORITY.shopping,
+			date: need.date,
+			need
+		});
+	}
+
+	// Vorratsfragen: alle unsicheren, bald gebrauchten (die Steuerung begrenzt die Anzeige).
 	const needed = neededSoon(input.entries, input.rows, input.today);
 	for (const question of stockQuestions(input.ingredients, stocks, needed, new Set(), 10)) {
 		hints.push({

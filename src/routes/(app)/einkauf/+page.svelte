@@ -9,6 +9,9 @@
 	import { toDateString } from '#lib/features/meals/week.js';
 	import ItemDialog from '#lib/features/shopping/ItemDialog.svelte';
 	import PlanTransferDialog from '#lib/features/shopping/PlanTransferDialog.svelte';
+	import ShoppingMode from '#lib/features/shopping/ShoppingMode.svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { formatQuantity, groupItems, parseQuickInput } from '#lib/features/shopping/list.js';
 	import ShoppingTile from '#lib/features/shopping/ShoppingTile.svelte';
 	import {
@@ -44,6 +47,19 @@
 	let editing: ShoppingItem | null = $state(null);
 	let undo: { ids: string[]; timer: ReturnType<typeof setTimeout> } | null = $state(null);
 	let transferOpen = $state(false);
+
+	// Einkaufsmodus über die Adresse (?modus=einkaufen), damit der Hinweis auf Heute hineinführt.
+	const shopping = $derived(page.url.searchParams.get('modus') === 'einkaufen');
+	let finished = $state(false);
+
+	function setShopping(on: boolean) {
+		const url = new URL(page.url.href);
+		if (on) url.searchParams.set('modus', 'einkaufen');
+		else url.searchParams.delete('modus');
+		finished = !on;
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- gleiche Seite, nur Query
+		void goto(url, { replace: true, reset: false });
+	}
 	let transferred: { count: number; timer: ReturnType<typeof setTimeout> } | null = $state(null);
 
 	function showTransferred(count: number) {
@@ -141,6 +157,12 @@
 <div class="head">
 	<h1>{m.shopping_title()}</h1>
 	{#if openCount > 0}<span class="count">{m.shopping_open_count({ count: openCount })}</span>{/if}
+	{#if !shopping}
+		<button type="button" class="btn shop" onclick={() => setShopping(true)}>
+			<Icon name="shopping" size={18} />
+			{m.shop_mode_start()}
+		</button>
+	{/if}
 	<button type="button" class="btn plan" onclick={() => (transferOpen = true)}>
 		<Icon name="meals" size={18} />
 		{m.plan_transfer_open()}
@@ -155,6 +177,18 @@
 		{editMode ? m.shopping_edit_mode_done() : m.shopping_edit_mode()}
 	</button>
 </div>
+
+{#if shopping}
+	<ShoppingMode
+		{household}
+		{membership}
+		today={toDateString(new Date())}
+		history={data.current.items}
+		onfinish={() => setShopping(false)}
+	/>
+{:else if finished}
+	<p class="hint finished" role="status">{m.shop_mode_finished()}</p>
+{/if}
 
 {#if editMode}
 	<p class="hint edit-hint" role="status">{m.shopping_edit_hint()}</p>
@@ -309,9 +343,17 @@
 		font-weight: 600;
 	}
 
-	.plan {
+	.shop {
 		margin-left: auto;
 		padding: 0 var(--space-4);
+	}
+
+	.plan {
+		padding: 0 var(--space-4);
+	}
+
+	.finished {
+		margin-bottom: var(--space-3);
 	}
 
 	.mode {

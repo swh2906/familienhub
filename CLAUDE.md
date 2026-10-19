@@ -108,7 +108,8 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 8. Essensplan und Rezepte ✓
 9. Heute-Ansicht ✓
 10. Feinschliff, Offline-Tests, Deployment, Backups ✓ (Abnahme auf ZimaOS steht aus)
-11. **Zutaten, Vorrat und intelligente Einkaufsliste** ← aktueller Schritt (Phasen A–E in PLAN.md)
+11. Zutaten, Vorrat und intelligente Einkaufsliste ✓ (Phasen A–E in PLAN.md)
+12. **Roadmap-Punkte aus PLAN.md** ← als Nächstes (Abnahme auf ZimaOS, Familientest)
 
 Details, Aufgaben und Abnahmekriterien pro Schritt stehen in **PLAN.md**. Dort Checkboxen abhaken, sobald etwas erledigt ist.
 

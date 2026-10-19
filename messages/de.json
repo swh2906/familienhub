@@ -418,5 +418,15 @@
 	"paste_badge_to_taste": "nach Geschmack",
 	"paste_badge_optional": "optional",
 	"paste_badge_alternatives": "oder {names}",
-	"paste_badge_unsure": "bitte prüfen"
+	"paste_badge_unsure": "bitte prüfen",
+	"editor_ingredient_more": "Mehr",
+	"editor_ingredient_optional": "Optional",
+	"editor_ingredient_kind": "Menge",
+	"editor_ingredient_alternatives": "Alternativen",
+	"editor_ingredient_note": "Hinweis",
+	"editor_placeholder_alternatives": "z. B. Dinkelmehl",
+	"editor_placeholder_note": "z. B. fein gehackt",
+	"amount_kind_exact": "genau",
+	"amount_kind_approx": "ungefähr",
+	"amount_kind_to_taste": "nach Geschmack"
 }

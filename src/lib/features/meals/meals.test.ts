@@ -145,7 +145,18 @@ describe('diffIngredients', () => {
 			{ name: '   ', amount: 0, unit: '', category: '' }
 		]);
 		expect(changes.create).toEqual([
-			{ name: 'Milch', amount: 0.5, unit: 'l', category: 'Kühlregal', sort: 1 }
+			{
+				name: 'Milch',
+				amount: 0.5,
+				unit: 'l',
+				category: 'Kühlregal',
+				sort: 1,
+				ingredient: '',
+				optional: false,
+				alternatives: [],
+				amount_kind: 'exact',
+				note: ''
+			}
 		]);
 		expect(changes.update).toEqual([{ id: 'eier', changes: { amount: 4, sort: 0 } }]);
 		expect(changes.remove).toEqual(['mehl']);

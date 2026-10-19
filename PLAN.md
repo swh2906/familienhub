@@ -296,7 +296,7 @@ Grundsatz: Vorrat als **Buchungsjournal** (Kauf +, Kochen −, Korrektur =) stat
 ### Phase A – Zutatenerkennung (`feat/schritt-11a-zutatenerkennung`)
 
 - [x] **A1 Parser v2** (`features/meals/parse/ingredient.ts`): Menge (Brüche, Bereiche → oberer Wert, Wörter wie „eine halbe“), Einheit (viele Schreibweisen), optional, Alternativen („oder“, „/“), „nach Geschmack“, „eine Prise“, „ca.“, Hinweise (Komma, Klammern), Aufzählungen („Salz und Pfeffer“), Unsicherheit markieren. 79 Testzeilen; Vorschau im Editor mit Markierungen; Einkaufs-Schnelleingabe bleibt ein Artikel.
-- [ ] **A2 Basisartikel und Normalisierung:** Collection `ingredients` (Name, Schreibweisen, Standardeinheit, Packungsgröße), `recipe_ingredients` + `ingredient`, `optional`, `alternatives`, `amount_kind`, `note`; feste IDs je Familie und Name gegen Duplikate; bestehende Rezepte einmalig in der App zuordnen, Unsicheres zur Prüfung.
+- [x] **A2 Basisartikel und Normalisierung:** Collection `ingredients` (Name, Schreibweisen, Standardeinheit, Packungsgröße), `recipe_ingredients` + `ingredient`, `optional`, `alternatives`, `amount_kind`, `note`; feste IDs je Familie und Name gegen Duplikate; bestehende Rezepte einmalig in der App zuordnen, Unsicheres zur Prüfung.
 - [ ] **A3 Korrekturen lernen:** „Korrigieren“ je Zeile; Schreibweise am Basisartikel bzw. `parse_corrections`; nächste ähnliche Zeile wird richtig erkannt.
 - [ ] **A4 Anzeige:** Rezeptseite und Kochansicht zeigen optional, Alternativen, „nach Geschmack“.
 

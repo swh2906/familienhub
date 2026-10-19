@@ -7,6 +7,7 @@
 const SAME_HOUSEHOLD_REFS = {
 	invites: { created_by: 'memberships' },
 	meal_plan_entries: { recipe: 'recipes' },
+	recipe_ingredients: { ingredient: 'ingredients' },
 	shopping_items: {
 		added_by: 'memberships',
 		checked_by: 'memberships',
@@ -365,7 +366,9 @@ function checkSameHousehold(e) {
 	const household =
 		name === 'task_completions'
 			? e.app.findRecordById('tasks', record.getString('task')).getString('household')
-			: record.getString('household');
+			: name === 'recipe_ingredients'
+				? e.app.findRecordById('recipes', record.getString('recipe')).getString('household')
+				: record.getString('household');
 
 	for (const field of Object.keys(refs)) {
 		for (const id of record.getStringSlice(field)) {
@@ -455,6 +458,7 @@ const HOUSEHOLD_DELETE_ORDER = [
 	['meal_plan_entries', 'household = {:h}'],
 	['recipe_ingredients', 'recipe.household = {:h}'],
 	['recipes', 'household = {:h}'],
+	['ingredients', 'household = {:h}'],
 	['events', 'household = {:h}'],
 	['invites', 'household = {:h}'],
 	['feedback', 'household = {:h}'],
@@ -493,6 +497,7 @@ const PURGE_COLLECTIONS = [
 	'meal_plan_entries',
 	'recipe_ingredients',
 	'recipes',
+	'ingredients',
 	'events',
 	'invites'
 ];

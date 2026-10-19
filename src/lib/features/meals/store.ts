@@ -1,6 +1,7 @@
 // Rezepte lesen und schreiben – nur über die lokale Datenbank; der Sync erledigt den Rest.
 import { repo } from '#lib/db/index.js';
 import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+import { ensureIngredients } from '#lib/features/pantry/store.js';
 import { clampDifficulty, clampMinutes } from './cooking.js';
 import { cleanTags, diffIngredients, type IngredientDraft } from './recipes.js';
 
@@ -65,7 +66,13 @@ export async function saveRecipe(
 		id = (await recipes.create({ household, ...fields })).id;
 	}
 
-	const changes = diffIngredients(before, drafts);
+	// Jede Zutat bekommt ihren Basisartikel (fehlende werden angelegt).
+	const links = await ensureIngredients(
+		household,
+		drafts.map((d) => d.name)
+	);
+	const linked = drafts.map((d) => ({ ...d, ingredient: links.get(d.name.trim()) ?? '' }));
+	const changes = diffIngredients(before, linked);
 	for (const fieldsOfNew of changes.create) {
 		await ingredients.create({ recipe: id, ...fieldsOfNew });
 	}

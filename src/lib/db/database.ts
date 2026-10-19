@@ -9,6 +9,7 @@ export class FamilyDb extends Dexie {
 	households!: Table<CollectionTypes['households'], string>;
 	memberships!: Table<CollectionTypes['memberships'], string>;
 	recipes!: Table<CollectionTypes['recipes'], string>;
+	ingredients!: Table<CollectionTypes['ingredients'], string>;
 	recipe_ingredients!: Table<CollectionTypes['recipe_ingredients'], string>;
 	meal_plan_entries!: Table<CollectionTypes['meal_plan_entries'], string>;
 	shopping_items!: Table<CollectionTypes['shopping_items'], string>;
@@ -37,6 +38,11 @@ export class FamilyDb extends Dexie {
 		});
 		// Version 2: Feedback der Testphase.
 		this.version(2).stores({ feedback: 'id, household, updated' });
+		// Version 3: Basisartikel; Rezept-Zutaten zusätzlich nach Basisartikel abfragbar.
+		this.version(3).stores({
+			ingredients: 'id, household, key, updated',
+			recipe_ingredients: 'id, recipe, ingredient, updated'
+		});
 	}
 
 	/** Tabelle einer Collection; der Rückgabetyp passt zur Collection. */

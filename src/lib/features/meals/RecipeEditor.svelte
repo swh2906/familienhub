@@ -2,7 +2,7 @@
 	// Rezept anlegen oder bearbeiten: Grunddaten, Tags, Zutaten-Zeilen (mit ↑/↓ sortierbar) und
 	// „Zutaten aus Text einfügen“. Speichert nur lokal; der Sync sendet im Hintergrund.
 	import { untrack } from 'svelte';
-	import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+	import type { AmountKind, Recipe, RecipeIngredient } from '#lib/db/types.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import Icon from '#lib/ui/Icon.svelte';
 	import { formatAmount, parseAmount } from './amounts.js';
@@ -34,12 +34,33 @@
 		amountText: string;
 		unit: string;
 		category: string;
+		optional: boolean;
+		/** Alternativen als Text, durch Komma getrennt. */
+		alternatives: string;
+		amountKind: AmountKind;
+		note: string;
 	}
 
 	let nextKey = 0;
 	function row(data: Partial<Omit<Row, 'key'>> = {}): Row {
 		nextKey += 1;
-		return { key: nextKey, name: '', amountText: '', unit: '', category: '', ...data };
+		return {
+			key: nextKey,
+			name: '',
+			amountText: '',
+			unit: '',
+			category: '',
+			optional: false,
+			alternatives: '',
+			amountKind: 'exact',
+			note: '',
+			...data
+		};
+	}
+
+	/** Hat die Zeile Zusatzangaben? (Dann ist „Mehr“ beim Öffnen aufgeklappt.) */
+	function hasExtras(r: Row): boolean {
+		return r.optional || !!r.alternatives.trim() || r.amountKind !== 'exact' || !!r.note.trim();
 	}
 
 	// Startwerte einmalig aus den Props; spätere Sync-Änderungen überschreiben die Eingaben nicht.
@@ -59,7 +80,11 @@
 						name: i.name,
 						amountText: formatAmount(i.amount),
 						unit: i.unit ?? '',
-						category: i.category ?? ''
+						category: i.category ?? '',
+						optional: i.optional ?? false,
+						alternatives: (i.alternatives ?? []).join(', '),
+						amountKind: i.amount_kind || 'exact',
+						note: i.note ?? ''
 					})
 				)
 			: [row()]
@@ -88,7 +113,15 @@
 		rows = [
 			...filled,
 			...pasted.map((draft) =>
-				row({ name: draft.name, amountText: formatAmount(draft.amount), unit: draft.unit })
+				row({
+					name: draft.name,
+					amountText: formatAmount(draft.amount),
+					unit: draft.unit,
+					optional: draft.optional,
+					alternatives: draft.alternatives.join(', '),
+					amountKind: draft.amountKind,
+					note: draft.note === 'nach Geschmack' ? '' : draft.note
+				})
 			)
 		];
 		pasteText = '';
@@ -121,7 +154,11 @@
 					name: r.name,
 					amount: parseAmount(r.amountText),
 					unit: r.unit,
-					category: r.category
+					category: r.category,
+					optional: r.optional,
+					alternatives: r.alternatives.split(',').map((a) => a.trim()),
+					amount_kind: r.amountKind,
+					note: r.note
 				}))
 			);
 			onsaved(id);
@@ -242,6 +279,50 @@
 							onclick={() => removeRow(index)}><Icon name="close" size={20} /></button
 						>
 					</div>
+					<details class="extras" open={hasExtras(item)}>
+						<summary>
+							{m.editor_ingredient_more()}
+							{#if item.optional}<span class="badge">{m.paste_badge_optional()}</span>{/if}
+							{#if item.amountKind === 'approx'}<span class="badge">{m.paste_badge_approx()}</span
+								>{/if}
+							{#if item.amountKind === 'to_taste'}<span class="badge"
+									>{m.paste_badge_to_taste()}</span
+								>{/if}
+							{#if item.alternatives.trim()}<span class="badge"
+									>{m.paste_badge_alternatives({ names: item.alternatives })}</span
+								>{/if}
+						</summary>
+						<div class="extras-fields">
+							<label class="check">
+								<input type="checkbox" bind:checked={item.optional} />
+								<span>{m.editor_ingredient_optional()}</span>
+							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_kind()}</span>
+								<select bind:value={item.amountKind}>
+									<option value="exact">{m.amount_kind_exact()}</option>
+									<option value="approx">{m.amount_kind_approx()}</option>
+									<option value="to_taste">{m.amount_kind_to_taste()}</option>
+								</select>
+							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_alternatives()}</span>
+								<input
+									maxlength="200"
+									placeholder={m.editor_placeholder_alternatives()}
+									bind:value={item.alternatives}
+								/>
+							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_note()}</span>
+								<input
+									maxlength="200"
+									placeholder={m.editor_placeholder_note()}
+									bind:value={item.note}
+								/>
+							</label>
+						</div>
+					</details>
 				</li>
 			{/each}
 		</ol>
@@ -435,7 +516,8 @@
 		grid-template-columns: 4.5rem 6rem 1fr auto;
 		grid-template-areas:
 			'name name name actions'
-			'amount unit category category';
+			'amount unit category category'
+			'extras extras extras extras';
 		gap: var(--space-2);
 		padding: var(--space-3) 0;
 		border-bottom: 1px solid var(--color-border);
@@ -463,6 +545,29 @@
 	}
 	.category {
 		grid-area: category;
+	}
+
+	.extras {
+		grid-area: extras;
+	}
+
+	.extras summary {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-2);
+		min-height: 36px;
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		cursor: pointer;
+	}
+
+	.extras-fields {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+		gap: var(--space-2) var(--space-3);
+		align-items: end;
+		padding: var(--space-2) 0;
 	}
 
 	.row-actions {
@@ -521,7 +626,9 @@
 	@media (min-width: 900px) {
 		.row {
 			grid-template-columns: minmax(10rem, 1fr) 5.5rem 6rem minmax(8rem, 12rem) auto;
-			grid-template-areas: 'name amount unit category actions';
+			grid-template-areas:
+				'name amount unit category actions'
+				'extras extras extras extras extras';
 			align-items: center;
 			padding: var(--space-2) 0;
 		}

@@ -515,3 +515,54 @@ describe('Aufgaben (tasks, task_completions)', () => {
 		await expect(as.adult.collection('task_completions').delete(forMia.id)).resolves.toBe(true);
 	});
 });
+
+describe('Basisartikel (ingredients)', () => {
+	it('Erwachsene legen an, Kinder nicht; Schlüssel je Familie eindeutig', async () => {
+		const created = await as.adult
+			.collection('ingredients')
+			.create({ household: householdA, name: 'Mehl', key: 'mehl', aliases: [], unit: 'g' });
+		expect(created.name).toBe('Mehl');
+		await expectDenied(
+			as.child
+				.collection('ingredients')
+				.create({ household: householdA, name: 'Zucker', key: 'zucker' })
+		);
+		await expectDenied(
+			as.admin
+				.collection('ingredients')
+				.create({ household: householdA, name: 'Weizenmehl', key: 'mehl' })
+		);
+		const list = await as.child.collection('ingredients').getFullList();
+		expect(list.map((i) => i.key)).toEqual(['mehl']);
+		await expectDenied(as.outsider.collection('ingredients').getOne(created.id), [404]);
+	});
+
+	it('Rezept-Zutat darf nur auf Basisartikel der eigenen Familie zeigen', async () => {
+		const own = await as.adult
+			.collection('ingredients')
+			.create({ household: householdA, name: 'Ei', key: 'ei' });
+		const foreign = await as.outsider
+			.collection('ingredients')
+			.create({ household: householdB, name: 'Ei', key: 'ei' });
+		const ok = await as.adult.collection('recipe_ingredients').create({
+			recipe: recipeA.id,
+			name: 'Eier',
+			amount: 3,
+			ingredient: own.id,
+			optional: true,
+			alternatives: ['Ei-Ersatz'],
+			amount_kind: 'approx',
+			note: 'Größe M'
+		});
+		expect(ok).toMatchObject({
+			optional: true,
+			amount_kind: 'approx',
+			alternatives: ['Ei-Ersatz']
+		});
+		await expectDenied(
+			as.adult
+				.collection('recipe_ingredients')
+				.create({ recipe: recipeA.id, name: 'Eier', ingredient: foreign.id })
+		);
+	});
+});

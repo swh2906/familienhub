@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { features } from '#lib/auth/features.svelte.js';
+	import { linkExistingIngredients } from '#lib/features/pantry/backfill.js';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { startSync, stopSync } from '#lib/sync/service.js';
@@ -22,6 +23,19 @@
 		if (!household) return;
 		startSync(household);
 		return () => void stopSync();
+	});
+
+	// Bestehende Rezept-Zutaten einmal pro Start ihren Basisartikeln zuordnen (nur wer Rezepte
+	// bearbeiten darf; idempotent). Kurz warten, damit der erste Abgleich Vorrang hat.
+	let linked = '';
+	$effect(() => {
+		const household = session.householdId;
+		if (!household || !session.canEdit || linked === household) return;
+		const timer = setTimeout(() => {
+			linked = household;
+			void linkExistingIngredients(household).catch(() => {});
+		}, 3000);
+		return () => clearTimeout(timer);
 	});
 
 	// Testphasen-Schalter (z. B. Feedback) beim Start einmal vom Server holen.

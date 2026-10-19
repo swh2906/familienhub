@@ -8,6 +8,7 @@ const FAMILY_COLLECTIONS = [
 	'invites',
 	'recipes',
 	'recipe_ingredients',
+	'ingredients',
 	'meal_plan_entries',
 	'shopping_items',
 	'events',
@@ -126,6 +127,7 @@ onRecordValidate(
 		e.next();
 	},
 	'invites',
+	'recipe_ingredients',
 	'meal_plan_entries',
 	'shopping_items',
 	'events',

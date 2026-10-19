@@ -53,7 +53,8 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | `memberships` | `role` (admin, adult, child), `color`, `display_name` | `users`, `households` |
 | `invites` | `token_hash`, `code_hash`, `role`, `expires_at`, `uses_left`, `revoked` | `households`, `memberships` |
 | `recipes` | `title`, `servings`, `instructions`, `tags[]`, `is_favorite`, `prep_minutes`, `difficulty` (0–3) | `households` |
-| `recipe_ingredients` | `name`, `amount`, `unit`, `category`, `sort` | `recipes` |
+| `ingredients` (Basisartikel) | `name`, `key` (je Familie eindeutig, feste ID daraus), `aliases[]`, `unit`, `category`, `pack_amount` | `households` |
+| `recipe_ingredients` | `name`, `amount`, `unit`, `category`, `sort`, `optional`, `alternatives[]`, `amount_kind`, `note` | `recipes`, `ingredients` (optional) |
 | `meal_plan_entries` | `date`, `slot` (breakfast, lunch, dinner), `title`, `recipe_url`, `note`, `servings` | `households`, `recipes` (optional) |
 | `shopping_items` | `name`, `amount`, `unit`, `category`, `checked`, `checked_at` | `households`, `memberships` (added_by, checked_by), `meal_plan_entries` (optional) |
 | `events` | `title`, `start`, `end`, `all_day`, `location`, `rrule`, `exdates[]`, `reminder_minutes` | `households`, `memberships` (participants) |

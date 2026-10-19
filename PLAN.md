@@ -315,8 +315,8 @@ Grundsatz: Vorrat als **Buchungsjournal** (Kauf +, Kochen −, Korrektur =) stat
 
 ### Phase D – Kalender-Kontext
 
-- [ ] **D1** Kochzeit je Mahlzeit gegen Termine; Vorschläge: verschieben, einfacheres Rezept, vorbereiten.
-- [ ] **D2** Hinweis-Steuerung: höchstens ein aktiver Hinweis, Rest gebündelt auf Heute; Antworten „Jetzt erledigen / Später / Nicht heute / Nie wieder so“ (`hint_responses`).
+- [x] **D1** Kochzeit je Mahlzeit gegen Termine (Essenszeiten 7:30/12:30/18:30, Zubereitungszeit oder ca. 30 Min.; blockiert nur, wenn alle Erwachsenen bzw. die ganze Familie dabei sind); Vorschläge: tauschen, schnelleres Rezept, Aufgabe „vorbereiten“ am Vortag.
+- [x] **D2** Hinweis-Steuerung (`features/hints`, Zurücknehmen in den Einstellungen): höchstens ein aktiver Hinweis, Rest gebündelt auf Heute; Antworten „Jetzt erledigen / Später / Nicht heute / Nie wieder so“ (`hint_responses`).
 
 ### Phase E – Proaktiver Einkaufsassistent (ohne Standort)
 

@@ -464,6 +464,7 @@ const HOUSEHOLD_DELETE_ORDER = [
 	['ingredients', 'household = {:h}'],
 	['parse_corrections', 'household = {:h}'],
 	['events', 'household = {:h}'],
+	['hint_responses', 'household = {:h}'],
 	['invites', 'household = {:h}'],
 	['feedback', 'household = {:h}'],
 	['memberships', 'household = {:h}']

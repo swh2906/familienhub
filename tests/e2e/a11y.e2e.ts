@@ -99,6 +99,15 @@ async function seed(admin: string, household: string): Promise<string> {
 		title: 'Pfannkuchen',
 		recipe: recipe.id
 	});
+	// Termin im Kochfenster des Mittagessens → Hinweis mit Vorschlägen auf Heute.
+	const tomorrow = iso(new Date(Date.now() + 86_400_000));
+	await apiCreate(token, 'events', {
+		household,
+		title: 'Zahnarzt',
+		start: new Date(`${tomorrow}T11:30:00`).toISOString(),
+		end: new Date(`${tomorrow}T12:15:00`).toISOString(),
+		exdates: []
+	});
 	await apiCreate(token, 'meal_plan_entries', {
 		household,
 		date: iso(new Date(Date.now() - 86_400_000)),
@@ -155,6 +164,7 @@ for (const scheme of ['light', 'dark'] as const) {
 				'/aufgaben/feedback',
 				'/einstellungen'
 			];
+			await expect(page.getByRole('region', { name: 'Hinweise' })).toBeVisible();
 			for (const path of pages) {
 				await page.goto(path);
 				await expect(page.getByRole('heading', { level: 1 }), path).toBeVisible();

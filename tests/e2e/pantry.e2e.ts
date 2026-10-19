@@ -43,14 +43,16 @@ test('Gekocht bestätigen, Vorrat erfragen, Kauf buchen', async ({ page }) => {
 	}
 	await login(page, family.email);
 
-	// Heute: zuerst „Gekocht?“ für gestern, dann die Frage nach Reis (für morgen gebraucht).
-	const questions = page.getByRole('region', { name: 'Kurze Fragen' });
-	await expect(questions.getByText('Habt ihr Reispfanne gekocht?')).toBeVisible();
-	await questions.getByRole('button', { name: 'Ja, gekocht' }).click();
-	await expect(questions.getByText('Habt ihr Reispfanne gekocht?')).toHaveCount(0);
-	await expect(questions.getByText('Habt ihr noch Reis?')).toBeVisible();
-	await questions.getByRole('button', { name: 'Nein, ist alle' }).click();
-	await expect(page.getByRole('region', { name: 'Kurze Fragen' })).toHaveCount(0);
+	// Heute: ein aktiver Hinweis – zuerst die Frage nach Reis (morgen gebraucht), „Gekocht?“ für
+	// gestern wartet gebündelt darunter und rückt danach nach oben.
+	const hints = page.getByRole('region', { name: 'Hinweise' });
+	await expect(hints.getByText('Habt ihr noch Reis?')).toBeVisible();
+	await expect(hints.getByText('Weitere Hinweise (1)')).toBeVisible();
+	await hints.getByRole('button', { name: 'Nein, ist alle' }).first().click();
+	await expect(hints.getByText('Habt ihr noch Reis?')).toHaveCount(0);
+	await expect(hints.getByText('Habt ihr Reispfanne gekocht?')).toBeVisible();
+	await hints.getByRole('button', { name: 'Ja, gekocht' }).click();
+	await expect(page.getByRole('region', { name: 'Hinweise' })).toHaveCount(0);
 
 	// Einkauf: Reis kaufen und abhaken bucht den Kauf.
 	await page
@@ -69,7 +71,8 @@ test('Gekocht bestätigen, Vorrat erfragen, Kauf buchen', async ({ page }) => {
 		.click();
 	await expect(page.getByRole('heading', { level: 1, name: 'Vorrat' })).toBeVisible();
 	const available = page.getByRole('region', { name: 'Vorhanden' });
-	await expect(available.getByRole('listitem')).toHaveText(/Reis\s*vorhanden\s*1 kg/);
+	// Nach dem Kochen ist der Bestand geschätzt („etwa“), bis jemand nachzählt.
+	await expect(available.getByRole('listitem')).toHaveText(/Reis\s*vorhanden\s*etwa 1 kg/);
 	await available
 		.getByRole('group', { name: 'Bestand von Reis' })
 		.getByRole('button', { name: 'Ungefähr die Hälfte' })

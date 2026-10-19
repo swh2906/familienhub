@@ -3,6 +3,7 @@ import {
 	answerEntry,
 	computeStock,
 	convertAmount,
+	displayAmount,
 	isUncertain,
 	type PantryEntry,
 	type PantryKind
@@ -134,5 +135,14 @@ describe('Antworten im Vorrat', () => {
 		const unknown = computeStock([], { unit: 'g', now: NOW });
 		expect(answerEntry('half', unknown, 500)).toEqual({ kind: 'set', amount: 250, unit: 'g' });
 		expect(answerEntry('half', unknown)).toEqual({ kind: 'present', amount: 0, unit: 'g' });
+	});
+});
+
+describe('Anzeige', () => {
+	it('große Mengen in kg und l', () => {
+		expect(displayAmount(1500, 'g')).toEqual({ amount: 1.5, unit: 'kg' });
+		expect(displayAmount(2000, 'ml')).toEqual({ amount: 2, unit: 'l' });
+		expect(displayAmount(333.333, 'g')).toEqual({ amount: 333.33, unit: 'g' });
+		expect(displayAmount(3, 'Stück')).toEqual({ amount: 3, unit: 'Stück' });
 	});
 });

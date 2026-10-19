@@ -177,3 +177,11 @@ export function answerEntry(
 		}
 	}
 }
+
+/** Menge für die Anzeige in handlicher Einheit: 1500 g → 1,5 kg, 2000 ml → 2 l. */
+export function displayAmount(amount: number, unit: string): { amount: number; unit: string } {
+	const round = (n: number) => Math.round(n * 100) / 100;
+	if (unit === 'g' && amount >= 1000) return { amount: round(amount / 1000), unit: 'kg' };
+	if (unit === 'ml' && amount >= 1000) return { amount: round(amount / 1000), unit: 'l' };
+	return { amount: round(amount), unit };
+}

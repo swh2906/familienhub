@@ -19,6 +19,7 @@
 	import { SLOTS, type Slot } from '#lib/features/meals/plan.js';
 	import { entriesBetween } from '#lib/features/meals/plan-store.js';
 	import { formatCompactDay, formatDay, toDateString } from '#lib/features/meals/week.js';
+	import PantryQuestions from '#lib/features/pantry/PantryQuestions.svelte';
 	import { formatQuantity, groupItems, parseQuickInput } from '#lib/features/shopping/list.js';
 	import ShoppingTile from '#lib/features/shopping/ShoppingTile.svelte';
 	import { addItem, itemsOf, membersOf, toggleItem } from '#lib/features/shopping/store.js';
@@ -145,6 +146,10 @@
 </header>
 
 <div class="cards">
+	{#if session.householdId}
+		<PantryQuestions household={session.householdId} {today} />
+	{/if}
+
 	<!-- Termine -->
 	<section class="card events" aria-labelledby="today-events">
 		<!-- eslint-disable svelte/no-navigation-without-resolve -- calendarToday nutzt resolve() -->

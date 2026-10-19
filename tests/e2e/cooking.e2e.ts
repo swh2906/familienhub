@@ -103,3 +103,36 @@ test('Auf „Heute“ führt ein geplantes Rezept direkt in die Kochansicht', as
 	await page.getByRole('link', { name: 'Pfannkuchen – kochen' }).click();
 	await expect(page).toHaveURL(new RegExp(`/essen/rezepte/${id}/kochen$`));
 });
+
+test('Zusatzangaben: ca., optional, nach Geschmack und Alternativen', async ({ page }) => {
+	const family = await createFamily();
+	const token = await apiToken(family.email);
+	const recipe = await apiCreate(token, 'recipes', {
+		household: family.household,
+		title: 'Bratkartoffeln',
+		servings: 2
+	});
+	const add = (data: Record<string, unknown>) =>
+		apiCreate(token, 'recipe_ingredients', { recipe: recipe.id, ...data });
+	await add({ name: 'Öl', amount: 2, unit: 'EL', amount_kind: 'approx', sort: 0 });
+	await add({ name: 'Petersilie', optional: true, note: 'gehackt', sort: 1 });
+	await add({ name: 'Pfeffer', amount_kind: 'to_taste', alternatives: ['Chili'], sort: 2 });
+	await login(page, family.email);
+
+	// Rezeptseite: Hinweise statt Warnungen.
+	await page.goto(`/essen/rezepte/${recipe.id}`);
+	const rows = page.getByRole('region', { name: 'Zutaten' }).getByRole('listitem');
+	await expect(rows).toHaveText([
+		/ca\. 2 EL\s*Öl/,
+		/Petersilie\s*gehackt\s*optional/,
+		/Pfeffer\s*nach Geschmack\s*oder Chili/
+	]);
+
+	// Kochansicht: dieselben Angaben in der Zeile.
+	await page.goto(`/essen/rezepte/${recipe.id}/kochen`);
+	await expect(page.getByRole('checkbox', { name: 'ca. 2 EL Öl' })).toBeVisible();
+	await expect(page.getByRole('checkbox', { name: 'Petersilie (optional)' })).toBeVisible();
+	await expect(
+		page.getByRole('checkbox', { name: 'Pfeffer (nach Geschmack) – oder Chili' })
+	).toBeVisible();
+});

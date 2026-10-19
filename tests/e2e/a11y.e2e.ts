@@ -57,6 +57,24 @@ async function seed(admin: string, household: string): Promise<string> {
 		instructions: 'Alles verrühren und ausbacken.',
 		tags: ['schnell']
 	});
+	// Zutaten mit Zusatzangaben, damit Hinweise (ca., optional, Alternativen) mitgeprüft werden.
+	await apiCreate(token, 'recipe_ingredients', {
+		recipe: recipe.id,
+		name: 'Mehl',
+		amount: 300,
+		unit: 'g',
+		amount_kind: 'approx',
+		alternatives: ['Dinkelmehl'],
+		sort: 0
+	});
+	await apiCreate(token, 'recipe_ingredients', {
+		recipe: recipe.id,
+		name: 'Zimt',
+		optional: true,
+		amount_kind: 'to_taste',
+		note: 'gemahlen',
+		sort: 1
+	});
 	return recipe.id;
 }
 

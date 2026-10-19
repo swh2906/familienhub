@@ -4,6 +4,8 @@ import {
 	clampMinutes,
 	difficultyName,
 	formatDuration,
+	ingredientAmount,
+	ingredientExtras,
 	ingredientLine,
 	recipeCategory,
 	recipeFacts,
@@ -54,5 +56,30 @@ describe('Kochansicht', () => {
 			'mittel'
 		]);
 		expect(recipeFacts({ servings: 4 }, '4 Portionen')).toEqual(['4 Portionen']);
+	});
+});
+
+describe('Zusatzangaben in der Anzeige', () => {
+	it('„ca.“ nur bei ungefähren Mengen mit Menge', () => {
+		const oil = { amount: 2, unit: 'EL', name: 'Öl', amount_kind: 'approx' as const };
+		expect(ingredientAmount(oil, 2, 4)).toBe('ca. 4 EL');
+		expect(ingredientLine(oil, 2, 2)).toBe('ca. 2 EL Öl');
+		expect(ingredientLine({ ...oil, amount: 0 }, 2, 2)).toBe('Öl');
+	});
+
+	it('optional, nach Geschmack und Alternativen als Hinweise', () => {
+		expect(
+			ingredientExtras({
+				amount_kind: 'to_taste',
+				optional: true,
+				alternatives: ['Chili', ' '],
+				note: ' gemahlen '
+			})
+		).toEqual({
+			tags: ['nach Geschmack', 'optional'],
+			alternatives: 'oder Chili',
+			note: 'gemahlen'
+		});
+		expect(ingredientExtras({})).toEqual({ tags: [], alternatives: '', note: '' });
 	});
 });

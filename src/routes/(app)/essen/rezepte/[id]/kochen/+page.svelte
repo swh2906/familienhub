@@ -12,6 +12,7 @@
 	import {
 		clampDifficulty,
 		DIFFICULTY_LEVELS,
+		ingredientExtras,
 		ingredientLine,
 		recipeCategory,
 		difficultyName,
@@ -185,6 +186,13 @@
 				{:else}
 					<ul class="ingredients" aria-labelledby="cook-ingredients">
 						{#each data.current.ingredients as ingredient (ingredient.id)}
+							{@const extras = ingredientExtras(ingredient)}
+							{@const extraText = [
+								...extras.tags.map((tag) => `(${tag})`),
+								extras.alternatives ? `– ${extras.alternatives}` : ''
+							]
+								.filter(Boolean)
+								.join(' ')}
 							<li>
 								<label class:done={done.includes(ingredient.id)}>
 									<input
@@ -192,7 +200,10 @@
 										checked={done.includes(ingredient.id)}
 										onchange={() => toggle(ingredient.id)}
 									/>
-									<span>{ingredientLine(ingredient, baseServings, portions)}</span>
+									<span
+										>{ingredientLine(ingredient, baseServings, portions)}{#if extraText}
+											<em class="extra">{` ${extraText}`}</em>{/if}</span
+									>
 								</label>
 							</li>
 						{/each}
@@ -451,6 +462,11 @@
 		width: 1.4rem;
 		height: 1.4rem;
 		accent-color: var(--paper-heading);
+	}
+
+	.extra {
+		font-style: normal;
+		opacity: 0.75;
 	}
 
 	.ingredients .done span {

@@ -75,6 +75,30 @@ async function seed(admin: string, household: string): Promise<string> {
 		note: 'gemahlen',
 		sort: 1
 	});
+	// Vorrat: zwei Basisartikel mit verschiedenem Status und eine offene „Gekocht?“-Frage.
+	const mehl = await apiCreate(token, 'ingredients', {
+		household,
+		name: 'Mehl',
+		key: 'mehl',
+		unit: 'g',
+		pack_amount: 1000
+	});
+	await apiCreate(token, 'ingredients', { household, name: 'Zimt', key: 'zimt' });
+	await apiCreate(token, 'pantry_events', {
+		household,
+		ingredient: mehl.id,
+		kind: 'set',
+		amount: 100,
+		unit: 'g',
+		at: new Date().toISOString()
+	});
+	await apiCreate(token, 'meal_plan_entries', {
+		household,
+		date: iso(new Date(Date.now() - 86_400_000)),
+		slot: 'dinner',
+		title: 'Pfannkuchen',
+		recipe: recipe.id
+	});
 	return recipe.id;
 }
 
@@ -116,6 +140,7 @@ for (const scheme of ['light', 'dark'] as const) {
 				`/essen/rezepte/${recipe}/kochen`,
 				'/essen/rezepte/neu',
 				'/einkauf',
+				'/einkauf/vorrat',
 				'/kalender?ansicht=tag',
 				'/kalender?ansicht=woche',
 				'/kalender?ansicht=monat',

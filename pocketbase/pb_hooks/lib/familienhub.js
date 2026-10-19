@@ -8,6 +8,7 @@ const SAME_HOUSEHOLD_REFS = {
 	invites: { created_by: 'memberships' },
 	meal_plan_entries: { recipe: 'recipes' },
 	recipe_ingredients: { ingredient: 'ingredients' },
+	pantry_events: { ingredient: 'ingredients' },
 	shopping_items: {
 		added_by: 'memberships',
 		checked_by: 'memberships',
@@ -458,6 +459,7 @@ const HOUSEHOLD_DELETE_ORDER = [
 	['meal_plan_entries', 'household = {:h}'],
 	['recipe_ingredients', 'recipe.household = {:h}'],
 	['recipes', 'household = {:h}'],
+	['pantry_events', 'household = {:h}'],
 	['ingredients', 'household = {:h}'],
 	['parse_corrections', 'household = {:h}'],
 	['events', 'household = {:h}'],

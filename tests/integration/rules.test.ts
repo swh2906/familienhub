@@ -591,3 +591,66 @@ describe('Gelernte Korrekturen (parse_corrections)', () => {
 		await expectDenied(as.outsider.collection('parse_corrections').getOne(created.id), [404]);
 	});
 });
+
+describe('Vorrat (pantry_events)', () => {
+	it('alle Mitglieder buchen; Buchungen bleiben unverändert; nur eigene Basisartikel', async () => {
+		const reis = await as.adult
+			.collection('ingredients')
+			.create({ household: householdA, name: 'Reis', key: 'reis', unit: 'g' });
+		const at = new Date().toISOString();
+		const bought = await as.child.collection('pantry_events').create({
+			household: householdA,
+			ingredient: reis.id,
+			kind: 'purchase',
+			amount: 1000,
+			unit: 'g',
+			at,
+			source: 'manual'
+		});
+		expect(bought.kind).toBe('purchase');
+		await expectDenied(
+			as.adult.collection('pantry_events').update(bought.id, { amount: 5 }),
+			[403, 404]
+		);
+		await expectDenied(as.admin.collection('pantry_events').delete(bought.id), [403, 404]);
+		await expectDenied(as.outsider.collection('pantry_events').getOne(bought.id), [404]);
+
+		const foreign = await as.outsider
+			.collection('ingredients')
+			.create({ household: householdB, name: 'Reis', key: 'reis' });
+		await expectDenied(
+			as.adult.collection('pantry_events').create({
+				household: householdA,
+				ingredient: foreign.id,
+				kind: 'consume',
+				amount: 100,
+				unit: 'g',
+				at
+			})
+		);
+		await expectDenied(
+			as.outsider.collection('pantry_events').create({
+				household: householdA,
+				ingredient: reis.id,
+				kind: 'set',
+				amount: 0,
+				at
+			})
+		);
+	});
+
+	it('„gekocht“ am Essensplan setzen nur Erwachsene', async () => {
+		const entry = await as.adult.collection('meal_plan_entries').create({
+			household: householdA,
+			date: '2026-10-18',
+			slot: 'dinner',
+			title: 'Reispfanne'
+		});
+		const done = await as.adult.collection('meal_plan_entries').update(entry.id, { cooked: 'yes' });
+		expect(done.cooked).toBe('yes');
+		await expectDenied(
+			as.child.collection('meal_plan_entries').update(entry.id, { cooked: 'no' }),
+			[403, 404]
+		);
+	});
+});

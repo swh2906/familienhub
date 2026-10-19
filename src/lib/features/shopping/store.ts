@@ -3,6 +3,7 @@
 // sofort mitgesetzt, damit die Anzeige nicht auf den Abgleich warten muss.
 import { repo } from '#lib/db/index.js';
 import type { Membership, ShoppingItem } from '#lib/db/types.js';
+import { bookPurchase, undoPurchase } from '#lib/features/pantry/journal.js';
 import { m } from '#lib/paraglide/messages.js';
 import { withFormerMembers } from '#lib/ui/members.js';
 import { suggestCategory } from './categorize.js';
@@ -49,7 +50,7 @@ export async function reopenItem(item: ShoppingItem, input?: QuickInput): Promis
 	});
 }
 
-/** Abhaken oder wieder öffnen. */
+/** Abhaken oder wieder öffnen. Gehört der Artikel zu einem Basisartikel, wird der Kauf im Vorrat gebucht. */
 export async function toggleItem(item: ShoppingItem, membership: string): Promise<void> {
 	const checked = !item.checked;
 	await repo('shopping_items').update(item.id, {
@@ -57,6 +58,10 @@ export async function toggleItem(item: ShoppingItem, membership: string): Promis
 		checked_at: checked ? new Date().toISOString() : '',
 		checked_by: checked ? membership : ''
 	});
+	// Der Vorrat ist Zusatz: ein Fehler dort darf das Abhaken nicht verhindern.
+	await (checked ? bookPurchase(item.household, item) : undoPurchase(item.household, item)).catch(
+		(error: unknown) => console.error('Vorrat nicht gebucht', error)
+	);
 }
 
 export interface ItemForm {

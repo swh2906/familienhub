@@ -75,6 +75,20 @@ export interface ParseCorrection extends BaseRecord {
 	result: CorrectedIngredient[] | null;
 }
 
+/** Buchung im Vorrat (nie geändert; Korrekturen sind neue Buchungen, siehe pantry/stock.ts). */
+export interface PantryEvent extends BaseRecord {
+	household: string;
+	ingredient: string;
+	kind: 'purchase' | 'consume' | 'set' | 'present' | 'undo';
+	amount: number;
+	unit: string;
+	at: string;
+	/** Bei 'undo': die stornierte Buchung. */
+	ref: string;
+	/** Herkunft, z. B. „shopping:<id>“, „meal:<id>“ oder „manual“. */
+	source: string;
+}
+
 /** Basisartikel einer Familie: alle Schreibweisen einer Zutat (Grundlage für Vorrat und Einkauf). */
 export interface Ingredient extends BaseRecord {
 	household: string;
@@ -100,6 +114,8 @@ export interface MealPlanEntry extends BaseRecord {
 	recipe: string;
 	note: string;
 	servings: number;
+	/** Antwort auf „Habt ihr … gekocht?“; leer = noch offen. */
+	cooked: '' | 'yes' | 'no';
 }
 
 export interface ShoppingItem extends BaseRecord {
@@ -166,6 +182,7 @@ export interface CollectionTypes {
 	recipes: Recipe;
 	ingredients: Ingredient;
 	parse_corrections: ParseCorrection;
+	pantry_events: PantryEvent;
 	recipe_ingredients: RecipeIngredient;
 	meal_plan_entries: MealPlanEntry;
 	shopping_items: ShoppingItem;
@@ -187,6 +204,7 @@ export const COLLECTIONS: readonly { name: CollectionName; scope: string }[] = [
 	{ name: 'recipes', scope: 'household' },
 	{ name: 'ingredients', scope: 'household' },
 	{ name: 'parse_corrections', scope: 'household' },
+	{ name: 'pantry_events', scope: 'household' },
 	{ name: 'recipe_ingredients', scope: 'recipe.household' },
 	{ name: 'meal_plan_entries', scope: 'household' },
 	{ name: 'shopping_items', scope: 'household' },

@@ -302,10 +302,10 @@ Grundsatz: Vorrat als **Buchungsjournal** (Kauf +, Kochen −, Korrektur =) stat
 
 ### Phase B – Vorrat und Bestand
 
-- [ ] **B1** Journal `pantry_events` + reine Bestandsrechnung (Bestand, Sicherheit, typischer Verbrauch, Einheiten-Umrechnung).
-- [ ] **B2** Kauf (+) und Kochen (−) buchen; `meal_plan_entries.cooked`; Rückfrage „Habt ihr … gekocht?“ auf Heute.
-- [ ] **B3** Reiter „Vorrat“ unter Einkauf mit Statusfarben und Antworten „Ja, habe ich noch / Nein, ist alle / Ungefähr die Hälfte“.
-- [ ] **B4** Rückfragen nur bei bald benötigten, unsicheren Zutaten.
+- [x] **B1** Journal `pantry_events` + reine Bestandsrechnung (Bestand, Sicherheit, typischer Verbrauch, Einheiten-Umrechnung) in `features/pantry/stock.ts`.
+- [x] **B2** Kauf (+) beim Abhaken bekannter Basisartikel (wieder öffnen = Storno) und Kochen (−, feste IDs gegen Doppelbuchung) buchen; `meal_plan_entries.cooked`; Rückfrage „Habt ihr … gekocht?“ auf Heute.
+- [x] **B3** Reiter „Vorrat“ (`/einkauf/vorrat`) unter Einkauf mit Statusfarben und Antworten „Ja, habe ich noch / Nein, ist alle / Ungefähr die Hälfte“.
+- [x] **B4** Rückfragen nur bei bald benötigten (7 Tage), unsicheren Zutaten; höchstens drei, „Später“ blendet aus.
 
 ### Phase C – Intelligente Einkaufsliste
 

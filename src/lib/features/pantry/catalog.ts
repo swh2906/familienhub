@@ -1,6 +1,8 @@
 // Basisartikel: verschiedene Schreibweisen einer Zutat („Mehl“, „Weizenmehl Typ 405“, „Mehl 405“)
 // landen beim selben Artikel. Grundlage für Vorrat und Einkaufsliste. Reine Logik, auf dem Gerät.
 
+import { stableId } from '#lib/db/ids.js';
+
 export interface StarterIngredient {
 	/** Anzeigename. */
 	name: string;
@@ -205,21 +207,11 @@ function baseKey(text: string): string {
 }
 
 /**
- * Feste ID je Familie und Schlüssel (15 Zeichen a–z0–9, PocketBase-Format). Legen zwei Geräte
- * gleichzeitig „Mehl“ an, entsteht dieselbe ID statt zwei Artikeln.
+ * Feste ID je Familie und Schlüssel. Legen zwei Geräte gleichzeitig „Mehl“ an, entsteht dieselbe
+ * ID statt zwei Artikeln (siehe `stableId`).
  */
 export function ingredientId(household: string, key: string): string {
-	const input = `${household}|${key}`;
-	// Drei FNV-1a-Varianten (32 Bit) → zusammen genug Länge, nur [a-z0-9].
-	const hash = (seed: number) => {
-		let h = seed >>> 0;
-		for (let i = 0; i < input.length; i++) {
-			h ^= input.charCodeAt(i);
-			h = Math.imul(h, 16777619) >>> 0;
-		}
-		return h.toString(36).padStart(7, '0');
-	};
-	return (hash(2166136261) + hash(0x9747b28c) + hash(0x1b873593)).slice(0, 15);
+	return stableId(household, key);
 }
 
 export interface KnownIngredient {

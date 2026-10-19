@@ -57,6 +57,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | `recipe_ingredients` | `name`, `amount`, `unit`, `category`, `sort`, `optional`, `alternatives[]`, `amount_kind`, `note` | `recipes`, `ingredients` (optional) |
 | `parse_corrections` | `key` (normalisierte Zeile), `input`, `result` (JSON) | `households` |
 | `pantry_events` (Vorrat, nur anfügen) | `kind` (purchase, consume, set, present, undo), `amount`, `unit`, `at`, `ref`, `source` | `households`, `ingredients` |
+| `hint_responses` (je Mitglied, nur eigene) | `key`, `response` (done, later, not_today, never), `until` | `households`, `memberships` |
 | `meal_plan_entries` | `date`, `slot` (breakfast, lunch, dinner), `title`, `recipe_url`, `note`, `servings`, `cooked` | `households`, `recipes` (optional) |
 | `shopping_items` | `name`, `amount`, `unit`, `category`, `checked`, `checked_at`, `reason` | `households`, `memberships` (added_by, checked_by), `meal_plan_entries`, `ingredients` (beide optional) |
 | `events` | `title`, `start`, `end`, `all_day`, `location`, `rrule`, `exdates[]`, `reminder_minutes` | `households`, `memberships` (participants) |

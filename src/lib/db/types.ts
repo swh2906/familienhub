@@ -89,6 +89,16 @@ export interface PantryEvent extends BaseRecord {
 	source: string;
 }
 
+/** Antwort einer Person auf einen Hinweis (siehe features/hints). */
+export interface HintResponse extends BaseRecord {
+	household: string;
+	membership: string;
+	key: string;
+	response: 'done' | 'later' | 'not_today' | 'never';
+	/** Bis wann ausgeblendet (ISO); leer = dauerhaft bzw. erledigt. */
+	until: string;
+}
+
 /** Basisartikel einer Familie: alle Schreibweisen einer Zutat (Grundlage für Vorrat und Einkauf). */
 export interface Ingredient extends BaseRecord {
 	household: string;
@@ -187,6 +197,7 @@ export interface CollectionTypes {
 	ingredients: Ingredient;
 	parse_corrections: ParseCorrection;
 	pantry_events: PantryEvent;
+	hint_responses: HintResponse;
 	recipe_ingredients: RecipeIngredient;
 	meal_plan_entries: MealPlanEntry;
 	shopping_items: ShoppingItem;
@@ -209,6 +220,7 @@ export const COLLECTIONS: readonly { name: CollectionName; scope: string }[] = [
 	{ name: 'ingredients', scope: 'household' },
 	{ name: 'parse_corrections', scope: 'household' },
 	{ name: 'pantry_events', scope: 'household' },
+	{ name: 'hint_responses', scope: 'household' },
 	{ name: 'recipe_ingredients', scope: 'recipe.household' },
 	{ name: 'meal_plan_entries', scope: 'household' },
 	{ name: 'shopping_items', scope: 'household' },

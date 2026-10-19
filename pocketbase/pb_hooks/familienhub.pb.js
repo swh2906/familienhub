@@ -11,6 +11,7 @@ const FAMILY_COLLECTIONS = [
 	'ingredients',
 	'parse_corrections',
 	'pantry_events',
+	'hint_responses',
 	'meal_plan_entries',
 	'shopping_items',
 	'events',

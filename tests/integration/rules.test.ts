@@ -679,3 +679,47 @@ describe('Einkaufsartikel aus dem Essensplan', () => {
 		);
 	});
 });
+
+describe('Antworten auf Hinweise (hint_responses)', () => {
+	it('nur mit eigener Mitgliedschaft; andere sehen sie nicht', async () => {
+		const own = await as.adult.collection('hint_responses').create({
+			household: householdA,
+			membership: membership.adult,
+			key: 'kind:conflict',
+			response: 'never'
+		});
+		expect(own.response).toBe('never');
+		const updated = await as.adult
+			.collection('hint_responses')
+			.update(own.id, { response: 'later', until: new Date().toISOString() });
+		expect(updated.response).toBe('later');
+
+		// Fremde Mitgliedschaft (auch im selben Haushalt) ist verboten.
+		await expectDenied(
+			as.child.collection('hint_responses').create({
+				household: householdA,
+				membership: membership.adult,
+				key: 'kind:stock',
+				response: 'never'
+			})
+		);
+		await expectDenied(as.admin.collection('hint_responses').getOne(own.id), [404]);
+		expect(await as.admin.collection('hint_responses').getFullList()).toHaveLength(0);
+		await expectDenied(
+			as.adult.collection('hint_responses').create({
+				household: householdA,
+				membership: membership.adult,
+				key: 'kind:conflict',
+				response: 'never'
+			})
+		);
+		await expectDenied(as.adult.collection('hint_responses').delete(own.id), [403, 404]);
+		const child = await as.child.collection('hint_responses').create({
+			household: householdA,
+			membership: membership.child,
+			key: 'stock:reis',
+			response: 'not_today'
+		});
+		expect(child.membership).toBe(membership.child);
+	});
+});

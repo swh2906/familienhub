@@ -5,6 +5,7 @@
 	import { listMembers, renameHousehold, serverMessage } from '#lib/auth/family.js';
 	import { isOffline, session } from '#lib/auth/session.svelte.js';
 	import type { Membership } from '#lib/auth/types.js';
+	import HintSettings from '#lib/features/hints/HintSettings.svelte';
 	import ChildForm from '#lib/features/household/ChildForm.svelte';
 	import FamilyMembers from '#lib/features/household/FamilyMembers.svelte';
 	import InvitePanel from '#lib/features/household/InvitePanel.svelte';
@@ -135,6 +136,11 @@
 				{/each}
 			</div>
 		</fieldset>
+	</section>
+
+	<section class="card" aria-labelledby="hints-heading">
+		<h2 id="hints-heading">{m.settings_hints_title()}</h2>
+		<HintSettings />
 	</section>
 
 	<section class="card" aria-labelledby="account-heading">

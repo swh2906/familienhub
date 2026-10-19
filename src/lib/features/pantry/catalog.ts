@@ -260,7 +260,10 @@ export function matchIngredient(name: string, known: readonly KnownIngredient[])
 	const fromStarter = (item: StarterIngredient): Match => {
 		const key = ingredientKey(item.name);
 		// Hat die Familie den Wörterbuch-Artikel schon angelegt, gilt ihr Artikel.
-		const own = known.find((k) => ingredientKey(k.name) === key);
+		const spellings = new Set([item.name, ...item.aliases].map(ingredientKey));
+		const own =
+			known.find((k) => ingredientKey(k.name) === key) ??
+			known.find((k) => spellings.has(ingredientKey(k.name)));
 		return own ? fromFamily(own) : { key, name: item.name, known: item, source: 'starter' };
 	};
 

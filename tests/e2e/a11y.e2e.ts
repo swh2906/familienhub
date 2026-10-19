@@ -94,6 +94,13 @@ async function seed(admin: string, household: string): Promise<string> {
 	});
 	await apiCreate(token, 'meal_plan_entries', {
 		household,
+		date: iso(new Date(Date.now() + 86_400_000)),
+		slot: 'lunch',
+		title: 'Pfannkuchen',
+		recipe: recipe.id
+	});
+	await apiCreate(token, 'meal_plan_entries', {
+		household,
 		date: iso(new Date(Date.now() - 86_400_000)),
 		slot: 'dinner',
 		title: 'Pfannkuchen',
@@ -169,6 +176,12 @@ for (const scheme of ['light', 'dark'] as const) {
 			await page.getByRole('button', { name: 'Neuer Termin' }).first().click();
 			await expect(page.getByRole('dialog')).toBeVisible();
 			await audit(page, 'Termin-Dialog');
+
+			await page.goto('/einkauf');
+			await page.getByRole('button', { name: 'Aus dem Essensplan' }).click();
+			const transfer = page.getByRole('dialog', { name: 'Fehlendes für die nächsten 7 Tage' });
+			await expect(transfer.getByRole('group').first()).toBeVisible();
+			await audit(page, 'Essensplan-Dialog');
 		});
 	});
 }

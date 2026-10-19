@@ -58,7 +58,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | `parse_corrections` | `key` (normalisierte Zeile), `input`, `result` (JSON) | `households` |
 | `pantry_events` (Vorrat, nur anfügen) | `kind` (purchase, consume, set, present, undo), `amount`, `unit`, `at`, `ref`, `source` | `households`, `ingredients` |
 | `meal_plan_entries` | `date`, `slot` (breakfast, lunch, dinner), `title`, `recipe_url`, `note`, `servings`, `cooked` | `households`, `recipes` (optional) |
-| `shopping_items` | `name`, `amount`, `unit`, `category`, `checked`, `checked_at` | `households`, `memberships` (added_by, checked_by), `meal_plan_entries` (optional) |
+| `shopping_items` | `name`, `amount`, `unit`, `category`, `checked`, `checked_at`, `reason` | `households`, `memberships` (added_by, checked_by), `meal_plan_entries`, `ingredients` (beide optional) |
 | `events` | `title`, `start`, `end`, `all_day`, `location`, `rrule`, `exdates[]`, `reminder_minutes` | `households`, `memberships` (participants) |
 | `tasks` | `title`, `notes`, `due_date`, `status`, `rrule`, `points` | `households`, `memberships` (assignees) |
 | `task_completions` | `completed_at`, `points` | `tasks`, `memberships` |

@@ -129,6 +129,10 @@ export interface ShoppingItem extends BaseRecord {
 	added_by: string;
 	checked_by: string;
 	meal_plan_entry: string;
+	/** Warum auf der Liste, z. B. „Für Reispfanne (Mi)“ (leer = von Hand). */
+	reason?: string;
+	/** Basisartikel, falls bekannt. */
+	ingredient?: string;
 }
 
 export interface CalendarEvent extends BaseRecord {

@@ -12,6 +12,7 @@
 		variant,
 		label,
 		adder = null,
+		fromPlan = false,
 		editable = false,
 		onactivate,
 		onlongpress
@@ -22,6 +23,8 @@
 		variant: 'open' | 'recent' | 'suggestion';
 		label: string;
 		adder?: { name: string; color: string } | null;
+		/** Aus dem Essensplan übernommen (Begründung steht im Namen und im Dialog). */
+		fromPlan?: boolean;
 		/** Bearbeiten-Modus: Antippen öffnet den Dialog statt abzuhaken (sichtbar markiert). */
 		editable?: boolean;
 		onactivate: () => void;
@@ -79,6 +82,8 @@
 	</button>
 	{#if editable}
 		<span class="pencil" aria-hidden="true"><Icon name="edit" size={14} /></span>
+	{:else if fromPlan}
+		<span class="plan" aria-hidden="true"><Icon name="meals" size={13} /></span>
 	{/if}
 	<!-- Neben dem Button: Die Initiale wäre sonst sichtbarer Text, der im Button-Namen fehlt (WCAG 2.5.3).
 	Wer hinzugefügt hat, steht bereits im Namen (label). -->
@@ -195,6 +200,20 @@
 		place-items: center;
 		width: 22px;
 		height: 22px;
+		border-radius: 999px;
+		background: var(--color-surface);
+		color: var(--color-text);
+		pointer-events: none;
+	}
+
+	.plan {
+		position: absolute;
+		top: 7px;
+		left: 7px;
+		display: grid;
+		place-items: center;
+		width: 20px;
+		height: 20px;
 		border-radius: 999px;
 		background: var(--color-surface);
 		color: var(--color-text);

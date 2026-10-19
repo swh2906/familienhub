@@ -35,6 +35,7 @@ function entry(
 		recipe: '',
 		note: '',
 		servings: 0,
+		cooked: '',
 		...extra
 	};
 }

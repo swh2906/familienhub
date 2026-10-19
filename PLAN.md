@@ -287,6 +287,44 @@ In drei PRs: **10a** App-Qualität (PWA, Offline, Barrierefreiheit), **10b** Dat
 
 ---
 
+## Schritt 11 – Zutaten, Vorrat und intelligente Einkaufsliste
+
+Vorgezogen vor die übrigen Roadmap-Punkte. Entscheidungen (19.10.2026): Erkennung nur lokal (Regeln, Wörterbuch, gelernte Korrekturen); „gekocht“ automatisch nach dem Plantag mit Rückfrage; Vorrat für alle Zutaten aller Rezepte; Standort, Push, Ruhezeiten später (Phase 2, native App); keine Supermärkte/Preise.
+
+Grundsatz: Vorrat als **Buchungsjournal** (Kauf +, Kochen −, Korrektur =) statt überschreibbarer Zahl – so gehen gleichzeitige und offline gemachte Änderungen nicht verloren. Unsicherheit wird angezeigt und erfragt, nie still angenommen. Migrationen nur hinzufügend.
+
+### Phase A – Zutatenerkennung (`feat/schritt-11a-zutatenerkennung`)
+
+- [x] **A1 Parser v2** (`features/meals/parse/ingredient.ts`): Menge (Brüche, Bereiche → oberer Wert, Wörter wie „eine halbe“), Einheit (viele Schreibweisen), optional, Alternativen („oder“, „/“), „nach Geschmack“, „eine Prise“, „ca.“, Hinweise (Komma, Klammern), Aufzählungen („Salz und Pfeffer“), Unsicherheit markieren. 79 Testzeilen; Vorschau im Editor mit Markierungen; Einkaufs-Schnelleingabe bleibt ein Artikel.
+- [ ] **A2 Basisartikel und Normalisierung:** Collection `ingredients` (Name, Schreibweisen, Standardeinheit, Packungsgröße), `recipe_ingredients` + `ingredient`, `optional`, `alternatives`, `amount_kind`, `note`; feste IDs je Familie und Name gegen Duplikate; bestehende Rezepte einmalig in der App zuordnen, Unsicheres zur Prüfung.
+- [ ] **A3 Korrekturen lernen:** „Korrigieren“ je Zeile; Schreibweise am Basisartikel bzw. `parse_corrections`; nächste ähnliche Zeile wird richtig erkannt.
+- [ ] **A4 Anzeige:** Rezeptseite und Kochansicht zeigen optional, Alternativen, „nach Geschmack“.
+
+### Phase B – Vorrat und Bestand
+
+- [ ] **B1** Journal `pantry_events` + reine Bestandsrechnung (Bestand, Sicherheit, typischer Verbrauch, Einheiten-Umrechnung).
+- [ ] **B2** Kauf (+) und Kochen (−) buchen; `meal_plan_entries.cooked`; Rückfrage „Habt ihr … gekocht?“ auf Heute.
+- [ ] **B3** Reiter „Vorrat“ unter Einkauf mit Statusfarben und Antworten „Ja, habe ich noch / Nein, ist alle / Ungefähr die Hälfte“.
+- [ ] **B4** Rückfragen nur bei bald benötigten, unsicheren Zutaten.
+
+### Phase C – Intelligente Einkaufsliste
+
+- [ ] **C1** Bedarf aus geplanten Homi-Rezepten (Portionen, Summen, Einheiten) gegen Vorrat; optional getrennt (schließt die MVP-Lücke „Zutatenübernahme mit Mengen-Zusammenfassung“).
+- [ ] **C2** „Fehlendes auf die Liste“ mit Vorschau und Begründung; Zusammenführen mit offenen Artikeln; Rundung auf Packungen.
+- [ ] **C3** Begründung an Kachel und Dialog.
+
+### Phase D – Kalender-Kontext
+
+- [ ] **D1** Kochzeit je Mahlzeit gegen Termine; Vorschläge: verschieben, einfacheres Rezept, vorbereiten.
+- [ ] **D2** Hinweis-Steuerung: höchstens ein aktiver Hinweis, Rest gebündelt auf Heute; Antworten „Jetzt erledigen / Später / Nicht heute / Nie wieder so“ (`hint_responses`).
+
+### Phase E – Proaktiver Einkaufsassistent (ohne Standort)
+
+- [ ] **E1** Ablauf Rezept → Bedarf → Bestand → Unsicherheit → Zeitpunkt (Vortag, nach letztem Termin, Einkaufsmodus) → Hinweis mit Begründung → Antwort → Vorrat und Liste aktualisieren.
+- [ ] **E2** Einkaufsmodus „Ich gehe einkaufen“ mit Liste und unsicheren Zutaten.
+
+Später (Phase 2): Standort und Umweg über native App, Push, Ruhe- und Fokuszeiten.
+
 ## Roadmap: als Nächstes
 
 ### 1. Performance bei vielen Einträgen

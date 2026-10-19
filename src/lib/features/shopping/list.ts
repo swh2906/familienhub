@@ -2,7 +2,7 @@
 import type { ShoppingItem } from '#lib/db/types.js';
 import { formatAmount } from '#lib/features/meals/amounts.js';
 import { CATEGORIES } from '#lib/features/meals/catalog.js';
-import { parseIngredientLine } from '#lib/features/meals/paste.js';
+import { parseIngredient } from '#lib/features/meals/parse/ingredient.js';
 
 export const FALLBACK_CATEGORY = 'Sonstiges';
 
@@ -12,11 +12,18 @@ export interface QuickInput {
 	unit: string;
 }
 
-/** „2 l Milch“ → Name, Menge, Einheit. Leere Eingabe → null. */
+/**
+ * „2 l Milch“ → Name, Menge, Einheit. Leere Eingabe → null.
+ * Auf der Einkaufsliste bleibt eine Eingabe ein Artikel: „Salz und Pfeffer“ wird nicht geteilt,
+ * Alternativen bleiben im Namen („Mehl oder Dinkelmehl“).
+ */
 export function parseQuickInput(text: string): QuickInput | null {
-	const parsed = parseIngredientLine(text);
-	if (!parsed) return null;
-	return { name: parsed.name, amount: parsed.amount, unit: parsed.unit };
+	const parsed = parseIngredient(text);
+	if (parsed.length === 0) return null;
+	if (parsed.length > 1) return { name: text.trim().replace(/\s+/g, ' '), amount: 0, unit: '' };
+	const [item] = parsed;
+	const name = [item.name, ...item.alternatives].join(' oder ');
+	return { name, amount: item.amount, unit: item.unit };
 }
 
 /** „2 l“, „500 g“, „3“ oder '' */

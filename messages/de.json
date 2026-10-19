@@ -413,5 +413,10 @@
 	"cal_timeline": "Zeitachse",
 	"cal_moved": "Termin verschoben.",
 	"cal_move_title": "Termin verschieben",
-	"tasks_sections_label": "Bereiche unter Aufgaben"
+	"tasks_sections_label": "Bereiche unter Aufgaben",
+	"paste_badge_approx": "ca.",
+	"paste_badge_to_taste": "nach Geschmack",
+	"paste_badge_optional": "optional",
+	"paste_badge_alternatives": "oder {names}",
+	"paste_badge_unsure": "bitte prüfen"
 }

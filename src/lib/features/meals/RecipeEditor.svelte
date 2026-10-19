@@ -279,7 +279,27 @@
 					<ul class="preview">
 						{#each pasted as draft, i (i)}
 							<li>
-								{[formatAmount(draft.amount), draft.unit, draft.name].filter(Boolean).join(' ')}
+								<span
+									>{[formatAmount(draft.amount), draft.unit, draft.name]
+										.filter(Boolean)
+										.join(' ')}</span
+								>
+								{#if draft.amountKind === 'approx'}<span class="badge"
+										>{m.paste_badge_approx()}</span
+									>{/if}
+								{#if draft.amountKind === 'to_taste'}<span class="badge"
+										>{m.paste_badge_to_taste()}</span
+									>{/if}
+								{#if draft.optional}<span class="badge">{m.paste_badge_optional()}</span>{/if}
+								{#if draft.alternatives.length > 0}<span class="badge"
+										>{m.paste_badge_alternatives({ names: draft.alternatives.join(', ') })}</span
+									>{/if}
+								{#if draft.note && draft.note !== 'nach Geschmack'}<span class="note"
+										>{draft.note}</span
+									>{/if}
+								{#if draft.confidence === 'low'}<span class="badge warn"
+										>{m.paste_badge_unsure()}</span
+									>{/if}
 							</li>
 						{/each}
 					</ul>
@@ -318,6 +338,32 @@
 </form>
 
 <style>
+	.preview li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-2);
+	}
+
+	.badge {
+		padding: 0 var(--space-2);
+		border-radius: 999px;
+		background: var(--color-meals-bg);
+		color: var(--color-meals);
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+
+	.badge.warn {
+		background: var(--color-warning-bg);
+		color: var(--color-warning);
+	}
+
+	.note {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+	}
+
 	.editor {
 		display: grid;
 		gap: var(--space-6);

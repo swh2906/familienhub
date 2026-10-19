@@ -160,26 +160,23 @@ describe('diffIngredients', () => {
 	});
 });
 
-describe('Zutaten aus Text', () => {
-	it.each([
-		['300 g Mehl', { name: 'Mehl', amount: 300, unit: 'g' }],
-		['2 EL Olivenöl', { name: 'Olivenöl', amount: 2, unit: 'EL' }],
-		['1/2 TL Salz', { name: 'Salz', amount: 0.5, unit: 'TL' }],
-		['½ Liter Milch', { name: 'Milch', amount: 0.5, unit: 'l' }],
-		['3 Eier', { name: 'Eier', amount: 3, unit: '' }],
-		['1 Zwiebel', { name: 'Zwiebel', amount: 1, unit: '' }],
-		['2 Zehen Knoblauch', { name: 'Knoblauch', amount: 2, unit: 'Zehe' }],
-		['- 1 Pck. Backpulver', { name: 'Backpulver', amount: 1, unit: 'Packung' }],
-		['• 200 gr. Zucker', { name: 'Zucker', amount: 200, unit: 'g' }],
-		['2-3 Tomaten', { name: 'Tomaten', amount: 2, unit: '' }],
-		[
-			'1,5 kg Kartoffeln, festkochend',
-			{ name: 'Kartoffeln, festkochend', amount: 1.5, unit: 'kg' }
-		],
-		['Salz und Pfeffer', { name: 'Salz und Pfeffer', amount: 0, unit: '' }],
-		['1. 250 ml Sahne', { name: 'Sahne', amount: 250, unit: 'ml' }]
-	])('„%s“', (line, expected) => {
-		expect(parseIngredientLine(line)).toEqual({ ...expected, category: '' });
+describe('Zutaten aus Text (Einfügen)', () => {
+	// Die Erkennung selbst testet parse/ingredient.test.ts; hier nur die Anbindung.
+	it('liefert Editor-Zeilen mit Zusatzangaben', () => {
+		expect(parseIngredientLine('200 g Mehl oder Dinkelmehl')).toEqual([
+			{
+				name: 'Mehl',
+				amount: 200,
+				unit: 'g',
+				category: '',
+				amountKind: 'exact',
+				optional: false,
+				alternatives: ['Dinkelmehl'],
+				note: '',
+				confidence: 'high'
+			}
+		]);
+		expect(parseIngredientLine('Salz und Pfeffer').map((d) => d.name)).toEqual(['Salz', 'Pfeffer']);
 	});
 
 	it('überspringt leere Zeilen und Überschriften', () => {

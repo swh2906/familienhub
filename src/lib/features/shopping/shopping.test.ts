@@ -107,3 +107,20 @@ describe('groupItems', () => {
 		expect(done.map((i) => i.name)).toEqual(['Eier', 'Brot']);
 	});
 });
+
+describe('Schnell-Eingabe mit dem neuen Parser', () => {
+	it('bleibt ein Artikel und behält Alternativen im Namen', () => {
+		expect(parseQuickInput('Salz und Pfeffer')).toEqual({
+			name: 'Salz und Pfeffer',
+			amount: 0,
+			unit: ''
+		});
+		expect(parseQuickInput('500 g Mehl oder Dinkelmehl')).toEqual({
+			name: 'Mehl oder Dinkelmehl',
+			amount: 500,
+			unit: 'g'
+		});
+		expect(parseQuickInput('  2  l   Milch ')).toEqual({ name: 'Milch', amount: 2, unit: 'l' });
+		expect(parseQuickInput('   ')).toBeNull();
+	});
+});

@@ -3,7 +3,10 @@
 // Bestand bzw. „noch da“. Wieder geöffnet oder „doch nicht gekocht“ → Storno (neue Buchung).
 import { repo } from '#lib/db/index.js';
 import type { Ingredient, MealPlanEntry, PantryEvent, ShoppingItem } from '#lib/db/types.js';
+import { addDaysTo } from '#lib/features/calendar/expand.js';
 import { scaleAmount } from '#lib/features/meals/amounts.js';
+import { entriesBetween } from '#lib/features/meals/plan-store.js';
+import type { DemandInput } from './demand.js';
 import { ingredientId, matchIngredient } from './catalog.js';
 import { computeStock, answerEntry, type Stock, type StockAnswer } from './stock.js';
 import { baseIngredientsOf } from './store.js';
@@ -91,7 +94,10 @@ async function undoAll(household: string, source: string): Promise<void> {
 
 /** Einkauf abgehakt: Kauf buchen (ohne Menge eine Packung bzw. „irgendeine Menge“). */
 export async function bookPurchase(household: string, item: ShoppingItem): Promise<void> {
-	const ingredient = knownIngredient(item.name, await baseIngredientsOf(household));
+	const list = await baseIngredientsOf(household);
+	const ingredient =
+		(item.ingredient && list.find((i) => i.id === item.ingredient)) ||
+		knownIngredient(item.name, list);
 	if (!ingredient) return;
 	const source = `shopping:${item.id}`;
 	if ((await openBookings(household, source)).length > 0) return;
@@ -171,4 +177,32 @@ export async function answerStock(
 		unit: entry.unit || ingredient.unit,
 		source: 'manual'
 	});
+}
+
+/** Alles, was die Bedarfsrechnung braucht (Essensplan ab heute, Rezepte, Vorrat, offene Liste). */
+export async function loadDemandInput(
+	household: string,
+	today: string,
+	days = 7
+): Promise<DemandInput> {
+	const entries = await entriesBetween(household, today, addDaysTo(today, days - 1));
+	const ids = [...new Set(entries.map((e) => e.recipe).filter(Boolean))];
+	const recipes = ids.length ? await repo('recipes').table.where('id').anyOf(ids).toArray() : [];
+	const rows = ids.length
+		? await repo('recipe_ingredients').table.where('recipe').anyOf(ids).toArray()
+		: [];
+	const ingredients = await baseIngredientsOf(household);
+	const openItems = (
+		await repo('shopping_items').table.where('household').equals(household).toArray()
+	).filter((i) => !i.deleted_at && !i.checked);
+	return {
+		today,
+		days,
+		entries,
+		recipes,
+		rows,
+		ingredients,
+		stocks: stockMap(ingredients, await eventsOf(household)),
+		openItems
+	};
 }

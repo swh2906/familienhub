@@ -88,6 +88,14 @@ export function formatWeekday(value: string): string {
 	return date ? weekdayFormat.format(date) : value;
 }
 
+const shortWeekdayFormat = new Intl.DateTimeFormat('de-DE', { weekday: 'short' });
+
+/** „Mo.“ */
+export function formatShortWeekday(value: string): string {
+	const date = fromDateString(value);
+	return date ? shortWeekdayFormat.format(date) : value;
+}
+
 /** „12. Okt.“ */
 export function formatShortDate(value: string): string {
 	const date = fromDateString(value);

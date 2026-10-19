@@ -6,7 +6,9 @@
 	import { live } from '#lib/db/live.svelte.js';
 	import type { Membership, ShoppingItem } from '#lib/db/types.js';
 	import { normalize } from '#lib/features/meals/recipes.js';
+	import { toDateString } from '#lib/features/meals/week.js';
 	import ItemDialog from '#lib/features/shopping/ItemDialog.svelte';
+	import PlanTransferDialog from '#lib/features/shopping/PlanTransferDialog.svelte';
 	import { formatQuantity, groupItems, parseQuickInput } from '#lib/features/shopping/list.js';
 	import ShoppingTile from '#lib/features/shopping/ShoppingTile.svelte';
 	import {
@@ -41,6 +43,13 @@
 	let editMode = $state(false);
 	let editing: ShoppingItem | null = $state(null);
 	let undo: { ids: string[]; timer: ReturnType<typeof setTimeout> } | null = $state(null);
+	let transferOpen = $state(false);
+	let transferred: { count: number; timer: ReturnType<typeof setTimeout> } | null = $state(null);
+
+	function showTransferred(count: number) {
+		if (transferred) clearTimeout(transferred.timer);
+		transferred = { count, timer: setTimeout(() => (transferred = null), 6000) };
+	}
 
 	const parsed = $derived(parseQuickInput(query));
 	const proposals = $derived(parsed ? suggestions(parsed.name, data.current.items, 7) : []);
@@ -60,7 +69,11 @@
 		const adder = adderOf(item);
 		// Reihenfolge wie auf der Kachel (Name, dann Menge), damit der Name zum sichtbaren Text passt.
 		const name = [item.name, quantity].filter(Boolean).join(' ');
-		return [action({ name }), adder ? m.shopping_tile_added_by({ person: adder.name }) : '']
+		return [
+			action({ name }),
+			adder ? m.shopping_tile_added_by({ person: adder.name }) : '',
+			item.reason ?? ''
+		]
 			.filter(Boolean)
 			.join(', ');
 	}
@@ -128,6 +141,10 @@
 <div class="head">
 	<h1>{m.shopping_title()}</h1>
 	{#if openCount > 0}<span class="count">{m.shopping_open_count({ count: openCount })}</span>{/if}
+	<button type="button" class="btn plan" onclick={() => (transferOpen = true)}>
+		<Icon name="meals" size={18} />
+		{m.plan_transfer_open()}
+	</button>
 	<button
 		type="button"
 		class="btn mode"
@@ -210,6 +227,7 @@
 						quantity={formatQuantity(item)}
 						category={item.category}
 						adder={adderOf(item)}
+						fromPlan={!!item.reason}
 						editable={editsOnTap(item)}
 						label={editsOnTap(item)
 							? m.shopping_edit({ name: item.name })
@@ -253,6 +271,22 @@
 	</div>
 {/if}
 
+{#if transferred}
+	<div class="toast" role="status">
+		<span>{m.plan_transfer_done({ count: transferred.count })}</span>
+	</div>
+{/if}
+
+<PlanTransferDialog
+	open={transferOpen}
+	{household}
+	{membership}
+	today={toDateString(new Date())}
+	history={data.current.items}
+	onclose={() => (transferOpen = false)}
+	ondone={showTransferred}
+/>
+
 <ItemDialog item={editing} onclose={() => (editing = null)} ondelete={(item) => remove([item])} />
 
 <style>
@@ -275,8 +309,12 @@
 		font-weight: 600;
 	}
 
-	.mode {
+	.plan {
 		margin-left: auto;
+		padding: 0 var(--space-4);
+	}
+
+	.mode {
 		padding: 0 var(--space-4);
 	}
 

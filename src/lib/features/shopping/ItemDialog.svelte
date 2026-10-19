@@ -59,6 +59,9 @@
 <dialog bind:this={dialog} aria-labelledby="item-dialog-title" {onclose}>
 	<form onsubmit={save} novalidate>
 		<h2 id="item-dialog-title">{m.shopping_dialog_title()}</h2>
+		{#if item?.reason}
+			<p class="reason"><strong>{m.shopping_reason_label()}:</strong> {item.reason}</p>
+		{/if}
 		<label class="field">
 			<span>{m.shopping_name()}</span>
 			<input id="item-name" maxlength="200" bind:value={name} />
@@ -102,6 +105,11 @@
 </dialog>
 
 <style>
+	.reason {
+		margin: 0;
+		color: var(--color-text-muted);
+	}
+
 	dialog {
 		width: min(28rem, calc(100vw - 2 * var(--space-4)));
 		padding: var(--space-6);

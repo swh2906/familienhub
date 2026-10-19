@@ -81,3 +81,10 @@ describe('Basisartikel: feste IDs', () => {
 		expect(ingredientId('household000001', 'zucker')).not.toBe(a);
 	});
 });
+
+describe('Basisartikel: Familienname weicht vom Wörterbuch ab', () => {
+	it('„Eier“ findet den Familienartikel „Ei“ über die Schreibweisen des Wörterbuchs', () => {
+		const match = matchIngredient('Eier', [{ id: 'own', name: 'Ei', aliases: [] }]);
+		expect(match).toMatchObject({ source: 'known', name: 'Ei' });
+	});
+});

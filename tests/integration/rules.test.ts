@@ -654,3 +654,28 @@ describe('Vorrat (pantry_events)', () => {
 		);
 	});
 });
+
+describe('Einkaufsartikel aus dem Essensplan', () => {
+	it('Begründung und Basisartikel; fremder Basisartikel wird abgelehnt', async () => {
+		const own = await as.adult
+			.collection('ingredients')
+			.create({ household: householdA, name: 'Linsen', key: 'linse' });
+		const item = await as.child.collection('shopping_items').create({
+			household: householdA,
+			name: 'Linsen',
+			amount: 500,
+			unit: 'g',
+			ingredient: own.id,
+			reason: 'Für Dal (Mi.)'
+		});
+		expect(item).toMatchObject({ ingredient: own.id, reason: 'Für Dal (Mi.)' });
+		const foreign = await as.outsider
+			.collection('ingredients')
+			.create({ household: householdB, name: 'Linsen', key: 'linse' });
+		await expectDenied(
+			as.adult
+				.collection('shopping_items')
+				.create({ household: householdA, name: 'Linsen', ingredient: foreign.id })
+		);
+	});
+});

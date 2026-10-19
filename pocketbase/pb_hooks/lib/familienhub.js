@@ -12,7 +12,8 @@ const SAME_HOUSEHOLD_REFS = {
 	shopping_items: {
 		added_by: 'memberships',
 		checked_by: 'memberships',
-		meal_plan_entry: 'meal_plan_entries'
+		meal_plan_entry: 'meal_plan_entries',
+		ingredient: 'ingredients'
 	},
 	events: { participants: 'memberships' },
 	feedback: { created_by: 'memberships' },

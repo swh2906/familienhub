@@ -309,9 +309,9 @@ Grundsatz: Vorrat als **Buchungsjournal** (Kauf +, Kochen −, Korrektur =) stat
 
 ### Phase C – Intelligente Einkaufsliste
 
-- [ ] **C1** Bedarf aus geplanten Homi-Rezepten (Portionen, Summen, Einheiten) gegen Vorrat; optional getrennt (schließt die MVP-Lücke „Zutatenübernahme mit Mengen-Zusammenfassung“).
-- [ ] **C2** „Fehlendes auf die Liste“ mit Vorschau und Begründung; Zusammenführen mit offenen Artikeln; Rundung auf Packungen.
-- [ ] **C3** Begründung an Kachel und Dialog.
+- [x] **C1** Bedarf aus geplanten Homi-Rezepten (Portionen, Summen, Einheiten) gegen Vorrat; optional getrennt (schließt die MVP-Lücke „Zutatenübernahme mit Mengen-Zusammenfassung“).
+- [x] **C2** „Fehlendes auf die Liste“ (Einkauf → „Aus dem Essensplan“, live, Vorauswahl nur für sicher Fehlendes) mit Vorschau und Begründung; Zusammenführen mit offenen Artikeln; Rundung auf Packungen.
+- [x] **C3** Begründung an Kachel (Symbol + Screenreader-Name) und Dialog (`shopping_items.reason`, `ingredient`).
 
 ### Phase D – Kalender-Kontext
 

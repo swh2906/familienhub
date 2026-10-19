@@ -39,7 +39,7 @@ export interface CookingConflict {
 }
 
 /** Minuten eines Vorkommens an einem Tag (mehrtägige Termine: ganzer Tag dazwischen). */
-function span(occurrence: Occurrence, date: string): [number, number] | null {
+export function daySpan(occurrence: Occurrence, date: string): [number, number] | null {
 	if (occurrence.allDay || occurrence.startDate > date || occurrence.endDate < date) return null;
 	const start = occurrence.startDate === date ? toMinutes(occurrence.startTime) : 0;
 	const end = occurrence.endDate === date ? toMinutes(occurrence.endTime) : 24 * 60;
@@ -47,10 +47,10 @@ function span(occurrence: Occurrence, date: string): [number, number] | null {
 }
 
 /**
- * Blockiert der Termin das Kochen? Ohne Teilnehmer gilt er für die ganze Familie; sonst nur, wenn
+ * Bindet der Termin alle Erwachsenen (z. B. zum Kochen oder Einkaufen)? Ohne Teilnehmer gilt er für die ganze Familie; sonst nur, wenn
  * alle Erwachsenen dabei sind (dann kann niemand sonst kochen).
  */
-function blocksCooking(occurrence: Occurrence, adults: readonly string[]): boolean {
+export function blocksAdults(occurrence: Occurrence, adults: readonly string[]): boolean {
 	const participants = occurrence.event.participants ?? [];
 	if (participants.length === 0 || adults.length === 0) return true;
 	return adults.every((id) => participants.includes(id));
@@ -90,8 +90,8 @@ export function cookingConflicts(input: ConflictInput): CookingConflict[] {
 		const blocking: Occurrence[] = [];
 		let lastEnd = start;
 		for (const occurrence of input.occurrences) {
-			const range = span(occurrence, entry.date);
-			if (!range || !blocksCooking(occurrence, input.adults)) continue;
+			const range = daySpan(occurrence, entry.date);
+			if (!range || !blocksAdults(occurrence, input.adults)) continue;
 			// Überschneidung mit dem Kochfenster [start, meal).
 			if (range[0] < meal && range[1] > start) {
 				blocking.push(occurrence);

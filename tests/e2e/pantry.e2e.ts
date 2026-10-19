@@ -50,6 +50,9 @@ test('Gekocht bestätigen, Vorrat erfragen, Kauf buchen', async ({ page }) => {
 	await expect(hints.getByText('Weitere Hinweise (1)')).toBeVisible();
 	await hints.getByRole('button', { name: 'Nein, ist alle' }).first().click();
 	await expect(hints.getByText('Habt ihr noch Reis?')).toHaveCount(0);
+	// Jetzt fehlt Reis sicher für morgen → der Einkaufs-Hinweis rückt vor; hier erst „Später“.
+	await expect(hints.getByText('Für morgen fehlt noch: Reis.')).toBeVisible();
+	await hints.getByRole('button', { name: 'Später' }).first().click();
 	await expect(hints.getByText('Habt ihr Reispfanne gekocht?')).toBeVisible();
 	await hints.getByRole('button', { name: 'Ja, gekocht' }).click();
 	await expect(page.getByRole('region', { name: 'Hinweise' })).toHaveCount(0);

@@ -497,5 +497,22 @@
 	"settings_hints_text": "Mit „Nie wieder so“ ausgeblendete Hinweise kannst du hier wieder einschalten.",
 	"settings_hints_reset": "Ausgeblendete Hinweise wieder zeigen",
 	"settings_hints_none": "Keine Hinweise ausgeblendet.",
-	"settings_hints_done": "Hinweise werden wieder gezeigt."
+	"settings_hints_done": "Hinweise werden wieder gezeigt.",
+	"hint_shopping_today": "Für heute fehlt noch: {names}.",
+	"hint_shopping_tomorrow": "Für morgen fehlt noch: {names}.",
+	"hint_shopping_now": "Gerade ist Zeit zum Einkaufen.",
+	"hint_shopping_later": "Zeit zum Einkaufen: heute ab {from}.",
+	"hint_shopping_no_time": "Heute ist kaum noch Zeit – vielleicht morgen früh.",
+	"hint_shopping_add": "Auf die Liste",
+	"hint_shopping_go": "Ich gehe einkaufen",
+	"shop_mode_start": "Ich gehe einkaufen",
+	"shop_mode_title": "Einkaufsmodus",
+	"shop_mode_intro": "Hakt ab, was im Wagen liegt – gekaufte Zutaten landen im Vorrat.",
+	"shop_mode_unsure_title": "Unsicher, ob noch da",
+	"shop_mode_unsure_none": "Für die geplanten Rezepte ist nichts unsicher.",
+	"shop_mode_take": "Mitnehmen",
+	"shop_mode_have": "Ist noch da",
+	"shop_mode_actions_label": "{name}: mitnehmen oder noch da",
+	"shop_mode_done": "Fertig eingekauft",
+	"shop_mode_finished": "Einkauf beendet. Danke!"
 }

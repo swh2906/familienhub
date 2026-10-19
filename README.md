@@ -142,7 +142,7 @@ Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (
 │  │  ├─ db/              lokale Datenbank (Dexie): Schema, IDs, Repositories – hier liest/schreibt die Oberfläche
 │  │  ├─ sync/            Abgleich mit PocketBase: Outbox senden, Änderungen holen, Live-Updates, Status
 │  │  ├─ testing/         Test-Zugang für E2E (nur im Build mit VITE_E2E=1)
-│  │  ├─ features/        household, shopping, tasks, calendar, meals, today
+│  │  ├─ features/        household, shopping, tasks, calendar, meals, today, pantry (Zutaten, Vorrat, Bedarf), hints (Hinweise, Einkaufsassistent), privacy
 │  │  ├─ ui/              gemeinsame Komponenten, Theme (CSS-Variablen Hell/Dunkel, Akzentfarben)
 │  │  └─ paraglide/       generierte Übersetzungsfunktionen (nicht bearbeiten)
 │  ├─ service-worker/   Offline-Cache der App (eigene tsconfig mit WebWorker-Typen)

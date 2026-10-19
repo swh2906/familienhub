@@ -2,6 +2,8 @@
 	// Hinweise auf Heute (Schritt 11 D2): oben genau ein aktiver Hinweis, der Rest gebündelt
 	// darunter. Jeder Hinweis lässt sich erledigen oder ausblenden („Später“, „Nicht heute“,
 	// „Nie wieder so“); nichts passiert still – erst die Antwort ändert Plan, Vorrat oder Aufgaben.
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { live } from '#lib/db/live.svelte.js';
 	import { repo } from '#lib/db/index.js';
@@ -11,18 +13,27 @@
 		MealPlanEntry,
 		PantryEvent,
 		Recipe,
-		RecipeIngredient
+		RecipeIngredient,
+		ShoppingItem
 	} from '#lib/db/types.js';
 	import { addDaysTo, expandEvents } from '#lib/features/calendar/expand.js';
 	import { eventsOf as calendarEventsOf } from '#lib/features/calendar/store.js';
 	import { deviceTimeZone } from '#lib/features/calendar/tz.js';
 	import { entriesBetween } from '#lib/features/meals/plan-store.js';
 	import { formatCompactDay, formatShortWeekday } from '#lib/features/meals/week.js';
+	import { reasonFor } from '#lib/features/pantry/demand.js';
 	import { answerCooked, answerStock, eventsOf } from '#lib/features/pantry/journal.js';
+	import { addFromPlan, itemsOf } from '#lib/features/shopping/store.js';
 	import type { StockAnswer } from '#lib/features/pantry/stock.js';
 	import { baseIngredientsOf } from '#lib/features/pantry/store.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import { buildHints, type ConflictHint, type Hint, type StockHint } from './build.js';
+	import {
+		buildHints,
+		type ConflictHint,
+		type Hint,
+		type ShoppingHint,
+		type StockHint
+	} from './build.js';
 	import { kindKey, splitHints, visibleHints, type HintAnswer } from './engine.js';
 	import { prepareAhead, replaceRecipe, respond, responsesOf, swapEntries } from './store.js';
 
@@ -55,7 +66,8 @@
 				pantryEvents: await eventsOf(household),
 				occurrences: expandEvents(events, today, addDaysTo(today, 6), timeZone),
 				adults: members.filter((mb) => !mb.deleted_at && mb.role !== 'child').map((mb) => mb.id),
-				responses: membership ? await responsesOf(household, membership) : []
+				responses: membership ? await responsesOf(household, membership) : [],
+				openItems: (await itemsOf(household)).filter((i) => !i.deleted_at && !i.checked)
 			};
 		},
 		{
@@ -66,7 +78,8 @@
 			pantryEvents: [] as PantryEvent[],
 			occurrences: [] as ReturnType<typeof expandEvents>,
 			adults: [] as string[],
-			responses: [] as HintResponse[]
+			responses: [] as HintResponse[],
+			openItems: [] as ShoppingItem[]
 		}
 	);
 
@@ -121,6 +134,34 @@
 
 	function stock(hint: StockHint, value: StockAnswer) {
 		void run(() => answerStock(household, hint.question.ingredient, hint.question.stock, value));
+	}
+
+	function shoppingText(hint: ShoppingHint): string {
+		const names = hint.need.missing.map((l) => l.name).join(', ');
+		return hint.date === today
+			? m.hint_shopping_today({ names })
+			: m.hint_shopping_tomorrow({ names });
+	}
+
+	function shoppingReason(hint: ShoppingHint): string {
+		const meals = hint.need.missing.flatMap((l) => l.meals);
+		const unique = meals.filter((meal, i) => meals.findIndex((x) => x.entry === meal.entry) === i);
+		return reasonFor(unique);
+	}
+
+	function timingText(hint: ShoppingHint): string {
+		const { timing } = hint.need;
+		if (timing.when === 'later') return m.hint_shopping_later({ from: timing.from });
+		if (timing.when === 'tomorrow') return m.hint_shopping_no_time();
+		return m.hint_shopping_now();
+	}
+
+	function addMissing(hint: ShoppingHint, thenShop: boolean) {
+		act(hint, async () => {
+			await addFromPlan(household, membership, hint.need.missing, data.current.openItems);
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- Pfad über resolve(), nur mit Query
+			if (thenShop) await goto(`${resolve('/(app)/einkauf')}?modus=einkaufen`);
+		});
 	}
 
 	function conflictText(hint: ConflictHint): string {
@@ -198,6 +239,21 @@
 				disabled={busy}
 				onclick={() => void run(() => answerCooked(household, entry, 'no'))}
 				>{m.pantry_cooked_no()}</button
+			>
+		</div>
+	{:else if hint.kind === 'shopping'}
+		{@const shop = hint}
+		<p class="question">{shoppingText(shop)}</p>
+		<p class="meta">{shoppingReason(shop)} · {timingText(shop)}</p>
+		<div class="answers">
+			<button
+				class="btn btn-primary"
+				type="button"
+				disabled={busy}
+				onclick={() => addMissing(shop, false)}>{m.hint_shopping_add()}</button
+			>
+			<button class="btn" type="button" disabled={busy} onclick={() => addMissing(shop, true)}
+				>{m.hint_shopping_go()}</button
 			>
 		</div>
 	{:else}

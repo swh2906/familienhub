@@ -320,8 +320,8 @@ Grundsatz: Vorrat als **Buchungsjournal** (Kauf +, Kochen −, Korrektur =) stat
 
 ### Phase E – Proaktiver Einkaufsassistent (ohne Standort)
 
-- [ ] **E1** Ablauf Rezept → Bedarf → Bestand → Unsicherheit → Zeitpunkt (Vortag, nach letztem Termin, Einkaufsmodus) → Hinweis mit Begründung → Antwort → Vorrat und Liste aktualisieren.
-- [ ] **E2** Einkaufsmodus „Ich gehe einkaufen“ mit Liste und unsicheren Zutaten.
+- [x] **E1** Ablauf Rezept → Bedarf → Bestand → Unsicherheit → Zeitpunkt (Vortag, nach letztem Termin, Einkaufsmodus) → Hinweis mit Begründung → Antwort → Vorrat und Liste aktualisieren.
+- [x] **E2** Einkaufsmodus „Ich gehe einkaufen“ (`/einkauf?modus=einkaufen`) mit Liste und unsicheren Zutaten („Mitnehmen“ / „Ist noch da“).
 
 Später (Phase 2): Standort und Umweg über native App, Push, Ruhe- und Fokuszeiten.
 

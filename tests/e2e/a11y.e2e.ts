@@ -157,6 +157,7 @@ for (const scheme of ['light', 'dark'] as const) {
 				'/essen/rezepte/neu',
 				'/einkauf',
 				'/einkauf/vorrat',
+				'/einkauf?modus=einkaufen',
 				'/kalender?ansicht=tag',
 				'/kalender?ansicht=woche',
 				'/kalender?ansicht=monat',

@@ -5,8 +5,12 @@
 	import { live } from '#lib/db/live.svelte.js';
 	import { repo } from '#lib/db/index.js';
 	import type { RecipeIngredient } from '#lib/db/types.js';
-	import { formatAmount, scaleAmount } from '#lib/features/meals/amounts.js';
-	import { difficultyName, formatDuration } from '#lib/features/meals/cooking.js';
+	import {
+		difficultyName,
+		formatDuration,
+		ingredientAmount,
+		ingredientExtras
+	} from '#lib/features/meals/cooking.js';
 	import { deleteRecipe, ingredientsOf } from '#lib/features/meals/store.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { PageProps } from './$types';
@@ -35,11 +39,6 @@
 				].filter(Boolean)
 			: []
 	);
-
-	function amountText(ingredient: RecipeIngredient): string {
-		const amount = scaleAmount(ingredient.amount, baseServings, portions);
-		return [formatAmount(amount), ingredient.unit].filter(Boolean).join(' ');
-	}
 
 	async function remove() {
 		if (!recipe) return;
@@ -110,9 +109,15 @@
 			{:else}
 				<ul class="ingredients">
 					{#each data.current.ingredients as ingredient (ingredient.id)}
+						{@const extras = ingredientExtras(ingredient)}
 						<li>
-							<span class="amount">{amountText(ingredient)}</span>
-							<span>{ingredient.name}</span>
+							<span class="amount">{ingredientAmount(ingredient, baseServings, portions)}</span>
+							<span class="name">
+								<span>{ingredient.name}</span>
+								{#if extras.note}<span class="muted">{extras.note}</span>{/if}
+								{#each extras.tags as tag (tag)}<span class="tag">{tag}</span>{/each}
+								{#if extras.alternatives}<span class="muted alt">{extras.alternatives}</span>{/if}
+							</span>
 						</li>
 					{/each}
 				</ul>
@@ -291,6 +296,30 @@
 
 	.ingredients li:first-child {
 		border-top: 0;
+	}
+
+	.name {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-1) var(--space-2);
+	}
+
+	.muted {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+	}
+
+	.alt {
+		flex-basis: 100%;
+	}
+
+	.tag {
+		padding: 0 var(--space-2);
+		border-radius: 999px;
+		background: var(--color-surface-2);
+		color: var(--color-text-muted);
+		font-size: 0.8125rem;
 	}
 
 	.amount {

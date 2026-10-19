@@ -2,12 +2,22 @@
 	// Rezept anlegen oder bearbeiten: Grunddaten, Tags, Zutaten-Zeilen (mit ↑/↓ sortierbar) und
 	// „Zutaten aus Text einfügen“. Speichert nur lokal; der Sync sendet im Hintergrund.
 	import { untrack } from 'svelte';
-	import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+	import type { AmountKind, Recipe, RecipeIngredient } from '#lib/db/types.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import Icon from '#lib/ui/Icon.svelte';
 	import { formatAmount, parseAmount } from './amounts.js';
 	import { CATEGORIES, UNITS } from './catalog.js';
-	import { parseIngredientText } from './paste.js';
+	import { live } from '#lib/db/live.svelte.js';
+	import type { CorrectedIngredient } from '#lib/db/types.js';
+	import { matchIngredient } from '#lib/features/pantry/catalog.js';
+	import {
+		correctionKey,
+		correctionMap,
+		correctionsOf,
+		learnCorrection
+	} from '#lib/features/pantry/learn.js';
+	import { baseIngredientsOf } from '#lib/features/pantry/store.js';
+	import { parsePastedLines, type PastedIngredient } from './paste.js';
 	import { saveRecipe } from './store.js';
 	import TagPicker from './TagPicker.svelte';
 
@@ -34,12 +44,82 @@
 		amountText: string;
 		unit: string;
 		category: string;
+		optional: boolean;
+		/** Alternativen als Text, durch Komma getrennt. */
+		alternatives: string;
+		amountKind: AmountKind;
+		note: string;
+		/** Von Hand gewählter Basisartikel; leer = automatisch. */
+		base: string;
 	}
 
 	let nextKey = 0;
 	function row(data: Partial<Omit<Row, 'key'>> = {}): Row {
 		nextKey += 1;
-		return { key: nextKey, name: '', amountText: '', unit: '', category: '', ...data };
+		return {
+			key: nextKey,
+			name: '',
+			amountText: '',
+			unit: '',
+			category: '',
+			optional: false,
+			alternatives: '',
+			amountKind: 'exact',
+			note: '',
+			base: '',
+			...data
+		};
+	}
+
+	// Basisartikel der Familie (Vorschlag „gehört zu“) und gelernte Zeilen-Korrekturen.
+	const known = live(() => household, baseIngredientsOf, []);
+	const corrections = live(() => household, correctionsOf, []);
+	const knownList = $derived(
+		known.current.map((i) => ({ id: i.id, name: i.name, aliases: i.aliases ?? [] }))
+	);
+
+	function automaticBase(name: string): string {
+		return name.trim() ? matchIngredient(name, knownList).name : '';
+	}
+
+	function rowData(draft: PastedIngredient): Partial<Omit<Row, 'key'>> {
+		return {
+			name: draft.name,
+			amountText: formatAmount(draft.amount),
+			unit: draft.unit,
+			optional: draft.optional,
+			alternatives: draft.alternatives.join(', '),
+			amountKind: draft.amountKind,
+			note: draft.note === 'nach Geschmack' ? '' : draft.note
+		};
+	}
+
+	function alternativesOf(text: string): string[] {
+		return text
+			.split(',')
+			.map((a) => a.trim())
+			.filter(Boolean);
+	}
+
+	/** Zeile so, wie sie als Korrektur gelernt wird. */
+	function corrected(r: Omit<Row, 'key'>): CorrectedIngredient {
+		return {
+			name: r.name.trim(),
+			amount: parseAmount(r.amountText),
+			unit: r.unit.trim(),
+			amountKind: r.amountKind,
+			optional: r.optional,
+			alternatives: alternativesOf(r.alternatives),
+			note: r.note.trim()
+		};
+	}
+
+	/** Eingefügte Zeilen merken, um Korrekturen beim Speichern zu lernen. */
+	const pasteSources: { raw: string; automatic: CorrectedIngredient[]; keys: number[] }[] = [];
+
+	/** Hat die Zeile Zusatzangaben? (Dann ist „Mehr“ beim Öffnen aufgeklappt.) */
+	function hasExtras(r: Row): boolean {
+		return r.optional || !!r.alternatives.trim() || r.amountKind !== 'exact' || !!r.note.trim();
 	}
 
 	// Startwerte einmalig aus den Props; spätere Sync-Änderungen überschreiben die Eingaben nicht.
@@ -59,7 +139,11 @@
 						name: i.name,
 						amountText: formatAmount(i.amount),
 						unit: i.unit ?? '',
-						category: i.category ?? ''
+						category: i.category ?? '',
+						optional: i.optional ?? false,
+						alternatives: (i.alternatives ?? []).join(', '),
+						amountKind: i.amount_kind || 'exact',
+						note: i.note ?? ''
 					})
 				)
 			: [row()]
@@ -69,7 +153,12 @@
 	let busy = $state(false);
 	let pasteOpen = $state(false);
 	let pasteText = $state('');
-	const pasted = $derived(parseIngredientText(pasteText));
+	const pastedLines = $derived(
+		parsePastedLines(pasteText, correctionMap(corrections.current), correctionKey)
+	);
+	const pasted = $derived(
+		pastedLines.flatMap((line) => line.items.map((draft) => ({ draft, learned: line.learned })))
+	);
 
 	function move(index: number, delta: number) {
 		const target = index + delta;
@@ -85,14 +174,34 @@
 
 	function applyPaste() {
 		const filled = rows.filter((r) => r.name.trim() || r.amountText.trim());
-		rows = [
-			...filled,
-			...pasted.map((draft) =>
-				row({ name: draft.name, amountText: formatAmount(draft.amount), unit: draft.unit })
-			)
-		];
+		const added: Row[] = [];
+		for (const line of pastedLines) {
+			const lineRows = line.items.map((draft) => row(rowData(draft)));
+			added.push(...lineRows);
+			pasteSources.push({
+				raw: line.raw,
+				automatic: line.automatic.map((draft) => corrected({ ...row(), ...rowData(draft) })),
+				keys: lineRows.map((r) => r.key)
+			});
+		}
+		rows = [...filled, ...added];
 		pasteText = '';
 		pasteOpen = false;
+	}
+
+	/** Eingefügte Zeilen, die jemand nachträglich geändert hat, als Korrektur merken. */
+	async function learnFromPaste() {
+		const byKey = new Map(rows.map((r) => [r.key, r]));
+		for (const source of pasteSources) {
+			const current = source.keys
+				.map((key) => byKey.get(key))
+				.filter((r): r is Row => !!r && !!r.name.trim());
+			// Ganz gelöschte Zeilen sind keine Korrektur, sondern „brauche ich nicht“.
+			if (current.length === 0) continue;
+			await learnCorrection(household, source.raw, source.automatic, current.map(corrected)).catch(
+				() => {}
+			);
+		}
 	}
 
 	async function submit(event: SubmitEvent) {
@@ -121,9 +230,15 @@
 					name: r.name,
 					amount: parseAmount(r.amountText),
 					unit: r.unit,
-					category: r.category
+					category: r.category,
+					optional: r.optional,
+					alternatives: alternativesOf(r.alternatives),
+					amount_kind: r.amountKind,
+					note: r.note,
+					base: r.base
 				}))
 			);
+			await learnFromPaste();
 			onsaved(id);
 		} catch {
 			error = m.error_generic();
@@ -242,9 +357,69 @@
 							onclick={() => removeRow(index)}><Icon name="close" size={20} /></button
 						>
 					</div>
+					<details class="extras" open={hasExtras(item)}>
+						<summary>
+							{m.editor_ingredient_more()}
+							{#if item.optional}<span class="badge">{m.paste_badge_optional()}</span>{/if}
+							{#if item.amountKind === 'approx'}<span class="badge">{m.paste_badge_approx()}</span
+								>{/if}
+							{#if item.amountKind === 'to_taste'}<span class="badge"
+									>{m.paste_badge_to_taste()}</span
+								>{/if}
+							{#if item.alternatives.trim()}<span class="badge"
+									>{m.paste_badge_alternatives({ names: item.alternatives })}</span
+								>{/if}
+						</summary>
+						<div class="extras-fields">
+							<label class="check">
+								<input type="checkbox" bind:checked={item.optional} />
+								<span>{m.editor_ingredient_optional()}</span>
+							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_kind()}</span>
+								<select bind:value={item.amountKind}>
+									<option value="exact">{m.amount_kind_exact()}</option>
+									<option value="approx">{m.amount_kind_approx()}</option>
+									<option value="to_taste">{m.amount_kind_to_taste()}</option>
+								</select>
+							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_alternatives()}</span>
+								<input
+									maxlength="200"
+									placeholder={m.editor_placeholder_alternatives()}
+									bind:value={item.alternatives}
+								/>
+							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_note()}</span>
+								<input
+									maxlength="200"
+									placeholder={m.editor_placeholder_note()}
+									bind:value={item.note}
+								/>
+							</label>
+							<label class="field">
+								<span>{m.editor_ingredient_base()}</span>
+								<input
+									maxlength="100"
+									list="known-ingredients"
+									placeholder={automaticBase(item.name)
+										? m.editor_placeholder_base({ name: automaticBase(item.name) })
+										: ''}
+									bind:value={item.base}
+								/>
+							</label>
+						</div>
+					</details>
 				</li>
 			{/each}
 		</ol>
+		<datalist id="known-ingredients">
+			{#each known.current as option (option.id)}
+				<option value={option.name}></option>
+			{/each}
+		</datalist>
 
 		<div class="ingredient-actions">
 			<button class="btn" type="button" onclick={() => (rows = [...rows, row()])}>
@@ -277,9 +452,30 @@
 				</p>
 				{#if pasted.length > 0}
 					<ul class="preview">
-						{#each pasted as draft, i (i)}
+						{#each pasted as { draft, learned }, i (i)}
 							<li>
-								{[formatAmount(draft.amount), draft.unit, draft.name].filter(Boolean).join(' ')}
+								<span
+									>{[formatAmount(draft.amount), draft.unit, draft.name]
+										.filter(Boolean)
+										.join(' ')}</span
+								>
+								{#if draft.amountKind === 'approx'}<span class="badge"
+										>{m.paste_badge_approx()}</span
+									>{/if}
+								{#if draft.amountKind === 'to_taste'}<span class="badge"
+										>{m.paste_badge_to_taste()}</span
+									>{/if}
+								{#if draft.optional}<span class="badge">{m.paste_badge_optional()}</span>{/if}
+								{#if draft.alternatives.length > 0}<span class="badge"
+										>{m.paste_badge_alternatives({ names: draft.alternatives.join(', ') })}</span
+									>{/if}
+								{#if draft.note && draft.note !== 'nach Geschmack'}<span class="note"
+										>{draft.note}</span
+									>{/if}
+								{#if learned}<span class="badge">{m.paste_badge_learned()}</span>{/if}
+								{#if draft.confidence === 'low' && !learned}<span class="badge warn"
+										>{m.paste_badge_unsure()}</span
+									>{/if}
 							</li>
 						{/each}
 					</ul>
@@ -318,6 +514,32 @@
 </form>
 
 <style>
+	.preview li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-2);
+	}
+
+	.badge {
+		padding: 0 var(--space-2);
+		border-radius: 999px;
+		background: var(--color-meals-bg);
+		color: var(--color-meals);
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+
+	.badge.warn {
+		background: var(--color-warning-bg);
+		color: var(--color-warning);
+	}
+
+	.note {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+	}
+
 	.editor {
 		display: grid;
 		gap: var(--space-6);
@@ -389,7 +611,8 @@
 		grid-template-columns: 4.5rem 6rem 1fr auto;
 		grid-template-areas:
 			'name name name actions'
-			'amount unit category category';
+			'amount unit category category'
+			'extras extras extras extras';
 		gap: var(--space-2);
 		padding: var(--space-3) 0;
 		border-bottom: 1px solid var(--color-border);
@@ -417,6 +640,29 @@
 	}
 	.category {
 		grid-area: category;
+	}
+
+	.extras {
+		grid-area: extras;
+	}
+
+	.extras summary {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-2);
+		min-height: 36px;
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		cursor: pointer;
+	}
+
+	.extras-fields {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+		gap: var(--space-2) var(--space-3);
+		align-items: end;
+		padding: var(--space-2) 0;
 	}
 
 	.row-actions {
@@ -475,7 +721,9 @@
 	@media (min-width: 900px) {
 		.row {
 			grid-template-columns: minmax(10rem, 1fr) 5.5rem 6rem minmax(8rem, 12rem) auto;
-			grid-template-areas: 'name amount unit category actions';
+			grid-template-areas:
+				'name amount unit category actions'
+				'extras extras extras extras extras';
 			align-items: center;
 			padding: var(--space-2) 0;
 		}

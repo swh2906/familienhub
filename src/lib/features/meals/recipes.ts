@@ -1,5 +1,5 @@
 // Reine Logik rund um Rezepte: Suche, Filter, Sortierung, Tags und Abgleich der Zutaten beim Speichern.
-import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+import type { AmountKind, Recipe, RecipeIngredient } from '#lib/db/types.js';
 import { SUGGESTED_TAGS } from './catalog.js';
 
 /** Für Vergleiche: klein, ohne Akzente/Umlaut-Punkte („Spätzle“ findet man auch mit „spatzle“). */
@@ -82,14 +82,43 @@ export interface IngredientDraft {
 	amount: number;
 	unit: string;
 	category: string;
+	/** Basisartikel; setzt das Speichern (siehe pantry/store.ts). */
+	ingredient?: string;
+	/** Von Hand gewählter Basisartikel (Name); leer = automatisch. Wird gelernt, nicht gespeichert. */
+	base?: string;
+	optional?: boolean;
+	alternatives?: string[];
+	amount_kind?: AmountKind | '';
+	note?: string;
 }
 
-type IngredientFields = Pick<RecipeIngredient, 'name' | 'amount' | 'unit' | 'category' | 'sort'>;
+type IngredientFields = Pick<RecipeIngredient, 'name' | 'amount' | 'unit' | 'category' | 'sort'> &
+	Required<
+		Pick<RecipeIngredient, 'ingredient' | 'optional' | 'alternatives' | 'amount_kind' | 'note'>
+	>;
 
 export interface IngredientChanges {
 	create: IngredientFields[];
 	update: { id: string; changes: Partial<IngredientFields> }[];
 	remove: string[];
+}
+
+/** Gespeicherten Wert mit Standard vergleichbar machen (fehlende Felder älterer Zeilen). */
+function stored(before: RecipeIngredient, key: keyof IngredientFields): unknown {
+	const value = before[key];
+	switch (key) {
+		case 'amount':
+		case 'sort':
+			return value ?? 0;
+		case 'optional':
+			return value ?? false;
+		case 'alternatives':
+			return value ?? [];
+		case 'amount_kind':
+			return value || 'exact';
+		default:
+			return value ?? '';
+	}
 }
 
 /**
@@ -112,7 +141,12 @@ export function diffIngredients(
 				amount: draft.amount > 0 ? draft.amount : 0,
 				unit: draft.unit.trim(),
 				category: draft.category.trim(),
-				sort
+				sort,
+				ingredient: draft.ingredient ?? '',
+				optional: draft.optional ?? false,
+				alternatives: (draft.alternatives ?? []).map((a) => a.trim()).filter(Boolean),
+				amount_kind: draft.amount_kind || 'exact',
+				note: (draft.note ?? '').trim()
 			};
 			const before = draft.id ? current.get(draft.id) : undefined;
 			if (!before || !draft.id) {
@@ -122,7 +156,7 @@ export function diffIngredients(
 			kept.add(draft.id);
 			const changes: Partial<IngredientFields> = {};
 			for (const key of Object.keys(fields) as (keyof IngredientFields)[]) {
-				if ((before[key] ?? (key === 'amount' || key === 'sort' ? 0 : '')) !== fields[key]) {
+				if (JSON.stringify(stored(before, key)) !== JSON.stringify(fields[key])) {
 					Object.assign(changes, { [key]: fields[key] });
 				}
 			}

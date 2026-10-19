@@ -35,6 +35,9 @@ export interface Recipe extends BaseRecord {
 	difficulty?: number;
 }
 
+/** Wie genau die Menge ist: genau, ungefähr („ca.“, „eine Prise“), nicht messbar („nach Geschmack“). */
+export type AmountKind = 'exact' | 'approx' | 'to_taste';
+
 export interface RecipeIngredient extends BaseRecord {
 	recipe: string;
 	name: string;
@@ -42,6 +45,47 @@ export interface RecipeIngredient extends BaseRecord {
 	unit: string;
 	category: string;
 	sort: number;
+	/** Basisartikel (fehlt bei älteren Zeilen, bis die App sie zuordnet). */
+	ingredient?: string;
+	optional?: boolean;
+	/** Ersatz-Zutaten („Dinkelmehl“). */
+	alternatives?: string[] | null;
+	/** Leer = genau. */
+	amount_kind?: AmountKind | '';
+	/** Hinweis wie „fein gehackt“ oder „2–3“. */
+	note?: string;
+}
+
+/** Eine erkannte Zutat, wie sie nach einer Korrektur gespeichert wird. */
+export interface CorrectedIngredient {
+	name: string;
+	amount: number;
+	unit: string;
+	amountKind: AmountKind;
+	optional: boolean;
+	alternatives: string[];
+	note: string;
+}
+
+/** Gelernte Korrektur einer eingefügten Zeile (Schlüssel = normalisierte Zeile). */
+export interface ParseCorrection extends BaseRecord {
+	household: string;
+	key: string;
+	input: string;
+	result: CorrectedIngredient[] | null;
+}
+
+/** Basisartikel einer Familie: alle Schreibweisen einer Zutat (Grundlage für Vorrat und Einkauf). */
+export interface Ingredient extends BaseRecord {
+	household: string;
+	name: string;
+	/** Normalisierter Schlüssel, je Familie eindeutig (feste ID daraus). */
+	key: string;
+	aliases: string[] | null;
+	unit: string;
+	category: string;
+	/** Übliche Packungsgröße in `unit` (0 = unbekannt). */
+	pack_amount: number;
 }
 
 export interface MealPlanEntry extends BaseRecord {
@@ -120,6 +164,8 @@ export interface CollectionTypes {
 	households: Household;
 	memberships: Membership;
 	recipes: Recipe;
+	ingredients: Ingredient;
+	parse_corrections: ParseCorrection;
 	recipe_ingredients: RecipeIngredient;
 	meal_plan_entries: MealPlanEntry;
 	shopping_items: ShoppingItem;
@@ -139,6 +185,8 @@ export const COLLECTIONS: readonly { name: CollectionName; scope: string }[] = [
 	{ name: 'households', scope: 'id' },
 	{ name: 'memberships', scope: 'household' },
 	{ name: 'recipes', scope: 'household' },
+	{ name: 'ingredients', scope: 'household' },
+	{ name: 'parse_corrections', scope: 'household' },
 	{ name: 'recipe_ingredients', scope: 'recipe.household' },
 	{ name: 'meal_plan_entries', scope: 'household' },
 	{ name: 'shopping_items', scope: 'household' },

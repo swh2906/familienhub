@@ -1,6 +1,8 @@
 // Rezepte lesen und schreiben – nur über die lokale Datenbank; der Sync erledigt den Rest.
 import { repo } from '#lib/db/index.js';
 import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
+import { learnAlias } from '#lib/features/pantry/learn.js';
+import { ensureIngredients } from '#lib/features/pantry/store.js';
 import { clampDifficulty, clampMinutes } from './cooking.js';
 import { cleanTags, diffIngredients, type IngredientDraft } from './recipes.js';
 
@@ -65,7 +67,22 @@ export async function saveRecipe(
 		id = (await recipes.create({ household, ...fields })).id;
 	}
 
-	const changes = diffIngredients(before, drafts);
+	// Jede Zutat bekommt ihren Basisartikel (fehlende werden angelegt). Von Hand gewählte
+	// Basisartikel gelten vorrangig, und ihre Schreibweise wird für das nächste Mal gelernt.
+	const manual = new Map<string, string>();
+	for (const draft of drafts) {
+		if (!draft.name.trim() || !draft.base?.trim()) continue;
+		manual.set(draft.name.trim(), await learnAlias(household, draft.name, draft.base));
+	}
+	const links = await ensureIngredients(
+		household,
+		drafts.filter((d) => !manual.has(d.name.trim())).map((d) => d.name)
+	);
+	const linked = drafts.map((d) => ({
+		...d,
+		ingredient: manual.get(d.name.trim()) || links.get(d.name.trim()) || ''
+	}));
+	const changes = diffIngredients(before, linked);
 	for (const fieldsOfNew of changes.create) {
 		await ingredients.create({ recipe: id, ...fieldsOfNew });
 	}

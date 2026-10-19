@@ -33,16 +33,47 @@ export function recipeCategory(recipe: Pick<Recipe, 'tags'>): string {
 	return (recipe.tags ?? []).find((tag) => tag.trim())?.trim() ?? '';
 }
 
-/** Zutaten-Zeile für die Portionenzahl: „300 g Mehl“. */
-export function ingredientLine(
-	ingredient: Pick<RecipeIngredient, 'amount' | 'unit' | 'name'>,
+/** Menge für die Portionenzahl: „300 g“, „ca. 2 EL“ oder leer. */
+export function ingredientAmount(
+	ingredient: Pick<RecipeIngredient, 'amount' | 'unit'> &
+		Partial<Pick<RecipeIngredient, 'amount_kind'>>,
 	baseServings: number,
 	servings: number
 ): string {
+	if (!ingredient.amount) return '';
 	const amount = scaleAmount(ingredient.amount, baseServings, servings);
-	return [formatAmount(amount), ingredient.amount ? ingredient.unit : '', ingredient.name]
+	const approx = ingredient.amount_kind === 'approx' ? m.paste_badge_approx() : '';
+	return [approx, formatAmount(amount), ingredient.unit].filter(Boolean).join(' ');
+}
+
+/** Zutaten-Zeile für die Portionenzahl: „300 g Mehl“, „ca. 2 EL Öl“. */
+export function ingredientLine(
+	ingredient: Pick<RecipeIngredient, 'amount' | 'unit' | 'name'> &
+		Partial<Pick<RecipeIngredient, 'amount_kind'>>,
+	baseServings: number,
+	servings: number
+): string {
+	return [ingredientAmount(ingredient, baseServings, servings), ingredient.name]
 		.filter(Boolean)
 		.join(' ');
+}
+
+/**
+ * Zusatzangaben für die Anzeige: Hinweis, „nach Geschmack“, „optional“ und Alternativen.
+ * Optionale Zutaten sind nur ein Hinweis, nie eine Warnung.
+ */
+export function ingredientExtras(
+	ingredient: Partial<Pick<RecipeIngredient, 'amount_kind' | 'optional' | 'alternatives' | 'note'>>
+): { tags: string[]; alternatives: string; note: string } {
+	const tags: string[] = [];
+	if (ingredient.amount_kind === 'to_taste') tags.push(m.paste_badge_to_taste());
+	if (ingredient.optional) tags.push(m.paste_badge_optional());
+	const names = (ingredient.alternatives ?? []).filter((a) => a.trim());
+	return {
+		tags,
+		alternatives: names.length ? m.paste_badge_alternatives({ names: names.join(', ') }) : '',
+		note: (ingredient.note ?? '').trim()
+	};
 }
 
 const LEVEL_LABELS = [m.cook_difficulty_1, m.cook_difficulty_2, m.cook_difficulty_3];

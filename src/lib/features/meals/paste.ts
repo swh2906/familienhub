@@ -1,91 +1,57 @@
 // „Zutaten aus Text einfügen“: macht aus kopiertem Text (z. B. per Live Text vom Foto einer
-// Kochbuchseite) Zutaten-Zeilen. Läuft komplett auf dem Gerät.
-import { parseAmount } from './amounts.js';
+// Kochbuchseite) Zutaten-Zeilen. Läuft komplett auf dem Gerät; die Erkennung steckt in
+// parse/ingredient.ts (Menge, Einheit, optional, Alternativen, „nach Geschmack“).
+import type { CorrectedIngredient } from '#lib/db/types.js';
+import { parseIngredient, type ParsedIngredient } from './parse/ingredient.js';
 import type { IngredientDraft } from './recipes.js';
 
-// Schreibweisen → einheitliche Einheit (Schlüssel klein geschrieben).
-const UNIT_ALIASES: Record<string, string> = {
-	g: 'g',
-	gr: 'g',
-	gramm: 'g',
-	kg: 'kg',
-	kilo: 'kg',
-	kilogramm: 'kg',
-	ml: 'ml',
-	milliliter: 'ml',
-	cl: 'cl',
-	l: 'l',
-	liter: 'l',
-	el: 'EL',
-	esslöffel: 'EL',
-	essl: 'EL',
-	tl: 'TL',
-	teelöffel: 'TL',
-	teel: 'TL',
-	stück: 'Stück',
-	stk: 'Stück',
-	st: 'Stück',
-	prise: 'Prise',
-	prisen: 'Prise',
-	pck: 'Packung',
-	pkg: 'Packung',
-	packung: 'Packung',
-	packungen: 'Packung',
-	päckchen: 'Packung',
-	dose: 'Dose',
-	dosen: 'Dose',
-	bund: 'Bund',
-	becher: 'Becher',
-	tasse: 'Tasse',
-	tassen: 'Tasse',
-	zehe: 'Zehe',
-	zehen: 'Zehe',
-	scheibe: 'Scheibe',
-	scheiben: 'Scheibe',
-	msp: 'Msp.',
-	handvoll: 'Handvoll'
-};
+/** Erkannte Zutat für Vorschau und Editor (Draft plus Zusatzangaben). */
+export type PastedIngredient = IngredientDraft & Omit<ParsedIngredient, 'name' | 'amount' | 'unit'>;
 
-// Menge am Zeilenanfang: Zahlen, Brüche, Unicode-Brüche, Bereiche („2-3“), auch „1 ½“.
-const AMOUNT =
-	/^((?:\d+\/\d+|\d*[½⅓⅔¼¾⅛]|\d+(?:[.,]\d+)?)(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?(?:\s+[½⅓⅔¼¾⅛]|\s+\d+\/\d+)?)\s*/;
+function toDraft(parsed: ParsedIngredient): PastedIngredient {
+	return { ...parsed, category: '' };
+}
 
-/** Eine Zeile wie „300 g Mehl“, „2 EL Öl“, „3 Eier“ oder „Salz“ in eine Zutat umwandeln. */
-export function parseIngredientLine(line: string): IngredientDraft | null {
-	let text = line
-		.trim()
-		// Aufzählungszeichen und Nummerierung am Anfang
-		.replace(/^(?:[-–•*·▪◦]|\d+[.)])\s+/, '')
-		.trim();
-	if (!text || /:$/.test(text)) return null; // Überschriften wie „Für den Teig:“
-
-	let amount = 0;
-	const amountMatch = AMOUNT.exec(text);
-	if (amountMatch) {
-		amount = parseAmount(amountMatch[1].replace(/\s*[-–]\s*\d+(?:[.,]\d+)?/, ''));
-		text = text.slice(amountMatch[0].length);
-	}
-
-	let unit = '';
-	const unitMatch = /^([A-Za-zÄÖÜäöüß]+)\.?(?:\s+|$)/.exec(text);
-	if (unitMatch) {
-		const alias = UNIT_ALIASES[unitMatch[1].toLocaleLowerCase('de')];
-		// Einheit nur, wenn danach noch ein Name kommt („2 Zehen Knoblauch“, nicht „1 Zwiebel“).
-		if (alias && text.slice(unitMatch[0].length).trim()) {
-			unit = alias;
-			text = text.slice(unitMatch[0].length);
-		}
-	}
-
-	const name = text.replace(/\s+/g, ' ').trim();
-	if (!name) return null;
-	return { name, amount, unit, category: '' };
+/** Eine Zeile wie „300 g Mehl“, „Petersilie, optional“ oder „Salz und Pfeffer“ (→ zwei). */
+export function parseIngredientLine(line: string): PastedIngredient[] {
+	return parseIngredient(line).map(toDraft);
 }
 
 /** Mehrere Zeilen auf einmal; leere Zeilen und Überschriften fallen weg. */
-export function parseIngredientText(text: string): IngredientDraft[] {
-	return text
-		.split(/\r?\n/)
-		.map(parseIngredientLine)
-		.filter((draft): draft is IngredientDraft => draft !== null);
+export function parseIngredientText(text: string): PastedIngredient[] {
+	return text.split(/\r?\n/).flatMap(parseIngredientLine);
+}
+
+/** Eine eingefügte Zeile: automatische Erkennung und – falls gelernt – die Korrektur der Familie. */
+export interface PastedLine {
+	raw: string;
+	automatic: PastedIngredient[];
+	items: PastedIngredient[];
+	learned: boolean;
+}
+
+/**
+ * Wie `parseIngredientText`, aber zeilenweise. Hat die Familie eine Zeile schon einmal
+ * korrigiert (Schlüssel siehe pantry/learn.ts), gilt die gelernte Fassung.
+ */
+export function parsePastedLines(
+	text: string,
+	corrections: ReadonlyMap<string, CorrectedIngredient[]> = new Map(),
+	keyOf: (line: string) => string = (line) => line
+): PastedLine[] {
+	const lines: PastedLine[] = [];
+	for (const raw of text.split(/\r?\n/)) {
+		const automatic = parseIngredientLine(raw);
+		if (automatic.length === 0) continue;
+		const learned = corrections.get(keyOf(raw));
+		lines.push({
+			raw: raw.trim(),
+			automatic,
+			items: learned
+				? learned.map((c) => ({ ...c, category: '', confidence: 'high' as const }))
+				: automatic,
+			learned: !!learned
+		});
+	}
+	return lines;
 }

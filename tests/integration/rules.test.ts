@@ -515,3 +515,79 @@ describe('Aufgaben (tasks, task_completions)', () => {
 		await expect(as.adult.collection('task_completions').delete(forMia.id)).resolves.toBe(true);
 	});
 });
+
+describe('Basisartikel (ingredients)', () => {
+	it('Erwachsene legen an, Kinder nicht; Schlüssel je Familie eindeutig', async () => {
+		const created = await as.adult
+			.collection('ingredients')
+			.create({ household: householdA, name: 'Mehl', key: 'mehl', aliases: [], unit: 'g' });
+		expect(created.name).toBe('Mehl');
+		await expectDenied(
+			as.child
+				.collection('ingredients')
+				.create({ household: householdA, name: 'Zucker', key: 'zucker' })
+		);
+		await expectDenied(
+			as.admin
+				.collection('ingredients')
+				.create({ household: householdA, name: 'Weizenmehl', key: 'mehl' })
+		);
+		const list = await as.child.collection('ingredients').getFullList();
+		expect(list.map((i) => i.key)).toEqual(['mehl']);
+		await expectDenied(as.outsider.collection('ingredients').getOne(created.id), [404]);
+	});
+
+	it('Rezept-Zutat darf nur auf Basisartikel der eigenen Familie zeigen', async () => {
+		const own = await as.adult
+			.collection('ingredients')
+			.create({ household: householdA, name: 'Ei', key: 'ei' });
+		const foreign = await as.outsider
+			.collection('ingredients')
+			.create({ household: householdB, name: 'Ei', key: 'ei' });
+		const ok = await as.adult.collection('recipe_ingredients').create({
+			recipe: recipeA.id,
+			name: 'Eier',
+			amount: 3,
+			ingredient: own.id,
+			optional: true,
+			alternatives: ['Ei-Ersatz'],
+			amount_kind: 'approx',
+			note: 'Größe M'
+		});
+		expect(ok).toMatchObject({
+			optional: true,
+			amount_kind: 'approx',
+			alternatives: ['Ei-Ersatz']
+		});
+		await expectDenied(
+			as.adult
+				.collection('recipe_ingredients')
+				.create({ recipe: recipeA.id, name: 'Eier', ingredient: foreign.id })
+		);
+	});
+});
+
+describe('Gelernte Korrekturen (parse_corrections)', () => {
+	it('Erwachsene lernen, Kinder nicht; Schlüssel je Familie eindeutig, fremde unsichtbar', async () => {
+		const result = [{ name: 'Milch', amount: 50, unit: 'ml' }];
+		const created = await as.adult
+			.collection('parse_corrections')
+			.create({ household: householdA, key: '1 schuss milch', input: '1 Schuss Milch', result });
+		expect(created.result).toEqual(result);
+		await expectDenied(
+			as.child
+				.collection('parse_corrections')
+				.create({ household: householdA, key: 'etwas salz', result })
+		);
+		await expectDenied(
+			as.admin
+				.collection('parse_corrections')
+				.create({ household: householdA, key: '1 schuss milch', result })
+		);
+		await expectDenied(
+			as.adult.collection('parse_corrections').update(created.id, { household: householdB })
+		);
+		await expectDenied(as.adult.collection('parse_corrections').delete(created.id));
+		await expectDenied(as.outsider.collection('parse_corrections').getOne(created.id), [404]);
+	});
+});

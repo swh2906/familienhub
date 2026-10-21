@@ -8,11 +8,13 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { layoutColumns } from './conflicts.js';
 	import {
+		COMPACT_MINUTES,
 		HOUR_PX,
 		initialScrollTop,
 		minutesToTime,
 		moveTo,
 		resizeTo,
+		slotGeometry,
 		snapMinutes,
 		type DragResult
 	} from './grid.js';
@@ -285,13 +287,14 @@
 							style:height="{((p.height + (dragging?.mode === 'resize' ? dragging.deltaMin : 0)) /
 								60) *
 								HOUR_PX}px"
-							style:left="{(p.column / p.columns) * 100}%"
-							style:width="{100 / p.columns}%"
+							style:left="{slotGeometry(p.column, p.columns).left}%"
+							style:width="{slotGeometry(p.column, p.columns).width}%"
+							style:z-index={dragging ? 5 : p.column + 1}
 							style:transform={dragging?.mode === 'move'
 								? `translate(${dragging.dayOffset * dragging.colWidth}px, ${(dragging.deltaMin / 60) * HOUR_PX}px)`
 								: undefined}
 						>
-							{@render chip(p.occurrence, false, day)}
+							{@render chip(p.occurrence, false, day, p.height < COMPACT_MINUTES)}
 						</div>
 					{/each}
 					{#if day === nowZoned.date}
@@ -303,7 +306,7 @@
 	</div>
 </div>
 
-{#snippet chip(o: Occurrence, allDay: boolean, day = '')}
+{#snippet chip(o: Occurrence, allDay: boolean, day = '', compact = false)}
 	{@const conflict = conflicts.has(o.key)}
 	{@const label = describeOccurrence(o, members, conflict)}
 	{#if onopen}
@@ -311,6 +314,7 @@
 			type="button"
 			class="event"
 			class:allday-event={allDay}
+			class:compact
 			class:conflict
 			style:--event-color={occurrenceColor(o, members)}
 			class:draggable={!allDay && draggable(o)}
@@ -336,6 +340,7 @@
 		<div
 			class="event"
 			class:allday-event={allDay}
+			class:compact
 			class:conflict
 			style:--event-color={occurrenceColor(o, members)}
 			title={label}
@@ -537,23 +542,53 @@
 		box-shadow: inset 0 0 0 2px var(--color-warning);
 	}
 
+	/* Titel nur an Wortgrenzen umbrechen (kein „Schwi-mmkurs“), zu Langes endet mit „…“. */
 	.event-title {
+		display: -webkit-box;
+		overflow: hidden;
 		font-weight: 650;
-		overflow-wrap: break-word;
-		hyphens: auto;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		text-overflow: ellipsis;
+	}
+
+	/* Kurze Termine: eine Zeile, Titel zuerst; bei wenig Platz wird zuerst die Uhrzeit gekürzt
+	   (voller Text im Tooltip und für Screenreader). */
+	.event.compact {
+		flex-direction: row;
+		align-items: baseline;
+		gap: 4px;
+	}
+
+	.event.compact .event-title {
+		display: block;
+		flex: none;
+		max-width: 100%;
+		white-space: nowrap;
+	}
+
+	.event.compact .event-time {
+		flex: 1 1 0;
+		min-width: 0;
 	}
 
 	.event-time {
+		overflow: hidden;
 		color: var(--color-calendar);
 		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 
+	/* Jetzt-Linie: eigene Farbe (nicht die der Überschneidungen), hinter den Terminen. */
 	.now {
 		position: absolute;
 		left: 0;
 		right: 0;
+		z-index: 0;
 		height: 2px;
-		background: var(--color-warning);
+		background: var(--color-danger);
 		pointer-events: none;
 	}
 
@@ -565,6 +600,6 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 999px;
-		background: var(--color-warning);
+		background: var(--color-danger);
 	}
 </style>

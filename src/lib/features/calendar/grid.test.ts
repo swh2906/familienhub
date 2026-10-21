@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { HOUR_PX, initialScrollTop, minutesToTime, moveTo, resizeTo, snapMinutes } from './grid.js';
+import {
+	HOUR_PX,
+	initialScrollTop,
+	minutesToTime,
+	moveTo,
+	resizeTo,
+	slotGeometry,
+	snapMinutes
+} from './grid.js';
 
 describe('Zeitachse', () => {
 	it('springt heute zur aktuellen Uhrzeit (oberes Drittel), sonst 6:30', () => {
@@ -43,5 +51,24 @@ describe('Zeitachse', () => {
 	it('Minuten als Uhrzeit', () => {
 		expect(minutesToTime(0)).toBe('00:00');
 		expect(minutesToTime(615)).toBe('10:15');
+	});
+});
+
+describe('Überlappende Termine', () => {
+	it('allein: volle Breite', () => {
+		expect(slotGeometry(0, 1)).toEqual({ left: 0, width: 100 });
+	});
+
+	it('zwei: der erste breiter und überlappt, der zweite rechts', () => {
+		expect(slotGeometry(0, 2)).toEqual({ left: 0, width: 85 });
+		expect(slotGeometry(1, 2)).toEqual({ left: 50, width: 50 });
+	});
+
+	it('drei: nie über den rechten Rand hinaus', () => {
+		for (let column = 0; column < 3; column++) {
+			const { left, width } = slotGeometry(column, 3);
+			expect(left + width).toBeLessThanOrEqual(100.0001);
+			expect(width).toBeGreaterThanOrEqual(100 / 3 - 0.0001);
+		}
 	});
 });

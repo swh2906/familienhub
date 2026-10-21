@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { listMembers, renameHousehold, serverMessage } from '#lib/auth/family.js';
@@ -12,6 +12,7 @@
 	import PrivacySection from '#lib/features/privacy/PrivacySection.svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import { appearance } from '#lib/ui/appearance.svelte.js';
+	import Collapsible from '#lib/ui/Collapsible.svelte';
 	import { ACCENTS, type Accent, type ThemePreference } from '#lib/ui/theme.js';
 
 	const themes: { value: ThemePreference; label: () => string }[] = [
@@ -24,6 +25,42 @@
 		indigo: m.accent_indigo,
 		graphit: m.accent_graphit
 	};
+
+	type SectionId = 'family' | 'invite' | 'child' | 'appearance' | 'hints' | 'account' | 'privacy';
+
+	// Auf dem Handy sind selten gebrauchte Abschnitte anfangs zugeklappt, am Desktop ist alles offen.
+	const compact = window.matchMedia('(max-width: 699px)').matches;
+	const open: Record<SectionId, boolean> = $state({
+		family: true,
+		invite: !compact,
+		child: !compact,
+		appearance: true,
+		hints: !compact,
+		account: true,
+		privacy: !compact
+	});
+
+	const jumps: { id: SectionId; label: () => string; adminOnly?: boolean }[] = [
+		{ id: 'family', label: m.settings_nav_family },
+		{ id: 'invite', label: m.settings_nav_invite, adminOnly: true },
+		{ id: 'child', label: m.settings_nav_child, adminOnly: true },
+		{ id: 'appearance', label: m.settings_nav_appearance },
+		{ id: 'hints', label: m.settings_nav_hints },
+		{ id: 'account', label: m.settings_nav_account },
+		{ id: 'privacy', label: m.settings_nav_privacy }
+	];
+
+	/** Sprungleiste: Abschnitt aufklappen und hinscrollen. */
+	async function jump(id: SectionId) {
+		open[id] = true;
+		await tick();
+		const target = document.getElementById(`section-${id}`);
+		target?.scrollIntoView({
+			behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+			block: 'start'
+		});
+		target?.querySelector('summary')?.focus({ preventScroll: true });
+	}
 
 	const household = session.householdId ?? '';
 	let members: Membership[] = $state([]);
@@ -64,9 +101,18 @@
 
 <h1>{m.settings_title()}</h1>
 
+<nav class="jumps" aria-label={m.settings_nav_label()}>
+	{#each jumps.filter((j) => !j.adminOnly || session.isAdmin) as item (item.id)}
+		<button type="button" class="jump" onclick={() => jump(item.id)}>{item.label()}</button>
+	{/each}
+</nav>
+
 <div class="sections">
-	<section class="card" aria-labelledby="family-heading">
-		<h2 id="family-heading">{m.settings_family()}: {session.householdName}</h2>
+	<Collapsible
+		id="family"
+		title="{m.settings_family()}: {session.householdName}"
+		bind:open={open.family}
+	>
 		{#if familyError}
 			<p class="form-error" role="alert">{familyError}</p>
 		{/if}
@@ -80,23 +126,19 @@
 			</form>
 		{/if}
 		<FamilyMembers {members} onchange={reload} />
-	</section>
+	</Collapsible>
 
 	{#if session.isAdmin}
-		<section class="card" aria-labelledby="invite-heading">
-			<h2 id="invite-heading">{m.invite_title()}</h2>
+		<Collapsible id="invite" title={m.invite_title()} bind:open={open.invite}>
 			<InvitePanel {household} />
-		</section>
+		</Collapsible>
 
-		<section class="card" aria-labelledby="child-heading">
-			<h2 id="child-heading">{m.child_title()}</h2>
+		<Collapsible id="child" title={m.child_title()} bind:open={open.child}>
 			<ChildForm {household} oncreated={reload} />
-		</section>
+		</Collapsible>
 	{/if}
 
-	<section class="card" aria-labelledby="appearance-heading">
-		<h2 id="appearance-heading">{m.settings_appearance()}</h2>
-
+	<Collapsible id="appearance" title={m.settings_appearance()} bind:open={open.appearance}>
 		<fieldset>
 			<legend>{m.settings_theme()}</legend>
 			<p class="hint">{m.settings_theme_hint()}</p>
@@ -136,49 +178,65 @@
 				{/each}
 			</div>
 		</fieldset>
-	</section>
+	</Collapsible>
 
-	<section class="card" aria-labelledby="hints-heading">
-		<h2 id="hints-heading">{m.settings_hints_title()}</h2>
+	<Collapsible id="hints" title={m.settings_hints_title()} bind:open={open.hints}>
 		<HintSettings />
-	</section>
+	</Collapsible>
 
-	<section class="card" aria-labelledby="account-heading">
-		<h2 id="account-heading">{m.account_title()}</h2>
+	<Collapsible id="account" title={m.account_title()} bind:open={open.account}>
 		<p>
 			{m.account_signed_in({
 				name: session.user?.email || session.user?.username || session.user?.name || ''
 			})}
 		</p>
 		<button class="btn logout" type="button" onclick={logout}>{m.logout()}</button>
-	</section>
+	</Collapsible>
 
-	<section class="card" aria-labelledby="privacy-heading">
-		<h2 id="privacy-heading">{m.privacy_title()}</h2>
+	<Collapsible id="privacy" title={m.privacy_title()} bind:open={open.privacy}>
 		<PrivacySection {household} householdName={session.householdName} isAdmin={session.isAdmin} />
-	</section>
+	</Collapsible>
 </div>
 
 <style>
 	h1 {
-		margin: 0 0 var(--space-6);
+		margin: 0 0 var(--space-4);
 		font-size: 2rem;
 		letter-spacing: -0.02em;
 	}
 
+	/* Sprungleiste: auf dem Handy waagerecht wischbar. */
+	.jumps {
+		display: flex;
+		gap: var(--space-2);
+		max-width: 720px;
+		margin: 0 calc(-1 * var(--space-4)) var(--space-4);
+		padding: 2px var(--space-4) var(--space-1);
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.jump {
+		flex: none;
+		min-height: var(--touch-target);
+		padding: 0 var(--space-4);
+		border: 1px solid var(--color-border);
+		border-radius: 999px;
+		background: var(--color-surface);
+		color: var(--color-text);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.jump:hover {
+		background: var(--color-primary-soft);
+	}
+
 	.sections {
 		display: grid;
-		gap: var(--space-6);
+		gap: var(--space-4);
 		max-width: 720px;
-	}
-
-	h2 {
-		margin: 0;
-		font-size: 1.125rem;
-	}
-
-	.card p {
-		margin: 0;
 	}
 
 	.rename {
@@ -255,8 +313,15 @@
 	}
 
 	@media (min-width: 700px) {
-		.card {
+		.sections :global(.card) {
 			padding: var(--space-6);
+		}
+
+		.jumps {
+			flex-wrap: wrap;
+			margin: 0 0 var(--space-6);
+			padding: 0;
+			overflow: visible;
 		}
 	}
 </style>

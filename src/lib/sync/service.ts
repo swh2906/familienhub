@@ -30,8 +30,6 @@ interface Running {
 	retryTimer: ReturnType<typeof setTimeout> | null;
 	purged: boolean;
 	remote: PocketBaseRemote;
-	/** Abos werden nachgeholt: nach jedem neuen Abo noch einmal abgleichen. */
-	resubscribing: boolean;
 }
 
 let current: Running | null = null;
@@ -57,8 +55,7 @@ export function startSync(household: string): void {
 		again: false,
 		retryDelay: RETRY_MIN_MS,
 		retryTimer: null,
-		purged: false,
-		resubscribing: false
+		purged: false
 	};
 	current = running;
 	syncStatus.reset();
@@ -105,9 +102,10 @@ export function startSync(household: string): void {
 }
 
 /**
- * Legt die Live-Abos an, die noch fehlen. Schlägt eines fehl (offline), bleibt es offen und wird beim
- * nächsten erfolgreichen Abgleich erneut versucht; danach wird noch einmal abgeglichen, damit
- * nichts aus der Zeit vor dem Abo fehlt.
+ * Legt die Live-Abos an, die noch fehlen. Steht ein Abo, wird noch einmal abgeglichen: Der erste
+ * Abgleich läuft parallel zum Anmelden der Abos, Änderungen dazwischen kämen sonst erst nach
+ * 60 Sekunden. Schlägt ein Abo fehl (offline), wird es beim nächsten erfolgreichen Abgleich erneut
+ * versucht.
  */
 function subscribeMissing(running: Running): void {
 	for (const { name, scope } of COLLECTIONS) {
@@ -122,7 +120,8 @@ function subscribeMissing(running: Running): void {
 			.then((unsubscribe) => {
 				if (current !== running) return void unsubscribe();
 				running.unsubscribe.push(unsubscribe);
-				if (running.resubscribing) void syncNow();
+				// Was zwischen dem ersten Abgleich und dem fertigen Abo geändert wurde, nachholen.
+				void syncNow();
 			})
 			.catch(() => {
 				// Offline: beim nächsten erfolgreichen Abgleich erneut versuchen.
@@ -159,10 +158,7 @@ export async function syncNow(): Promise<void> {
 		} else {
 			syncStatus.online = true;
 			running.retryDelay = RETRY_MIN_MS;
-			if (running.subscribed.size < COLLECTIONS.length) {
-				running.resubscribing = true;
-				subscribeMissing(running);
-			}
+			if (running.subscribed.size < COLLECTIONS.length) subscribeMissing(running);
 			if (!running.purged) {
 				running.purged = true;
 				await running.engine.purgeTombstones();

@@ -80,6 +80,8 @@ flowchart LR
 
 - Ohne Verbindung arbeitet die App normal weiter; die Kopfzeile zeigt „Offline“ bzw. „N ausstehend“.
 - Auch ein Start ganz ohne Netz geht: Die Live-Updates werden nachgeholt, sobald der Server wieder erreichbar ist.
+- Ist der Server nicht erreichbar (aus, oder unterwegs ohne Verbindung ins Heimnetz), startet die App nach höchstens 4 s mit den gespeicherten Daten; jede Anfrage bricht nach 15 s ab, statt zu hängen.
+- Die Anmeldung gilt 365 Tage und verlängert sich bei jedem Start. Ist sie doch abgelaufen, arbeitet die App lokal weiter und zeigt „Neu anmelden“; lokale Daten und ausstehende Änderungen bleiben dabei erhalten. Nur ein anderes Konto oder „Abmelden“ löscht die lokalen Daten.
 - Konflikte: pro Feld gewinnt die zuletzt beim Server angekommene Änderung.
 - Lehnt der Server eine Änderung ab (z. B. fehlende Rechte), wird sie zurückgesetzt und ein Hinweis angezeigt.
 - Abmelden löscht die lokale Datenbank.

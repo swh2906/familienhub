@@ -9,6 +9,10 @@ import type { Membership, User } from './types.js';
 
 const HOUSEHOLD_KEY = 'fh-household';
 const MEMBERSHIPS_KEY = 'fh-memberships';
+/** Wem die lokalen Daten gehören – meldet sich ein anderes Konto an, werden sie verworfen. */
+const LAST_USER_KEY = 'fh-last-user';
+/** So lange wartet der Start auf den Server, danach geht es mit den gespeicherten Daten weiter. */
+const STARTUP_TIMEOUT_MS = 4_000;
 
 function readCache<T>(key: string): T | null {
 	try {
@@ -28,10 +32,12 @@ function writeCache(key: string, value: unknown): void {
 	}
 }
 
-/** Netzwerkfehler (offline, Server nicht erreichbar) statt einer Antwort des Servers? */
+/** Netzwerkfehler (offline, Server nicht erreichbar, Zeitlimit) statt einer Antwort des Servers? */
 export function isOffline(error: unknown): boolean {
 	return error instanceof ClientResponseError && error.status === 0 && !error.isAbort;
 }
+
+type RefreshResult = 'ok' | 'offline' | 'invalid';
 
 function toUser(record: Record<string, unknown> | null): User | null {
 	if (!record) return null;
@@ -80,26 +86,69 @@ class Session {
 		return this.#ready;
 	}
 
+	/**
+	 * Verfügbarkeit vor allem: Mit gespeicherten Daten startet die App auch, wenn der Server nicht
+	 * (schnell genug) antwortet oder die Anmeldung abgelaufen ist, und arbeitet lokal weiter. Die
+	 * Verlängerung läuft im Hintergrund weiter; lehnt der Server ab, meldet der Abgleich „Neu
+	 * anmelden“ – lokale Daten und noch nicht gesendete Änderungen bleiben dabei erhalten.
+	 */
 	async #restore(): Promise<void> {
 		const pb = getPocketBase();
-		if (!pb.authStore.isValid) {
+		const record = pb.authStore.record;
+		if (!pb.authStore.token || !record) {
 			pb.authStore.clear();
 			return;
 		}
+		// Sitzungen von vor diesem Update: Besitzer der lokalen Daten merken.
+		if (!readCache<string>(LAST_USER_KEY)) writeCache(LAST_USER_KEY, record.id);
+
+		const cached = readCache<Membership[]>(MEMBERSHIPS_KEY) ?? [];
+		const refresh = this.#refresh();
+		const result =
+			cached.length > 0
+				? await Promise.race([
+						refresh,
+						new Promise<'slow'>((done) => setTimeout(() => done('slow'), STARTUP_TIMEOUT_MS))
+					])
+				: await refresh;
+		if (result === 'ok') return;
+		if (cached.length === 0) {
+			// Nichts Lokales zum Weiterarbeiten: bei ungültiger Anmeldung zur Anmeldeseite.
+			if (result === 'invalid') this.#expire();
+			else this.user = toUser(record);
+			return;
+		}
+		this.user = toUser(record);
+		this.memberships = cached;
+	}
+
+	/** Anmeldung beim Server verlängern und Mitgliedschaften laden. */
+	async #refresh(): Promise<RefreshResult> {
+		const pb = getPocketBase();
 		try {
 			await pb.collection('users').authRefresh();
 			this.user = toUser(pb.authStore.record);
 			await this.loadMemberships();
+			return 'ok';
 		} catch (error) {
-			if (isOffline(error)) {
-				// Offline: mit den zuletzt bekannten Daten weiterarbeiten.
-				this.user = toUser(pb.authStore.record);
-				this.memberships = readCache<Membership[]>(MEMBERSHIPS_KEY) ?? [];
-			} else {
-				// Anmeldung ungültig: auch lokale Daten verwerfen, ein anderes Konto könnte sich anmelden.
-				await this.#clear();
-			}
+			return isOffline(error) ? 'offline' : 'invalid';
 		}
+	}
+
+	/**
+	 * Anmeldung verwerfen, lokale Daten behalten (abgelaufen oder „Neu anmelden“). Meldet sich
+	 * dieselbe Person wieder an, gehen die gespeicherten Änderungen danach raus.
+	 */
+	#expire(): void {
+		getPocketBase().authStore.clear();
+		this.user = null;
+	}
+
+	/** „Neu anmelden“: zur Anmeldeseite, ohne lokale Daten zu löschen. */
+	async reauthenticate(): Promise<void> {
+		await stopSync();
+		this.#expire();
+		this.#ready = Promise.resolve();
 	}
 
 	async loadMemberships(): Promise<void> {
@@ -123,6 +172,17 @@ class Session {
 	async login(identity: string, password: string): Promise<void> {
 		const pb = getPocketBase();
 		await pb.collection('users').authWithPassword(identity.trim(), password);
+		const id = pb.authStore.record?.id ?? '';
+		const previous = readCache<string>(LAST_USER_KEY);
+		if (previous && previous !== id) {
+			// Anderes Konto: dessen Daten gehören nicht auf dieses Gerät.
+			await stopSync();
+			await deleteLocalData();
+			this.#householdId = null;
+			writeCache(HOUSEHOLD_KEY, null);
+			writeCache(MEMBERSHIPS_KEY, null);
+		}
+		writeCache(LAST_USER_KEY, id);
 		this.user = toUser(pb.authStore.record);
 		this.#ready = Promise.resolve();
 		await this.loadMemberships();
@@ -164,6 +224,7 @@ class Session {
 		this.#householdId = null;
 		writeCache(HOUSEHOLD_KEY, null);
 		writeCache(MEMBERSHIPS_KEY, null);
+		writeCache(LAST_USER_KEY, null);
 		await stopSync();
 		await deleteLocalData();
 	}

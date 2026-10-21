@@ -26,7 +26,7 @@ async function seed(admin: string, household: string) {
 		household,
 		title: 'Elterngespräch',
 		start: start.toISOString(),
-		// Bis kurz vor Mitternacht: auch spät abends noch „als Nächstes“ (läuft noch).
+		// Bis kurz vor Mitternacht: auch spät abends noch unter „Als Nächstes“ (läuft noch).
 		end: endOfDay.toISOString(),
 		exdates: []
 	});
@@ -60,9 +60,13 @@ test('Heute zeigt alle vier Bereiche; Hinzufügen und Abhaken kommen live an', a
 	await login(b, family.member);
 
 	await expect(a.getByText(/^(Guten Morgen|Hallo|Guten Abend|Gute Nacht), Julia$/)).toBeVisible();
-	await expect(card(a, 'Termine heute').getByText('Elterngespräch')).toBeVisible();
-	await expect(card(a, 'Termine heute').getByText('als Nächstes')).toBeVisible();
-	await expect(card(a, 'Essen heute').getByText('Gemüse-Lasagne')).toBeVisible();
+	await expect(card(a, 'Als Nächstes').getByText('Elterngespräch')).toBeVisible();
+	await expect(
+		card(a, 'Nächste 7 Tage').getByRole('link', { name: 'Gemüse-Lasagne – im Wochenplan' })
+	).toBeVisible();
+	const overview = a.getByRole('navigation', { name: 'Überblick für heute' });
+	await expect(overview.getByRole('link', { name: /1\s*Termine heute/ })).toBeVisible();
+	await expect(overview.getByRole('link', { name: /1\s*Aufgaben fällig/ })).toBeVisible();
 	await expect(
 		card(a, 'Einkauf').getByRole('button', { name: 'Brot als gekauft markieren' })
 	).toBeVisible();
@@ -86,9 +90,14 @@ test('Heute zeigt alle vier Bereiche; Hinzufügen und Abhaken kommen live an', a
 	await a.getByRole('button', { name: 'Rückgängig' }).click();
 	await expect(card(a, 'Aufgaben').getByText('Blumen gießen')).toBeVisible();
 
-	// Kartenkopf führt in den Bereich (Name = sichtbare Überschrift, WCAG 2.5.3).
-	await a.getByRole('link', { name: 'Termine heute' }).click();
+	// Kartenkopf und Tage der Woche führen in den Kalender (Name = sichtbare Überschrift, WCAG 2.5.3).
+	await a.getByRole('link', { name: 'Als Nächstes' }).click();
 	await expect(a).toHaveURL(/\/kalender\?ansicht=tag/);
+	await a.goBack();
+	await card(a, 'Nächste 7 Tage')
+		.getByRole('link', { name: /^Morgen/ })
+		.click();
+	await expect(a).toHaveURL(/\/kalender\?ansicht=tag&datum=\d{4}-\d{2}-\d{2}/);
 });
 
 test('Leere Zustände und Kinder', async ({ page }) => {
@@ -96,13 +105,16 @@ test('Leere Zustände und Kinder', async ({ page }) => {
 	const username = await createChild(family.admin, family.household);
 	await login(page, username);
 
-	await expect(card(page, 'Termine heute').getByText('Heute keine Termine.')).toBeVisible();
+	await expect(card(page, 'Als Nächstes').getByText('Heute steht nichts mehr an.')).toBeVisible();
 	await expect(
-		card(page, 'Termine heute').getByRole('link', { name: 'Termin anlegen' })
+		card(page, 'Als Nächstes').getByRole('link', { name: 'Termin anlegen' })
 	).toHaveCount(0);
-	await expect(
-		card(page, 'Essen heute').getByRole('link', { name: 'Mahlzeit planen' })
-	).toBeVisible();
+	// Kinder planen kein Essen; sie sehen nur, dass nichts geplant ist.
+	await expect(card(page, 'Nächste 7 Tage').getByText('Kein Essen geplant')).toHaveCount(7);
+	await expect(page.getByRole('button', { name: 'Nur meins' })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
 	await expect(card(page, 'Einkauf').getByText('Alles da – nichts auf der Liste.')).toBeVisible();
 	await expect(card(page, 'Aufgaben').getByText('Heute ist nichts fällig.')).toBeVisible();
 
@@ -112,4 +124,21 @@ test('Leere Zustände und Kinder', async ({ page }) => {
 	await expect(
 		card(page, 'Einkauf').getByRole('button', { name: 'Kekse als gekauft markieren' })
 	).toBeVisible();
+});
+
+test('„Alle / Nur meins“ bleibt auf dem Gerät gespeichert', async ({ page }) => {
+	const family = await createFamilyWithMember();
+	await login(page, family.admin);
+	const mine = page.getByRole('button', { name: 'Nur meins' });
+	await expect(page.getByRole('button', { name: 'Alle' })).toHaveAttribute('aria-pressed', 'true');
+	await mine.click();
+	await expect(mine).toHaveAttribute('aria-pressed', 'true');
+	await page.reload();
+	await expect(page.getByRole('button', { name: 'Nur meins' })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+	// Leere Woche: Erwachsene können direkt Essen planen.
+	await card(page, 'Nächste 7 Tage').getByRole('link', { name: 'Essen planen' }).first().click();
+	await expect(page).toHaveURL(/\/essen\/wochenplan\?woche=/);
 });

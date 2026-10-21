@@ -91,6 +91,10 @@ flowchart LR
 - Tastatur: Der erste Tab-Stopp ist „Zum Inhalt springen“; die Taste **N** startet „Neu“ (Aufgabe, Termin, Rezept, Einkaufsfeld).
 - `pnpm test:e2e` prüft alle Seiten mit axe (WCAG 2.1 AA) in Hell und Dunkel sowie den Offline-Start.
 
+## Heute: Dashboard
+
+Die Startseite zeigt oben vier Kennzahlen (Termine heute, Einkauf offen, Aufgaben fällig, Überschneidungen), darunter „Als Nächstes“ (Termine und wann das Kochen beginnt), die fälligen Aufgaben, die nächsten 7 Tage (Termine, Essen, Aufgaben je Tag) und den Einkauf mit Schnelleingabe. „Alle / Nur meins“ filtert Termine und Aufgaben auf die eigenen und die der ganzen Familie; die Auswahl gilt je Gerät, Kinder starten mit „Nur meins“.
+
 ## Kalender: Termine ziehen
 
 In Tag- und Wochenansicht lassen sich Termine ziehen (Maus sofort, Finger nach langem Drücken): verschieben auf andere Uhrzeit oder anderen Tag, am unteren Rand die Dauer ändern; Raster 15 Minuten. Bei Serien fragt Homi „Nur dieser Termin / Alle Termine“, bei Einzelterminen gibt es „Rückgängig“. Kinder können nicht ziehen. Ist heute zu sehen, springt die Zeitachse zur aktuellen Uhrzeit.

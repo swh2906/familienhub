@@ -362,6 +362,21 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 - [x] Tag/Woche springt zur aktuellen Uhrzeit.
 - [ ] Vor dem Abschluss der Testphase: Feedback auswerten, `HOMI_FEEDBACK` auf '0' setzen.
 
+### 12a. Heute als Dashboard (`feat/schritt-12a-dashboard`)
+
+- [x] Kennzahlen oben (Termine heute, Einkauf offen, Aufgaben fällig/überfällig, Überschneidungen), jede antippbar.
+- [x] „Als Nächstes“: Termine und Kochbeginn (Essenszeit minus Zubereitungszeit) zeitlich sortiert, läuft gerade, Überschneidung im Klartext; ganztägige Termine darüber.
+- [x] „Nächste 7 Tage“: je Tag Personen, Termine, Konflikt, fällige Aufgaben und Essen (Handy Zeilen, Desktop 7 Spalten); Tag → Kalender, Essen → Kochansicht bzw. Wochenplan.
+- [x] Filter „Alle / Nur meins“ je Gerät (`fh-today-scope`), Kinder standardmäßig „Nur meins“.
+- [x] Logik in `features/today/dashboard.ts` mit Unit-Tests; E2E `today.e2e.ts` angepasst.
+
+### 12b. Feinschliff Kalender, Aufgaben, Einstellungen
+
+- [ ] Kalender: kurze Termine einzeilig mit „…“, eigene Farbe für die Jetzt-Linie (hinter Terminen), breitere Spalten bei Überschneidungen.
+- [ ] Dialoge Termin/Aufgabe: Speichern/Abbrechen bleiben unten sichtbar.
+- [ ] Aufgaben: Kopf wie im Kalender, Gruppen Überfällig/Heute/Diese Woche/Später/Ohne Datum, nächste Fälligkeit bei Wiederholungen.
+- [ ] Einstellungen: Abschnitte einklappbar, Sprungleiste.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

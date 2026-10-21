@@ -161,7 +161,6 @@
 	"task_assigned_to": "zuständig: {names}",
 	"task_everyone": "alle",
 	"task_done_by": "{person} · {date}",
-	"task_revert_hint": "Haken antippen, um ein Erledigt zurückzunehmen.",
 	"task_revert_label": "{title}: Erledigt zurücknehmen",
 	"task_reverted": "„{title}“ ist wieder offen.",
 	"task_completed": "„{title}“ erledigt.",

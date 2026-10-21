@@ -370,7 +370,8 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 - [x] Filter „Alle / Nur meins“ je Gerät (`fh-today-scope`), Kinder standardmäßig „Nur meins“.
 - [x] Logik in `features/today/dashboard.ts` mit Unit-Tests; E2E `today.e2e.ts` angepasst.
 - [x] Heller Modus mit mehr Kontrast: dunklerer Hintergrund, kräftigere Ränder, Schatten und Nebentext.
-- [x] Aufgaben → Erledigt: Haken antippen nimmt das Erledigt zurück (je Aufgabe das neueste; Serien wieder fällig am Tag des Abhakens), Erledigtes lässt sich bearbeiten.
+- [x] Aufgaben → Erledigt: jeder Haken lässt sich antippen und nimmt das Erledigt zurück (einmalige wieder offen, Serien wieder fällig am Tag des Abhakens); Erledigtes lässt sich bearbeiten.
+- [x] Erledigt-Verlauf nur 14 Tage: Liste blendet Älteres aus, Aufräum-Job (Server und Gerät) löscht es endgültig. Hinweis: Punkte (Phase 2) lassen sich damit nicht rückwirkend über 14 Tage hinaus berechnen.
 
 ### 12b. Feinschliff Kalender, Aufgaben, Einstellungen
 

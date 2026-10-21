@@ -112,7 +112,7 @@ Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (
 - **Datenexport** (Einstellungen → Daten und Konto): alle Daten der Familie als JSON-Datei, direkt aus der lokalen Datenbank (geht auch offline). Gelöschte Einträge und Einladungen sind nicht enthalten.
 - **Konto löschen**: mit Passwort. Das Konto verschwindet, die Mitgliedschaft bleibt ohne Namen bestehen; Einträge zeigen „Ehemaliges Mitglied“. Der letzte Admin muss vorher die Admin-Rolle übergeben oder den Familienraum löschen.
 - **Familienraum löschen** (Admin): mit dem Namen als Bestätigung; alle Daten werden sofort endgültig gelöscht. Andere Geräte merken das beim nächsten Abgleich und verwerfen ihre lokalen Daten (ebenso, wenn jemand aus der Familie entfernt wurde).
-- **Aufräum-Job**: Gelöschte Einträge (`deleted_at`) werden nach 30 Tagen endgültig entfernt, täglich um 3:30 Uhr (Serverzeit). Mitgliedschaften bleiben für „Ehemaliges Mitglied“.
+- **Aufräum-Job**: Gelöschte Einträge (`deleted_at`) werden nach 30 Tagen endgültig entfernt, der Erledigt-Verlauf der Aufgaben nach 14 Tagen; täglich um 3:30 Uhr (Serverzeit), die Geräte räumen lokal genauso auf. Mitgliedschaften bleiben für „Ehemaliges Mitglied“.
 
 ## Datenmodell und Rechte
 

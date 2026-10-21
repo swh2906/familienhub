@@ -6,7 +6,6 @@ import {
 	dueKind,
 	isOverdue,
 	recentCompletions,
-	revertibleCompletions,
 	tasksForTab
 } from './list.js';
 import {
@@ -209,27 +208,17 @@ describe('Aufgabenliste', () => {
 				deleted_at: 'x'
 			}
 		];
-		const result = recentCompletions(completions, tasks);
+		const now = Date.parse('2026-10-14T12:00:00Z');
+		const result = recentCompletions(completions, tasks, now);
 		expect(result.map((e) => e.completion.id)).toEqual(['2', '1']);
 		expect(result[0].task?.title).toBe('Zimmer aufräumen');
+		// Nach 14 Tagen verschwindet Erledigtes aus der Liste.
+		const later = Date.parse('2026-10-25T12:00:00Z');
+		expect(recentCompletions(completions, tasks, later).map((e) => e.completion.id)).toEqual(['2']);
 	});
 });
 
 describe('Erledigt zurücknehmen', () => {
-	const done = (id: string, taskId: string, at: string) => ({
-		completion: { ...base, id, task: taskId, membership: 'm', completed_at: at, points: 0 },
-		task: undefined
-	});
-
-	it('nur der neueste Eintrag je Aufgabe', () => {
-		const ids = revertibleCompletions([
-			done('a1', 'blumen', '2026-10-19T08:00:00Z'),
-			done('a2', 'blumen', '2026-10-22T08:00:00Z'),
-			done('b1', 'müll', '2026-10-20T08:00:00Z')
-		]);
-		expect([...ids].sort()).toEqual(['a2', 'b1']);
-	});
-
 	it('Serie: wieder fällig am Tag des Abhakens, ein früheres altes Datum bleibt', () => {
 		expect(dueAfterRevert('2026-10-26', '2026-10-21')).toBe('2026-10-21');
 		expect(dueAfterRevert('2026-10-14', '2026-10-21')).toBe('2026-10-14');

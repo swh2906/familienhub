@@ -52,34 +52,23 @@ export interface DoneEntry {
 	task: Task | undefined;
 }
 
-/** Zuletzt Erledigtes, neueste zuerst. */
+/** So lange bleibt Erledigtes sichtbar; danach löscht der Aufräum-Job es endgültig. */
+export const DONE_VISIBLE_DAYS = 14;
+
+/** Erledigtes der letzten 14 Tage, neueste zuerst. */
 export function recentCompletions(
 	completions: readonly TaskCompletion[],
 	tasks: readonly Task[],
+	now = Date.now(),
 	limit = 50
 ): DoneEntry[] {
 	const byId = new Map(tasks.map((t) => [t.id, t]));
+	const since = now - DONE_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
 	return completions
-		.filter((c) => !c.deleted_at)
-		.sort((a, b) => b.completed_at.localeCompare(a.completed_at))
+		.filter((c) => !c.deleted_at && parseUtc(c.completed_at) >= since)
+		.sort((a, b) => parseUtc(b.completed_at) - parseUtc(a.completed_at))
 		.slice(0, limit)
 		.map((completion) => ({ completion, task: byId.get(completion.task) }));
-}
-
-/**
- * Pro Aufgabe nur der neueste Erledigt-Eintrag lässt sich zurücknehmen – ältere würden die
- * Fälligkeit einer Serie sonst durcheinanderbringen.
- */
-export function revertibleCompletions(entries: readonly DoneEntry[]): Set<string> {
-	const latest = new Map<string, TaskCompletion>();
-	for (const { completion } of entries) {
-		const current = latest.get(completion.task);
-		// Zeitpunkte vergleichen, nicht Text: Server („… 08:00:00.000Z“) und Gerät (ISO) schreiben verschieden.
-		if (!current || parseUtc(completion.completed_at) > parseUtc(current.completed_at)) {
-			latest.set(completion.task, completion);
-		}
-	}
-	return new Set([...latest.values()].map((c) => c.id));
 }
 
 /**

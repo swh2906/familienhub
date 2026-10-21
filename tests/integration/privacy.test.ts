@@ -177,6 +177,23 @@ describe('Aufräum-Job', () => {
 			deleted_at: pbDate(Date.now() - 31 * DAY_MS)
 		});
 
+		const daily = await f.admin.pb.collection('tasks').create({
+			household: f.household,
+			title: 'Blumen gießen',
+			status: 'open'
+		});
+		const completions = f.admin.pb.collection('task_completions');
+		const oldDone = await completions.create({
+			task: daily.id,
+			membership: f.adminMembership,
+			completed_at: pbDate(Date.now() - 15 * DAY_MS)
+		});
+		const recentDone = await completions.create({
+			task: daily.id,
+			membership: f.adminMembership,
+			completed_at: pbDate(Date.now() - 13 * DAY_MS)
+		});
+
 		// Nur Superuser.
 		await expectDenied(f.admin.pb.send('/api/fh/purge', { method: 'POST' }), [401, 403]);
 
@@ -191,6 +208,11 @@ describe('Aufräum-Job', () => {
 		await expectDenied(f.admin.pb.collection('tasks').getOne(task.id), [404]);
 		expect((await items.getOne(recent.id)).name).toBe('Neu gelöscht');
 		expect((await items.getOne(alive.id)).name).toBe('Aktiv');
+		// Erledigt-Verlauf: älter als 14 Tage weg, jüngere bleiben, die Aufgabe selbst bleibt.
+		expect(removed.task_completions).toBeGreaterThanOrEqual(1);
+		await expectDenied(completions.getOne(oldDone.id), [404]);
+		expect((await completions.getOne(recentDone.id)).id).toBe(recentDone.id);
+		expect((await f.admin.pb.collection('tasks').getOne(daily.id)).title).toBe('Blumen gießen');
 		// Mitgliedschaften werden nie aufgeräumt.
 		expect((await f.admin.pb.collection('memberships').getFullList()).length).toBe(2);
 	});

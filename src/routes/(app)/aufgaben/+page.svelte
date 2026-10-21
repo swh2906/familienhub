@@ -12,7 +12,6 @@
 		dueKind,
 		isOpen,
 		recentCompletions,
-		revertibleCompletions,
 		tasksForTab,
 		type Tab
 	} from '#lib/features/tasks/list.js';
@@ -53,16 +52,10 @@
 		tab === 'done' ? [] : tasksForTab(data.current.tasks, tab, membership, today)
 	);
 	const done = $derived(recentCompletions(data.current.completions, data.current.tasks));
-	const revertible = $derived(revertibleCompletions(done));
 
 	/** Zurücknehmen: Admins und Erwachsene alles, Kinder ihr eigenes Erledigt (wie die Server-Regel). */
 	function canRevert(completion: TaskCompletion, task: Task | undefined): boolean {
-		return (
-			!!task &&
-			!task.deleted_at &&
-			revertible.has(completion.id) &&
-			(session.canEdit || completion.membership === membership)
-		);
+		return !!task && !task.deleted_at && (session.canEdit || completion.membership === membership);
 	}
 
 	async function revert(completion: TaskCompletion, task: Task) {
@@ -180,7 +173,6 @@
 	{#if done.length === 0}
 		<p class="hint">{m.tasks_empty_done()}</p>
 	{:else}
-		<p class="hint">{m.task_revert_hint()}</p>
 		<ul class="card list" aria-label={m.tasks_tab_done()}>
 			{#each done as { completion, task } (completion.id)}
 				{@const person = members.get(completion.membership)}

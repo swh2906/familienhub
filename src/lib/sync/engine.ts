@@ -30,11 +30,24 @@ function asRemoteError(error: unknown): RemoteError {
 /** Wie der Aufräum-Job auf dem Server (pocketbase/pb_hooks/lib/familienhub.js). */
 export const PURGE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** Erledigt-Verlauf der Aufgaben bleibt 14 Tage (wie auf dem Server). */
+export const COMPLETIONS_KEEP_MS = 14 * 24 * 60 * 60 * 1000;
+
+/** Zeitpunkt älter als `age`? Versteht ISO- und PocketBase-Format; leer oder ungültig → nein. */
+function olderThan(value: string | undefined, age: number, now: number): boolean {
+	if (!value) return false;
+	const time = Date.parse(value.replace(' ', 'T'));
+	return Number.isFinite(time) && time < now - age;
+}
+
 /** `deleted_at` gesetzt und älter als 30 Tage? Versteht ISO- und PocketBase-Format. */
 export function isOlderTombstone(deletedAt: string | undefined, now: number): boolean {
-	if (!deletedAt) return false;
-	const time = Date.parse(deletedAt.replace(' ', 'T'));
-	return Number.isFinite(time) && time < now - PURGE_AFTER_MS;
+	return olderThan(deletedAt, PURGE_AFTER_MS, now);
+}
+
+/** Erledigt-Eintrag älter als 14 Tage? */
+export function isExpiredCompletion(completedAt: string | undefined, now: number): boolean {
+	return olderThan(completedAt, COMPLETIONS_KEEP_MS, now);
 }
 
 export class SyncEngine {
@@ -171,9 +184,10 @@ export class SyncEngine {
 	}
 
 	/**
-	 * Entfernt lokal Einträge, die vor mehr als 30 Tagen gelöscht wurden – der Server löscht sie dann
-	 * endgültig und meldet das nicht mehr. Mitgliedschaften bleiben („Ehemaliges Mitglied“),
-	 * ebenso Einträge mit noch nicht gesendeten Änderungen. Gibt die Anzahl zurück.
+	 * Entfernt lokal Einträge, die vor mehr als 30 Tagen gelöscht wurden, und Erledigt-Einträge älter
+	 * als 14 Tage – der Server löscht sie dann endgültig und meldet das nicht mehr. Mitgliedschaften
+	 * bleiben („Ehemaliges Mitglied“), ebenso Einträge mit noch nicht gesendeten Änderungen.
+	 * Gibt die Anzahl zurück.
 	 */
 	async purgeTombstones(now = Date.now()): Promise<number> {
 		let removed = 0;
@@ -182,7 +196,12 @@ export class SyncEngine {
 			const table = this.db.collection(name);
 			await this.db.transaction('rw', table, this.db.outbox, async () => {
 				const old = await table
-					.filter((row) => isOlderTombstone(row.deleted_at, now))
+					.filter(
+						(row) =>
+							isOlderTombstone(row.deleted_at, now) ||
+							(name === 'task_completions' &&
+								isExpiredCompletion((row as { completed_at?: string }).completed_at, now))
+					)
 					.primaryKeys();
 				for (const id of old) {
 					if ((await this.pendingFor(name, id).count()) > 0) continue;

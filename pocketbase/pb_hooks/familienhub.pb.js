@@ -64,7 +64,7 @@ routerAdd(
 	$apis.requireAuth('users')
 );
 
-// ---- Aufräum-Job: gelöschte Einträge nach 30 Tagen endgültig entfernen ----
+// ---- Aufräum-Job: gelöschte Einträge nach 30 Tagen, Erledigt-Verlauf nach 14 Tagen entfernen ----
 
 cronAdd('fh_purge_deleted', '30 3 * * *', () => {
 	const removed = require(`${__hooks}/lib/familienhub.js`).purgeDeleted($app);

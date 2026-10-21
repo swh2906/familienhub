@@ -1,5 +1,6 @@
 // Reine Logik der Aufgabenliste: Reiter, Sortierung, Fälligkeit, Rechte in der Oberfläche.
 import type { Task, TaskCompletion } from '#lib/db/types.js';
+import { parseUtc } from '#lib/features/calendar/tz.js';
 
 export type Tab = 'mine' | 'all' | 'done';
 
@@ -63,6 +64,31 @@ export function recentCompletions(
 		.sort((a, b) => b.completed_at.localeCompare(a.completed_at))
 		.slice(0, limit)
 		.map((completion) => ({ completion, task: byId.get(completion.task) }));
+}
+
+/**
+ * Pro Aufgabe nur der neueste Erledigt-Eintrag lässt sich zurücknehmen – ältere würden die
+ * Fälligkeit einer Serie sonst durcheinanderbringen.
+ */
+export function revertibleCompletions(entries: readonly DoneEntry[]): Set<string> {
+	const latest = new Map<string, TaskCompletion>();
+	for (const { completion } of entries) {
+		const current = latest.get(completion.task);
+		// Zeitpunkte vergleichen, nicht Text: Server („… 08:00:00.000Z“) und Gerät (ISO) schreiben verschieden.
+		if (!current || parseUtc(completion.completed_at) > parseUtc(current.completed_at)) {
+			latest.set(completion.task, completion);
+		}
+	}
+	return new Set([...latest.values()].map((c) => c.id));
+}
+
+/**
+ * Fälligkeit nach dem Zurücknehmen einer wiederkehrenden Aufgabe: wieder fällig am Tag des
+ * Abhakens (bzw. am alten Datum, falls das früher liegt). Das genaue frühere Datum ist nicht
+ * gespeichert; so taucht die Aufgabe sicher wieder als fällig auf.
+ */
+export function dueAfterRevert(currentDue: string, completedOn: string): string {
+	return currentDue && currentDue < completedOn ? currentDue : completedOn;
 }
 
 export type DueKind = 'overdue' | 'today' | 'tomorrow' | 'later' | 'none';

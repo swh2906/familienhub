@@ -5,12 +5,14 @@
 	import type { Membership, Task, TaskCompletion } from '#lib/db/types.js';
 	import { formatCompactDay, toDateString } from '#lib/features/meals/week.js';
 	import { membersOf } from '#lib/features/shopping/store.js';
+	import { parseUtc } from '#lib/features/calendar/tz.js';
 	import { describeRrule } from '#lib/features/tasks/describe.js';
 	import {
 		canComplete,
 		dueKind,
 		isOpen,
 		recentCompletions,
+		revertibleCompletions,
 		tasksForTab,
 		type Tab
 	} from '#lib/features/tasks/list.js';
@@ -18,7 +20,7 @@
 		completeTask,
 		completionsOf,
 		deleteTask,
-		reopenTask,
+		revertCompletion,
 		restoreTask,
 		tasksOf,
 		undoCompletion,
@@ -51,6 +53,28 @@
 		tab === 'done' ? [] : tasksForTab(data.current.tasks, tab, membership, today)
 	);
 	const done = $derived(recentCompletions(data.current.completions, data.current.tasks));
+	const revertible = $derived(revertibleCompletions(done));
+
+	/** Zurücknehmen: Admins und Erwachsene alles, Kinder ihr eigenes Erledigt (wie die Server-Regel). */
+	function canRevert(completion: TaskCompletion, task: Task | undefined): boolean {
+		return (
+			!!task &&
+			!task.deleted_at &&
+			revertible.has(completion.id) &&
+			(session.canEdit || completion.membership === membership)
+		);
+	}
+
+	async function revert(completion: TaskCompletion, task: Task) {
+		await revertCompletion(
+			completion,
+			task,
+			toDateString(new Date(parseUtc(completion.completed_at)))
+		);
+		showToast(m.task_reverted({ title: task.title }), () =>
+			completeTask(task, membership, today).then(() => undefined)
+		);
+	}
 	const openCount = $derived(tasksForTab(data.current.tasks, 'mine', membership, today).length);
 	const members = $derived(new Map(data.current.members.map((member) => [member.id, member])));
 	const activeMembers = $derived(data.current.members.filter((member) => !member.deleted_at));
@@ -156,11 +180,21 @@
 	{#if done.length === 0}
 		<p class="hint">{m.tasks_empty_done()}</p>
 	{:else}
+		<p class="hint">{m.task_revert_hint()}</p>
 		<ul class="card list" aria-label={m.tasks_tab_done()}>
 			{#each done as { completion, task } (completion.id)}
 				{@const person = members.get(completion.membership)}
 				<li class="row done">
-					<span class="check checked" aria-hidden="true"></span>
+					{#if task && canRevert(completion, task)}
+						<button
+							type="button"
+							class="check checked"
+							aria-label={m.task_revert_label({ title: task.title })}
+							onclick={() => revert(completion, task)}
+						></button>
+					{:else}
+						<span class="check checked" aria-hidden="true"></span>
+					{/if}
 					<div class="body">
 						<span class="title">{task?.title ?? '–'}</span>
 						<span class="meta">
@@ -175,13 +209,18 @@
 							color={person.color}
 							size={28}
 						/>{/if}
-					{#if task && task.status === 'done' && !task.rrule && canComplete(task, membership, session.canEdit) && !task.deleted_at}
+					{#if task && !task.deleted_at && session.canEdit}
 						<button
-							class="btn small"
 							type="button"
-							aria-label={m.task_reopen_label({ title: task.title })}
-							onclick={() => reopenTask(task)}>{m.task_reopen()}</button
+							class="edit"
+							aria-label={m.task_edit({ title: task.title })}
+							onclick={() => {
+								editing = task;
+								dialogOpen = true;
+							}}
 						>
+							<Icon name="edit" size={20} />
+						</button>
 					{/if}
 				</li>
 			{/each}
@@ -381,6 +420,14 @@
 	.check.checked::before {
 		border-color: var(--color-tasks);
 		background: var(--color-tasks);
+	}
+
+	button.check.checked {
+		cursor: pointer;
+	}
+
+	button.check.checked:hover::before {
+		opacity: 0.75;
 	}
 
 	.check.checked::after {

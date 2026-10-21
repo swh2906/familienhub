@@ -369,6 +369,8 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 - [x] „Nächste 7 Tage“: je Tag Personen, Termine, Konflikt, fällige Aufgaben und Essen (Handy Zeilen, Desktop 7 Spalten); Tag → Kalender, Essen → Kochansicht bzw. Wochenplan.
 - [x] Filter „Alle / Nur meins“ je Gerät (`fh-today-scope`), Kinder standardmäßig „Nur meins“.
 - [x] Logik in `features/today/dashboard.ts` mit Unit-Tests; E2E `today.e2e.ts` angepasst.
+- [x] Heller Modus mit mehr Kontrast: dunklerer Hintergrund, kräftigere Ränder, Schatten und Nebentext.
+- [x] Aufgaben → Erledigt: Haken antippen nimmt das Erledigt zurück (je Aufgabe das neueste; Serien wieder fällig am Tag des Abhakens), Erledigtes lässt sich bearbeiten.
 
 ### 12b. Feinschliff Kalender, Aufgaben, Einstellungen
 

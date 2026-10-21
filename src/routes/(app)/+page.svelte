@@ -579,7 +579,7 @@
 		background: var(--color-surface);
 		color: var(--color-text);
 		text-decoration: none;
-		box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+		box-shadow: var(--shadow-card);
 		border-left: 4px solid var(--stat-color);
 	}
 

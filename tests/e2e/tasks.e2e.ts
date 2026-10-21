@@ -153,3 +153,44 @@ test('Kinder haken eigene und nicht zugewiesene ab, fremde nicht', async ({ page
 	});
 	await expect(page.getByText(/vom Server abgelehnt/)).toHaveCount(0);
 });
+
+test('Erledigtes zurücknehmen und bearbeiten', async ({ page }) => {
+	const { email, household } = await createFamily();
+	const token = await apiToken(email);
+	await apiCreate(token, 'tasks', { household, title: 'Fenster putzen', status: 'open' });
+	await apiCreate(token, 'tasks', {
+		household,
+		title: 'Müll rausbringen',
+		due_date: today,
+		rrule: 'FREQ=WEEKLY',
+		status: 'open'
+	});
+
+	await login(page, email);
+	await openTasks(page);
+	await page.getByRole('button', { name: 'Fenster putzen erledigen' }).click();
+	await page.getByRole('button', { name: 'Müll rausbringen erledigen' }).click();
+	await expect(page.getByText(nextWeekLabel, { exact: true })).toBeVisible();
+
+	// Nach Ablauf von „Rückgängig“: im Reiter „Erledigt“ zurücknehmen.
+	await tab(page, 'Erledigt').click();
+	const doneList = page.getByRole('list', { name: 'Erledigt' });
+	await doneList.getByRole('button', { name: 'Fenster putzen: Erledigt zurücknehmen' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'ist wieder offen' })).toBeVisible();
+	await doneList.getByRole('button', { name: 'Müll rausbringen: Erledigt zurücknehmen' }).click();
+	await expect(page.getByText('Noch nichts erledigt.')).toBeVisible();
+
+	await tab(page, 'Alle').click();
+	await expect(page.getByRole('button', { name: 'Fenster putzen erledigen' })).toBeEnabled();
+	// Die Serie ist wieder am Tag des Abhakens fällig.
+	await expect(page.getByText('heute', { exact: true })).toBeVisible();
+
+	// Erledigtes lässt sich auch bearbeiten.
+	await page.getByRole('button', { name: 'Fenster putzen erledigen' }).click();
+	await tab(page, 'Erledigt').click();
+	await doneList.getByRole('button', { name: 'Fenster putzen bearbeiten' }).click();
+	const dialog = page.getByRole('dialog');
+	await dialog.getByLabel('Aufgabe').fill('Fenster putzen (innen)');
+	await dialog.getByRole('button', { name: 'Speichern' }).click();
+	await expect(doneList.getByText('Fenster putzen (innen)')).toBeVisible();
+});

@@ -134,6 +134,8 @@ function subscribeMissing(running: Running): void {
 export async function syncNow(): Promise<void> {
 	const running = current;
 	if (!running) return;
+	// Anmeldung ungültig: nicht weiter abgleichen (der Server sähe nur einen Gast), bis „Neu anmelden“.
+	if (syncStatus.authLost) return;
 	if (running.busy) {
 		running.again = true;
 		return;

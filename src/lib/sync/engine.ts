@@ -75,6 +75,13 @@ export class SyncEngine {
 					await this.db.outbox.update(seq, { inFlight: 0, attempts: entry.attempts + 1 });
 					return remoteError.kind === 'network' ? 'offline' : 'auth';
 				}
+				// Erst prüfen, ob die Anmeldung gilt: Mit ungültiger Anmeldung lehnt der Server alles ab,
+				// verwerfen hieße Datenverlust. Dann bleibt die Änderung und „Neu anmelden“ erscheint.
+				const auth = await this.checkAuth();
+				if (auth !== 'ok') {
+					await this.db.outbox.update(seq, { inFlight: 0 });
+					return auth;
+				}
 				await this.reject(entry, remoteError);
 				continue;
 			}
@@ -178,9 +185,26 @@ export class SyncEngine {
 		}
 	}
 
-	/** Ist der Familienraum noch sichtbar? false = gelöscht oder eigene Mitgliedschaft entfernt. */
+	/**
+	 * Ist der Familienraum noch sichtbar? false = gelöscht oder eigene Mitgliedschaft entfernt.
+	 * Mit ungültiger Anmeldung wäre er auch „nicht sichtbar“ – dann RemoteError 'auth' statt false,
+	 * damit die App nicht ihre lokalen Daten verwirft.
+	 */
 	async hasAccess(): Promise<boolean> {
-		return (await this.remote.fetchOne('households', this.household)) !== null;
+		if ((await this.remote.fetchOne('households', this.household)) !== null) return true;
+		const auth = await this.checkAuth();
+		if (auth === 'offline') throw new RemoteError('network', 'offline');
+		if (auth === 'auth') throw new RemoteError('auth', 'Anmeldung ungültig', 401);
+		return false;
+	}
+
+	/** Anmeldung prüfen: 'ok', 'auth' (ungültig) oder 'offline' (Server nicht erreichbar). */
+	private async checkAuth(): Promise<'ok' | 'auth' | 'offline'> {
+		try {
+			return (await this.remote.verifyAuth()) ? 'ok' : 'auth';
+		} catch {
+			return 'offline';
+		}
 	}
 
 	/**

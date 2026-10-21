@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Logo from '#lib/ui/Logo.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -18,10 +19,14 @@
 	let { children }: LayoutProps = $props();
 
 	// Abgleich läuft, solange die App-Seiten offen sind und ein Familienraum gewählt ist.
+	// $derived: Neustart nur bei anderem Familienraum, nicht bei jeder neu geladenen Mitgliederliste
+	// (ein Neustart setzt den Status zurück, z. B. „Neu anmelden“).
+	const syncHousehold = $derived(session.householdId);
 	$effect(() => {
-		const household = session.householdId;
+		const household = syncHousehold;
 		if (!household) return;
-		startSync(household);
+		// untrack: Was der Abgleich beim Start liest (z. B. den Status), darf ihn nicht neu starten.
+		untrack(() => startSync(household));
 		return () => void stopSync();
 	});
 
@@ -55,8 +60,9 @@
 		void import('#lib/testing/e2e-hook.js').then((hook) => hook.install());
 	}
 
+	// Neu anmelden ohne Datenverlust: lokale Daten und ausstehende Änderungen bleiben.
 	async function relogin() {
-		await session.logout();
+		await session.reauthenticate();
 		await goto(resolve('/(auth)/login'));
 	}
 

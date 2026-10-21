@@ -380,6 +380,18 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 - [ ] Aufgaben: Kopf wie im Kalender, Gruppen Überfällig/Heute/Diese Woche/Später/Ohne Datum, nächste Fälligkeit bei Wiederholungen.
 - [ ] Einstellungen: Abschnitte einklappbar, Sprungleiste.
 
+### 13. Verfügbarkeit (`feat/schritt-13-verfuegbarkeit`)
+
+Ziel: Termine, Einkauf usw. funktionieren auch ohne erreichbaren Server; beim Wiederverbinden wird abgeglichen. So selten wie möglich neu anmelden, nie Daten verlieren.
+
+- [x] Start-Zeitlimit 4 s (`session.svelte.ts`), danach mit gespeicherten Daten weiter; Verlängerung läuft im Hintergrund.
+- [x] Zeitlimit 15 s pro Anfrage (`pb/client.ts`), gilt als Netzwerkfehler.
+- [x] Anmeldung 365 statt 7 Tage (Migration `1793100001_users_long_session.js`), bei jedem Start verlängert.
+- [x] Abgelaufene Anmeldung: kein Rauswurf, lokal weiterarbeiten; „Neu anmelden“ behält lokale Daten (nur anderes Konto oder Abmelden löscht).
+- [x] Behoben: Der Server behandelt ungültige Anmeldungen still als Gast. Der Abgleich hielt das für „abgelehnt“ bzw. „kein Zugriff“ und verwarf Änderungen bzw. löschte die lokale Datenbank. Jetzt prüft er die Anmeldung (`verifyAuth`), bevor er verwirft oder löscht.
+- [x] Behoben: Neustart des Abgleichs bei jeder neu geladenen Mitgliederliste (setzte den Status zurück).
+- [x] Tests: `availability.e2e.ts` (Server lehnt ab / antwortet nicht / Anmeldung abgelaufen / anderes Konto), Engine-Tests, Integrationstest zur Gültigkeit.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

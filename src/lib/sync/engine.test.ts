@@ -12,6 +12,8 @@ const HOUSEHOLD = 'household000001';
 class FakeRemote implements Remote {
 	records = new Map<string, RemoteRecord>();
 	online = true;
+	/** false = Anmeldung ungültig: Server behandelt Anfragen wie die eines Gastes. */
+	authValid = true;
 	calls: string[] = [];
 	rejectIf:
 		((collection: CollectionName, fields: Record<string, unknown>) => number | null) | null = null;
@@ -60,6 +62,11 @@ class FakeRemote implements Remote {
 			.map(([, record]) => record)
 			.filter((r) => (scope === 'id' ? r.id : r[scope]) === household && r.updated >= since)
 			.sort((a, b) => a.updated.localeCompare(b.updated));
+	}
+
+	async verifyAuth() {
+		if (!this.online) throw new RemoteError('network', 'offline');
+		return this.authValid;
 	}
 
 	async subscribe() {
@@ -240,6 +247,32 @@ describe('Push', () => {
 		expect(await engine.push()).toBe('auth');
 		expect(await db.outbox.count()).toBe(1);
 	});
+
+	it('ungültige Anmeldung (Server behandelt wie Gast): nichts verwerfen, „auth“ melden', async () => {
+		const item = await items.create({ household: HOUSEHOLD, name: 'Brot' });
+		remote.authValid = false;
+		remote.rejectIf = () => 400;
+		expect(await engine.push()).toBe('auth');
+		expect((await items.get(item.id))?.name).toBe('Brot');
+		expect(await db.outbox.count()).toBe(1);
+		expect(notices).toEqual([]);
+
+		// Nach erneuter Anmeldung geht die Änderung raus.
+		remote.authValid = true;
+		remote.rejectIf = null;
+		expect(await engine.push()).toBe('done');
+		expect(remote.records.has(`shopping_items/${item.id}`)).toBe(true);
+	});
+
+	it('Ablehnung, Server dann nicht erreichbar: Änderung bleibt für später', async () => {
+		await items.create({ household: HOUSEHOLD, name: 'Brot' });
+		remote.rejectIf = () => 400;
+		remote.verifyAuth = async () => {
+			throw new RemoteError('network', 'offline');
+		};
+		expect(await engine.push()).toBe('offline');
+		expect(await db.outbox.count()).toBe(1);
+	});
 });
 
 describe('Pull und Feld-Merge', () => {
@@ -314,6 +347,11 @@ describe('Zugriff und Aufräumen', () => {
 		expect(await engine.hasAccess()).toBe(false);
 		remote.online = false;
 		await expect(engine.hasAccess()).rejects.toBeInstanceOf(RemoteError);
+	});
+
+	it('ungültige Anmeldung ist kein Zugriffsverlust (sonst würden lokale Daten verworfen)', async () => {
+		remote.authValid = false;
+		await expect(engine.hasAccess()).rejects.toMatchObject({ kind: 'auth' });
 	});
 
 	it('isOlderTombstone versteht ISO- und PocketBase-Format', () => {

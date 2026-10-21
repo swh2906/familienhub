@@ -723,3 +723,21 @@ describe('Antworten auf Hinweise (hint_responses)', () => {
 		expect(child.membership).toBe(membership.child);
 	});
 });
+
+describe('Anmeldung', () => {
+	it('gilt 365 Tage und wird bei jeder Verlängerung erneuert', async () => {
+		const { pb } = await signUp(server.url, { email: 'lang@r.test', name: 'Lang' });
+		const exp = (token: string) =>
+			(
+				JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as {
+					exp: number;
+				}
+			).exp;
+		const days = (exp(pb.authStore.token) * 1000 - Date.now()) / 86_400_000;
+		expect(days).toBeGreaterThan(364);
+		expect(days).toBeLessThanOrEqual(365);
+
+		await pb.collection('users').authRefresh();
+		expect(exp(pb.authStore.token) * 1000 - Date.now()).toBeGreaterThan(364 * 86_400_000);
+	});
+});

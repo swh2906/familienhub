@@ -1,6 +1,8 @@
 // Reine Logik der Aufgabenliste: Reiter, Sortierung, Fälligkeit, Rechte in der Oberfläche.
 import type { Task, TaskCompletion } from '#lib/db/types.js';
+import { addDaysTo } from '#lib/features/calendar/expand.js';
 import { parseUtc } from '#lib/features/calendar/tz.js';
+import { nextDueDate } from './recurrence.js';
 
 export type Tab = 'mine' | 'all' | 'done';
 
@@ -90,4 +92,41 @@ export function dueKind(due: string, today: string): DueKind {
 	const [y, m, d] = today.split('-').map(Number);
 	const tomorrow = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 	return due === tomorrow ? 'tomorrow' : 'later';
+}
+
+/**
+ * Fälligkeit für Anzeige und Gruppen: das gespeicherte Datum, bei Wiederholungen ohne Datum das
+ * nächste Vorkommen ab heute (einschließlich).
+ */
+export function effectiveDue(task: Task, today: string): string {
+	if (task.due_date) return task.due_date;
+	return task.rrule ? nextDueDate(task.rrule, '', addDaysTo(today, -1)) : '';
+}
+
+export type TaskGroup = 'overdue' | 'today' | 'week' | 'later' | 'none';
+
+const GROUP_ORDER: TaskGroup[] = ['overdue', 'today', 'week', 'later', 'none'];
+
+/** Gruppe nach Fälligkeit: „week“ = morgen bis in 6 Tagen. */
+export function groupOf(due: string, today: string): TaskGroup {
+	if (!due) return 'none';
+	if (due < today) return 'overdue';
+	if (due === today) return 'today';
+	return due <= addDaysTo(today, 6) ? 'week' : 'later';
+}
+
+/** Aufgaben in Gruppen (feste Reihenfolge, nur nicht leere); die Reihenfolge innerhalb bleibt. */
+export function groupTasks(
+	tasks: readonly Task[],
+	today: string
+): { group: TaskGroup; tasks: Task[] }[] {
+	const groups = new Map<TaskGroup, Task[]>();
+	for (const task of tasks) {
+		const group = groupOf(effectiveDue(task, today), today);
+		groups.set(group, [...(groups.get(group) ?? []), task]);
+	}
+	return GROUP_ORDER.filter((g) => groups.has(g)).map((group) => ({
+		group,
+		tasks: groups.get(group)!
+	}));
 }

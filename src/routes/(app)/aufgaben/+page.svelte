@@ -10,6 +10,9 @@
 	import {
 		canComplete,
 		dueKind,
+		effectiveDue,
+		groupTasks,
+		type TaskGroup,
 		isOpen,
 		recentCompletions,
 		tasksForTab,
@@ -51,6 +54,14 @@
 	const visible = $derived(
 		tab === 'done' ? [] : tasksForTab(data.current.tasks, tab, membership, today)
 	);
+	const groups = $derived(groupTasks(visible, today));
+	const groupLabels: Record<TaskGroup, () => string> = {
+		overdue: m.tasks_group_overdue,
+		today: m.tasks_group_today,
+		week: m.tasks_group_week,
+		later: m.tasks_group_later,
+		none: m.tasks_group_none
+	};
 	const done = $derived(recentCompletions(data.current.completions, data.current.tasks));
 
 	/** Zurücknehmen: Admins und Erwachsene alles, Kinder ihr eigenes Erledigt (wie die Server-Regel). */
@@ -109,15 +120,16 @@
 	}
 
 	function dueText(task: Task): string {
-		switch (dueKind(task.due_date, today)) {
+		const due = effectiveDue(task, today);
+		switch (dueKind(due, today)) {
 			case 'overdue':
-				return m.task_due_overdue({ date: formatCompactDay(task.due_date) });
+				return m.task_due_overdue({ date: formatCompactDay(due) });
 			case 'today':
 				return m.task_due_today();
 			case 'tomorrow':
 				return m.task_due_tomorrow();
 			case 'later':
-				return formatCompactDay(task.due_date);
+				return formatCompactDay(due);
 			default:
 				return '';
 		}
@@ -143,8 +155,10 @@
 </svelte:head>
 
 <div class="head">
-	<h1>{m.tasks_title()}</h1>
-	{#if openCount > 0}<span class="count">{m.tasks_open_count({ count: openCount })}</span>{/if}
+	<div class="heading">
+		<h1>{m.tasks_title()}</h1>
+		{#if openCount > 0}<span class="count">{m.tasks_open_count({ count: openCount })}</span>{/if}
+	</div>
 	{#if session.canEdit}
 		<button
 			class="btn btn-primary new"
@@ -221,62 +235,69 @@
 {:else if data.loaded && visible.length === 0}
 	<p class="hint">{tab === 'mine' ? m.tasks_empty_mine() : m.tasks_empty_all()}</p>
 {:else}
-	<ul class="card list" aria-label={tab === 'mine' ? m.tasks_tab_mine() : m.tasks_tab_all()}>
-		{#each visible as task (task.id)}
-			{@const allowed = canComplete(task, membership, session.canEdit)}
-			{@const kind = dueKind(task.due_date, today)}
-			<li class="row">
-				<button
-					type="button"
-					class="check"
-					disabled={!allowed || !isOpen(task)}
-					title={allowed ? undefined : m.task_complete_denied({ title: task.title })}
-					aria-label={allowed
-						? m.task_complete({ title: task.title })
-						: m.task_complete_denied({ title: task.title })}
-					onclick={() => complete(task)}
-				></button>
-				<div class="body">
-					<span class="title">{task.title}</span>
-					<span class="meta">
-						{#if kind !== 'none'}
-							<span class="due {kind}">{dueText(task)}</span>
-						{/if}
-						{#if task.rrule}
-							<span class="repeat"
-								><Icon name="pending" size={14} />{describeRrule(task.rrule)}</span
+	{#each groups as { group, tasks: items } (group)}
+		<section class="group" aria-labelledby="tasks-group-{group}">
+			<h2 class="group-title" class:overdue={group === 'overdue'} id="tasks-group-{group}">
+				{groupLabels[group]()} <span class="group-count">{items.length}</span>
+			</h2>
+			<ul class="card list" aria-labelledby="tasks-group-{group}">
+				{#each items as task (task.id)}
+					{@const allowed = canComplete(task, membership, session.canEdit)}
+					{@const kind = dueKind(effectiveDue(task, today), today)}
+					<li class="row">
+						<button
+							type="button"
+							class="check"
+							disabled={!allowed || !isOpen(task)}
+							title={allowed ? undefined : m.task_complete_denied({ title: task.title })}
+							aria-label={allowed
+								? m.task_complete({ title: task.title })
+								: m.task_complete_denied({ title: task.title })}
+							onclick={() => complete(task)}
+						></button>
+						<div class="body">
+							<span class="title">{task.title}</span>
+							<span class="meta">
+								{#if kind !== 'none'}
+									<span class="due {kind}">{dueText(task)}</span>
+								{/if}
+								{#if task.rrule}
+									<span class="repeat"
+										><Icon name="pending" size={14} />{describeRrule(task.rrule)}</span
+									>
+								{/if}
+								<span class="visually-hidden">{assigneeNames(task)}</span>
+							</span>
+							{#if task.notes}<span class="notes">{task.notes}</span>{/if}
+						</div>
+						<span class="avatars" aria-hidden="true">
+							{#each task.assignees ?? [] as id (id)}
+								{@const person = members.get(id)}
+								{#if person}<MemberAvatar
+										name={person.display_name}
+										color={person.color}
+										size={28}
+									/>{/if}
+							{/each}
+						</span>
+						{#if session.canEdit}
+							<button
+								type="button"
+								class="edit"
+								aria-label={m.task_edit({ title: task.title })}
+								onclick={() => {
+									editing = task;
+									dialogOpen = true;
+								}}
 							>
+								<Icon name="edit" size={20} />
+							</button>
 						{/if}
-						<span class="visually-hidden">{assigneeNames(task)}</span>
-					</span>
-					{#if task.notes}<span class="notes">{task.notes}</span>{/if}
-				</div>
-				<span class="avatars" aria-hidden="true">
-					{#each task.assignees ?? [] as id (id)}
-						{@const person = members.get(id)}
-						{#if person}<MemberAvatar
-								name={person.display_name}
-								color={person.color}
-								size={28}
-							/>{/if}
-					{/each}
-				</span>
-				{#if session.canEdit}
-					<button
-						type="button"
-						class="edit"
-						aria-label={m.task_edit({ title: task.title })}
-						onclick={() => {
-							editing = task;
-							dialogOpen = true;
-						}}
-					>
-						<Icon name="edit" size={20} />
-					</button>
-				{/if}
-			</li>
-		{/each}
-	</ul>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/each}
 {/if}
 
 {#if toast}
@@ -302,12 +323,43 @@
 {/if}
 
 <style>
+	/* Wie im Kalender: Überschrift links, „Neue Aufgabe“ rechts in derselben Zeile. */
 	.head {
 		display: flex;
-		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--space-2) var(--space-3);
+		gap: var(--space-3);
 		margin-bottom: var(--space-3);
+	}
+
+	.heading {
+		display: grid;
+		min-width: 0;
+	}
+
+	/* Gruppen: Überfällig, Heute, Nächste 7 Tage, Später, Ohne Datum. */
+	.group + .group {
+		margin-top: var(--space-4);
+	}
+
+	.group-title {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		margin: 0 0 var(--space-2);
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.group-title.overdue {
+		color: var(--color-warning);
+	}
+
+	.group-count {
+		font-weight: 600;
+		letter-spacing: 0;
 	}
 
 	h1 {
@@ -322,6 +374,7 @@
 	}
 
 	.new {
+		flex: none;
 		margin-left: auto;
 		padding: 0 var(--space-4);
 	}

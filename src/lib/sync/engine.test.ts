@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FamilyDb } from '#lib/db/database.js';
 import { Repository } from '#lib/db/repository.js';
 import type { CollectionName } from '#lib/db/types.js';
-import { isOlderTombstone, SyncEngine, type SyncNotice } from './engine.js';
+import { isExpiredCompletion, isOlderTombstone, SyncEngine, type SyncNotice } from './engine.js';
 import { RemoteError, type Remote, type RemoteRecord } from './remote.js';
 
 const HOUSEHOLD = 'household000001';
@@ -362,5 +362,21 @@ describe('Zugriff und Aufräumen', () => {
 			'pen000000000001'
 		]);
 		expect(await db.collection('memberships').get('mem000000000001')).toBeDefined();
+	});
+
+	it('Erledigt-Verlauf: lokal nach 14 Tagen entfernt', async () => {
+		const now = Date.parse('2026-10-17T12:00:00Z');
+		expect(isExpiredCompletion('2026-10-02 12:00:00.000Z', now)).toBe(true);
+		expect(isExpiredCompletion('2026-10-04T12:00:00.000Z', now)).toBe(false);
+		expect(isExpiredCompletion('', now)).toBe(false);
+
+		const table = db.collection('task_completions');
+		const base = { task: 't', membership: 'm', updated: 'x', created: '', updated_by: '' };
+		await table.bulkPut([
+			{ ...base, id: 'old000000000002', completed_at: '2026-10-01 08:00:00.000Z', deleted_at: '' },
+			{ ...base, id: 'new000000000002', completed_at: '2026-10-15 08:00:00.000Z', deleted_at: '' }
+		] as never);
+		expect(await engine.purgeTombstones(now)).toBe(1);
+		expect((await table.toArray()).map((r) => r.id)).toEqual(['new000000000002']);
 	});
 });

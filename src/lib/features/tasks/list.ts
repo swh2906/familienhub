@@ -1,5 +1,6 @@
 // Reine Logik der Aufgabenliste: Reiter, Sortierung, Fälligkeit, Rechte in der Oberfläche.
 import type { Task, TaskCompletion } from '#lib/db/types.js';
+import { parseUtc } from '#lib/features/calendar/tz.js';
 
 export type Tab = 'mine' | 'all' | 'done';
 
@@ -51,18 +52,32 @@ export interface DoneEntry {
 	task: Task | undefined;
 }
 
-/** Zuletzt Erledigtes, neueste zuerst. */
+/** So lange bleibt Erledigtes sichtbar; danach löscht der Aufräum-Job es endgültig. */
+export const DONE_VISIBLE_DAYS = 14;
+
+/** Erledigtes der letzten 14 Tage, neueste zuerst. */
 export function recentCompletions(
 	completions: readonly TaskCompletion[],
 	tasks: readonly Task[],
+	now = Date.now(),
 	limit = 50
 ): DoneEntry[] {
 	const byId = new Map(tasks.map((t) => [t.id, t]));
+	const since = now - DONE_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
 	return completions
-		.filter((c) => !c.deleted_at)
-		.sort((a, b) => b.completed_at.localeCompare(a.completed_at))
+		.filter((c) => !c.deleted_at && parseUtc(c.completed_at) >= since)
+		.sort((a, b) => parseUtc(b.completed_at) - parseUtc(a.completed_at))
 		.slice(0, limit)
 		.map((completion) => ({ completion, task: byId.get(completion.task) }));
+}
+
+/**
+ * Fälligkeit nach dem Zurücknehmen einer wiederkehrenden Aufgabe: wieder fällig am Tag des
+ * Abhakens (bzw. am alten Datum, falls das früher liegt). Das genaue frühere Datum ist nicht
+ * gespeichert; so taucht die Aufgabe sicher wieder als fällig auf.
+ */
+export function dueAfterRevert(currentDue: string, completedOn: string): string {
+	return currentDue && currentDue < completedOn ? currentDue : completedOn;
 }
 
 export type DueKind = 'overdue' | 'today' | 'tomorrow' | 'later' | 'none';

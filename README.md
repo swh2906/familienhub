@@ -91,6 +91,10 @@ flowchart LR
 - Tastatur: Der erste Tab-Stopp ist „Zum Inhalt springen“; die Taste **N** startet „Neu“ (Aufgabe, Termin, Rezept, Einkaufsfeld).
 - `pnpm test:e2e` prüft alle Seiten mit axe (WCAG 2.1 AA) in Hell und Dunkel sowie den Offline-Start.
 
+## Heute: Dashboard
+
+Die Startseite zeigt oben vier Kennzahlen (Termine heute, Einkauf offen, Aufgaben fällig, Überschneidungen), darunter „Als Nächstes“ (Termine und wann das Kochen beginnt), die fälligen Aufgaben, die nächsten 7 Tage (Termine, Essen, Aufgaben je Tag) und den Einkauf mit Schnelleingabe. „Alle / Nur meins“ filtert Termine und Aufgaben auf die eigenen und die der ganzen Familie; die Auswahl gilt je Gerät, Kinder starten mit „Nur meins“.
+
 ## Kalender: Termine ziehen
 
 In Tag- und Wochenansicht lassen sich Termine ziehen (Maus sofort, Finger nach langem Drücken): verschieben auf andere Uhrzeit oder anderen Tag, am unteren Rand die Dauer ändern; Raster 15 Minuten. Bei Serien fragt Homi „Nur dieser Termin / Alle Termine“, bei Einzelterminen gibt es „Rückgängig“. Kinder können nicht ziehen. Ist heute zu sehen, springt die Zeitachse zur aktuellen Uhrzeit.
@@ -108,7 +112,7 @@ Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (
 - **Datenexport** (Einstellungen → Daten und Konto): alle Daten der Familie als JSON-Datei, direkt aus der lokalen Datenbank (geht auch offline). Gelöschte Einträge und Einladungen sind nicht enthalten.
 - **Konto löschen**: mit Passwort. Das Konto verschwindet, die Mitgliedschaft bleibt ohne Namen bestehen; Einträge zeigen „Ehemaliges Mitglied“. Der letzte Admin muss vorher die Admin-Rolle übergeben oder den Familienraum löschen.
 - **Familienraum löschen** (Admin): mit dem Namen als Bestätigung; alle Daten werden sofort endgültig gelöscht. Andere Geräte merken das beim nächsten Abgleich und verwerfen ihre lokalen Daten (ebenso, wenn jemand aus der Familie entfernt wurde).
-- **Aufräum-Job**: Gelöschte Einträge (`deleted_at`) werden nach 30 Tagen endgültig entfernt, täglich um 3:30 Uhr (Serverzeit). Mitgliedschaften bleiben für „Ehemaliges Mitglied“.
+- **Aufräum-Job**: Gelöschte Einträge (`deleted_at`) werden nach 30 Tagen endgültig entfernt, der Erledigt-Verlauf der Aufgaben nach 14 Tagen; täglich um 3:30 Uhr (Serverzeit), die Geräte räumen lokal genauso auf. Mitgliedschaften bleiben für „Ehemaliges Mitglied“.
 
 ## Datenmodell und Rechte
 

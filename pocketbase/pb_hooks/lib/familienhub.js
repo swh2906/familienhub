@@ -495,6 +495,8 @@ function deleteHousehold(e) {
 
 // Endgültig löschen nach 30 Tagen. Mitgliedschaften bleiben (für „Ehemaliges Mitglied“).
 const PURGE_AFTER_MS = 30 * DAY_MS;
+// Erledigt-Verlauf der Aufgaben: nach 14 Tagen endgültig entfernen (auch nicht gelöschte).
+const COMPLETIONS_KEEP_MS = 14 * DAY_MS;
 const PURGE_COLLECTIONS = [
 	'task_completions',
 	'tasks',
@@ -507,7 +509,10 @@ const PURGE_COLLECTIONS = [
 	'invites'
 ];
 
-/** Entfernt Einträge, deren `deleted_at` älter als 30 Tage ist. Gibt die Anzahl pro Collection zurück. */
+/**
+ * Entfernt Einträge, deren `deleted_at` älter als 30 Tage ist, und Erledigt-Einträge älter als
+ * 14 Tage. Gibt die Anzahl pro Collection zurück.
+ */
 function purgeDeleted(app, now) {
 	const cutoff = pbDate((now || Date.now()) - PURGE_AFTER_MS);
 	const removed = {};
@@ -530,6 +535,19 @@ function purgeDeleted(app, now) {
 			}
 		}
 		removed[collection] = count;
+	}
+
+	const completions = app.findRecordsByFilter(
+		'task_completions',
+		'completed_at < {:cutoff}',
+		'',
+		0,
+		0,
+		{ cutoff: pbDate((now || Date.now()) - COMPLETIONS_KEEP_MS) }
+	);
+	for (const record of completions) {
+		app.delete(record);
+		removed.task_completions += 1;
 	}
 	return removed;
 }
@@ -561,6 +579,7 @@ module.exports = {
 	deleteHousehold,
 	purgeDeleted,
 	PURGE_AFTER_MS,
+	COMPLETIONS_KEEP_MS,
 	stampUpdatedBy,
 	stampShoppingItem,
 	checkSameHousehold,

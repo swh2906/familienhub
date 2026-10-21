@@ -79,6 +79,7 @@ flowchart LR
 ```
 
 - Ohne Verbindung arbeitet die App normal weiter; die Kopfzeile zeigt „Offline“ bzw. „N ausstehend“.
+- Auch ein Start ganz ohne Netz geht: Die Live-Updates werden nachgeholt, sobald der Server wieder erreichbar ist.
 - Konflikte: pro Feld gewinnt die zuletzt beim Server angekommene Änderung.
 - Lehnt der Server eine Änderung ab (z. B. fehlende Rechte), wird sie zurückgesetzt und ein Hinweis angezeigt.
 - Abmelden löscht die lokale Datenbank.

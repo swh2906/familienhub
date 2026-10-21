@@ -1,9 +1,11 @@
 // Steuert die Sync-Engine in der App: Start/Stopp, Auslöser, Wiederholung mit wachsender Wartezeit.
 // Auslöser: lokale Änderung (kurz verzögert), wieder online, App wieder sichtbar, alle 60 Sekunden.
+// Live-Abos, die offline nicht zustande kamen (App ohne Netz gestartet), werden beim nächsten
+// erfolgreichen Abgleich nachgeholt.
 import { liveQuery } from 'dexie';
 import { getDb } from '#lib/db/database.js';
 import { localChanges } from '#lib/db/repository.js';
-import { COLLECTIONS } from '#lib/db/types.js';
+import { COLLECTIONS, type CollectionName } from '#lib/db/types.js';
 import { getPocketBase } from '#lib/pb/client.js';
 import { SyncEngine } from './engine.js';
 import { PocketBaseRemote } from './pocketbase-remote.js';
@@ -20,11 +22,14 @@ interface Running {
 	engine: SyncEngine;
 	cleanup: (() => void)[];
 	unsubscribe: (() => Promise<void>)[];
+	/** Collections mit bestehendem oder gerade entstehendem Live-Abo. */
+	subscribed: Set<CollectionName>;
 	busy: boolean;
 	again: boolean;
 	retryDelay: number;
 	retryTimer: ReturnType<typeof setTimeout> | null;
 	purged: boolean;
+	remote: PocketBaseRemote;
 }
 
 let current: Running | null = null;
@@ -42,8 +47,10 @@ export function startSync(household: string): void {
 	const running: Running = {
 		household,
 		engine,
+		remote,
 		cleanup: [],
 		unsubscribe: [],
+		subscribed: new Set(),
 		busy: false,
 		again: false,
 		retryDelay: RETRY_MIN_MS,
@@ -89,23 +96,38 @@ export function startSync(household: string): void {
 	});
 
 	// Live-Abos zuerst, damit zwischen Abgleich und Abo nichts verloren geht.
+	subscribeMissing(running);
+
+	void syncNow();
+}
+
+/**
+ * Legt die Live-Abos an, die noch fehlen. Steht ein Abo, wird noch einmal abgeglichen: Der erste
+ * Abgleich läuft parallel zum Anmelden der Abos, Änderungen dazwischen kämen sonst erst nach
+ * 60 Sekunden. Schlägt ein Abo fehl (offline), wird es beim nächsten erfolgreichen Abgleich erneut
+ * versucht.
+ */
+function subscribeMissing(running: Running): void {
 	for (const { name, scope } of COLLECTIONS) {
-		remote
-			.subscribe(name, scope, household, (event) => {
-				void engine.applyRealtime(name, event);
+		if (running.subscribed.has(name)) continue;
+		running.subscribed.add(name);
+		running.remote
+			.subscribe(name, scope, running.household, (event) => {
+				void running.engine.applyRealtime(name, event);
 				// Familienraum gelöscht: gleich abgleichen, dabei fällt der fehlende Zugriff auf.
 				if (name === 'households' && event.action === 'delete') void syncNow();
 			})
 			.then((unsubscribe) => {
-				if (current === running) running.unsubscribe.push(unsubscribe);
-				else void unsubscribe();
+				if (current !== running) return void unsubscribe();
+				running.unsubscribe.push(unsubscribe);
+				// Was zwischen dem ersten Abgleich und dem fertigen Abo geändert wurde, nachholen.
+				void syncNow();
 			})
 			.catch(() => {
-				// Offline: Der Abgleich bei „wieder online“ und das Intervall holen Verpasstes nach.
+				// Offline: beim nächsten erfolgreichen Abgleich erneut versuchen.
+				running.subscribed.delete(name);
 			});
 	}
-
-	void syncNow();
 }
 
 /** Ein Abgleich: erst senden, dann holen, dann Neues aus der Zwischenzeit senden. */
@@ -136,6 +158,7 @@ export async function syncNow(): Promise<void> {
 		} else {
 			syncStatus.online = true;
 			running.retryDelay = RETRY_MIN_MS;
+			if (running.subscribed.size < COLLECTIONS.length) subscribeMissing(running);
 			if (!running.purged) {
 				running.purged = true;
 				await running.engine.purgeTombstones();

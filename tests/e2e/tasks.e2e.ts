@@ -169,6 +169,8 @@ test('Erledigtes zurücknehmen und bearbeiten', async ({ page }) => {
 	await login(page, email);
 	await openTasks(page);
 	await page.getByRole('button', { name: 'Fenster putzen erledigen' }).click();
+	// Erst klicken, wenn die Liste nachgerutscht ist – sonst trifft der Klick die falsche Zeile.
+	await expect(page.getByRole('button', { name: 'Fenster putzen erledigen' })).toHaveCount(0);
 	await page.getByRole('button', { name: 'Müll rausbringen erledigen' }).click();
 	await expect(page.getByText(nextWeekLabel, { exact: true })).toBeVisible();
 

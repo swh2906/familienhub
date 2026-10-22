@@ -170,8 +170,7 @@
 		justify-content: space-between;
 		height: calc(var(--header-height) + env(safe-area-inset-top));
 		padding: env(safe-area-inset-top) var(--space-2) 0 var(--space-4);
-		border-bottom: 1px solid var(--color-border);
-		background: var(--color-surface);
+		background: var(--color-bg);
 	}
 
 	.brand {
@@ -180,17 +179,18 @@
 		gap: var(--space-3);
 		min-height: var(--touch-target);
 		color: var(--color-text);
-		font-weight: 700;
-		font-size: 1.0625rem;
+		font-weight: 800;
+		font-size: var(--fs-title);
+		letter-spacing: var(--tracking-tight);
 		text-decoration: none;
 	}
 
 	.logo {
 		display: grid;
 		place-items: center;
-		width: 32px;
-		height: 32px;
-		border-radius: 10px;
+		width: 36px;
+		height: 36px;
+		border-radius: 12px;
 		background: var(--color-primary);
 		color: var(--color-primary-text);
 		font-weight: 800;
@@ -220,7 +220,7 @@
 		place-items: center;
 		min-width: var(--touch-target);
 		min-height: var(--touch-target);
-		border-radius: var(--radius);
+		border-radius: var(--radius-pill);
 		color: var(--color-text);
 	}
 
@@ -235,7 +235,7 @@
 
 	main {
 		padding: var(--space-6) var(--space-4);
-		padding-bottom: calc(var(--nav-height) + var(--space-8) + env(safe-area-inset-bottom));
+		padding-bottom: calc(var(--nav-height) + var(--space-6) + env(safe-area-inset-bottom));
 	}
 
 	main:focus {
@@ -267,14 +267,15 @@
 		min-width: 12rem;
 	}
 
-	/* Handy: untere Leiste mit fünf gleich breiten Einträgen */
+	/* Handy: schwebende dunkle Leiste mit fünf gleich breiten Einträgen */
 	.nav {
 		position: fixed;
-		inset: auto 0 0 0;
+		inset: auto var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom)) var(--space-4);
 		z-index: 10;
-		border-top: 1px solid var(--color-border);
-		background: var(--color-surface);
-		padding: var(--space-1) var(--space-1) env(safe-area-inset-bottom);
+		padding: var(--space-2);
+		border-radius: 30px;
+		background: var(--color-ink);
+		box-shadow: var(--shadow-float);
 	}
 
 	.nav ul {
@@ -291,30 +292,25 @@
 		align-items: center;
 		justify-content: center;
 		gap: 2px;
-		min-height: var(--nav-height);
+		min-height: 56px;
 		min-width: var(--touch-target);
 		padding: var(--space-1);
-		border-radius: var(--radius);
-		color: var(--color-text-muted);
-		font-size: 0.75rem;
-		font-weight: 500;
+		border-radius: 22px;
+		color: var(--color-on-ink-muted);
+		font-size: 0.6875rem;
+		font-weight: 700;
 		text-decoration: none;
 	}
 
 	.nav-icon {
 		display: grid;
 		place-items: center;
-		padding: 2px 16px;
-		border-radius: 999px;
 	}
 
 	.nav a[aria-current='page'] {
-		color: var(--color-primary-strong);
-		font-weight: 700;
-	}
-
-	.nav a[aria-current='page'] .nav-icon {
-		background: var(--color-primary-soft);
+		background: var(--color-primary);
+		color: var(--color-primary-text);
+		font-weight: 800;
 	}
 
 	/* Tablet (z. B. iPad hochkant): schmale Leiste links, Icon über Beschriftung */
@@ -332,12 +328,29 @@
 
 		.nav {
 			position: sticky;
+			inset: auto;
 			top: var(--header-height);
 			align-self: start;
 			height: calc(100dvh - var(--header-height));
 			padding: var(--space-4) var(--space-2);
-			border-top: none;
-			border-right: 1px solid var(--color-border);
+			border-radius: 0;
+			background: var(--color-bg);
+			box-shadow: none;
+		}
+
+		.nav a {
+			color: var(--color-text-muted);
+			font-size: var(--fs-mini);
+		}
+
+		.nav-icon {
+			padding: 4px 16px;
+			border-radius: var(--radius-pill);
+		}
+
+		.nav a[aria-current='page'] {
+			background: none;
+			color: var(--color-text);
 		}
 
 		.nav ul {
@@ -355,7 +368,8 @@
 		}
 
 		.nav a[aria-current='page'] .nav-icon {
-			background: var(--color-primary-soft);
+			background: var(--color-ink);
+			color: var(--color-on-ink);
 		}
 
 		main {
@@ -383,7 +397,8 @@
 			justify-content: flex-start;
 			gap: var(--space-3);
 			min-height: var(--touch-target);
-			padding: 0 var(--space-3);
+			padding: 0 var(--space-4);
+			border-radius: var(--radius-pill);
 			font-size: 0.9375rem;
 		}
 
@@ -398,8 +413,14 @@
 			background: var(--color-surface-2);
 		}
 
-		.nav a[aria-current='page'] {
-			background: var(--color-primary-soft);
+		.nav a[aria-current='page'],
+		.nav a[aria-current='page']:hover {
+			background: var(--color-ink);
+			color: var(--color-on-ink);
+		}
+
+		.nav a[aria-current='page'] .nav-icon {
+			color: inherit;
 		}
 
 		main {

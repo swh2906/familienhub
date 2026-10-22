@@ -10,6 +10,7 @@ import {
 	isMyTask,
 	loadScope,
 	saveScope,
+	validScope,
 	stats,
 	tasksInScope,
 	upNext,
@@ -89,8 +90,9 @@ describe('Filter „Nur meins“', () => {
 		expect(isMyEvent(occ('mine', '09:00', '10:00', ['me', 'x']), 'me')).toBe(true);
 		expect(isMyEvent(occ('other', '09:00', '10:00', ['x']), 'me')).toBe(false);
 		const all = [occ('a', '09:00', '10:00', ['x']), occ('b', '09:00', '10:00', ['me'])];
-		expect(eventsInScope(all, 'all', 'me')).toHaveLength(2);
-		expect(eventsInScope(all, 'mine', 'me').map((o) => o.key)).toEqual(['b']);
+		expect(eventsInScope(all, 'all')).toHaveLength(2);
+		expect(eventsInScope(all, 'me').map((o) => o.key)).toEqual(['b']);
+		expect(eventsInScope(all, 'x').map((o) => o.key)).toEqual(['a']);
 	});
 
 	it('Aufgaben: mir zugewiesene und nicht zugewiesene', () => {
@@ -98,8 +100,9 @@ describe('Filter „Nur meins“', () => {
 		expect(isMyTask(task('meine', { assignees: ['me'] }), 'me')).toBe(true);
 		expect(isMyTask(task('fremd', { assignees: ['x'] }), 'me')).toBe(false);
 		const all = [task('a', { assignees: ['x'] }), task('b')];
-		expect(tasksInScope(all, 'mine', 'me').map((t) => t.id)).toEqual(['b']);
-		expect(tasksInScope(all, 'all', 'me')).toHaveLength(2);
+		expect(tasksInScope(all, 'me').map((t) => t.id)).toEqual(['b']);
+		expect(tasksInScope(all, 'x').map((t) => t.id)).toEqual(['a', 'b']);
+		expect(tasksInScope(all, 'all')).toHaveLength(2);
 	});
 });
 
@@ -115,19 +118,25 @@ describe('Auswahl speichern', () => {
 		return store;
 	}
 
-	it('ohne Auswahl: Kinder „Nur meins“, Erwachsene alles', () => {
+	it('ohne Auswahl: Kinder sich selbst, Erwachsene alle', () => {
 		stubStorage();
-		expect(loadScope(true)).toBe('mine');
-		expect(loadScope(false)).toBe('all');
+		expect(loadScope(true, 'kind')).toBe('kind');
+		expect(loadScope(false, 'mama')).toBe('all');
 	});
 
-	it('gespeicherte Auswahl gilt, ungültige nicht', () => {
+	it('gespeicherte Auswahl gilt; altes „mine“ wird zur eigenen Person', () => {
 		const store = stubStorage({ [SCOPE_STORAGE_KEY]: 'mine' });
-		expect(loadScope(false)).toBe('mine');
-		saveScope('all');
-		expect(store.get(SCOPE_STORAGE_KEY)).toBe('all');
-		store.set(SCOPE_STORAGE_KEY, 'quatsch');
-		expect(loadScope(true)).toBe('mine');
+		expect(loadScope(false, 'mama')).toBe('mama');
+		saveScope('papa');
+		expect(store.get(SCOPE_STORAGE_KEY)).toBe('papa');
+		expect(loadScope(false, 'mama')).toBe('papa');
+	});
+
+	it('Auswahl einer Person, die es nicht (mehr) gibt, gilt als alle', () => {
+		const members = [{ id: 'mama' }, { id: 'papa' }];
+		expect(validScope('papa', members)).toBe('papa');
+		expect(validScope('weg', members)).toBe('all');
+		expect(validScope('all', members)).toBe('all');
 	});
 
 	it('gesperrter Speicher: Standard, kein Fehler', () => {
@@ -139,8 +148,8 @@ describe('Auswahl speichern', () => {
 				throw new Error('blocked');
 			}
 		});
-		expect(loadScope(false)).toBe('all');
-		expect(() => saveScope('mine')).not.toThrow();
+		expect(loadScope(false, 'mama')).toBe('all');
+		expect(() => saveScope('mama')).not.toThrow();
 	});
 });
 

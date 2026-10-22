@@ -40,12 +40,14 @@
 		type CompletionUndo
 	} from '#lib/features/tasks/store.js';
 	import {
+		ALL,
 		eventsInScope,
 		loadScope,
 		saveScope,
 		stats,
 		tasksInScope,
 		upNext,
+		validScope,
 		weekStrip,
 		type Scope
 	} from '#lib/features/today/dashboard.js';
@@ -89,17 +91,22 @@
 		return () => clearInterval(timer);
 	});
 
-	let scope: Scope = $state(loadScope(session.membership?.role === 'child'));
+	let chosen: Scope = $state(loadScope(session.membership?.role === 'child', membership));
 	function setScope(value: Scope) {
-		scope = value;
+		chosen = value;
 		saveScope(value);
 	}
+	// Personen-Filter: aktive Mitglieder (ohne ehemalige), Auswahl nur gültig, solange es sie gibt.
+	const people = $derived(
+		data.current.members.filter((member) => !member.deleted_at && member.user)
+	);
+	const scope = $derived(data.loaded ? validScope(chosen, people) : chosen);
 
 	const members = $derived(new Map(data.current.members.map((member) => [member.id, member])));
 	const occurrences = $derived(
-		eventsInScope(expandEvents(data.current.events, today, lastDay, timeZone), scope, membership)
+		eventsInScope(expandEvents(data.current.events, today, lastDay, timeZone), scope)
 	);
-	const tasks = $derived(tasksInScope(data.current.tasks, scope, membership));
+	const tasks = $derived(tasksInScope(data.current.tasks, scope));
 	const todayEvents = $derived(onDay(occurrences, today));
 	const allDayToday = $derived(todayEvents.filter((o) => o.allDay));
 	const openItems = $derived(groupItems(data.current.items).open.flatMap((group) => group.items));
@@ -193,14 +200,23 @@
 		<p class="greeting">{greeting}</p>
 		<p class="date">{formatDay(today)}</p>
 	</div>
-	<div class="scope" role="group" aria-label={m.today_scope_label()}>
-		<button type="button" aria-pressed={scope === 'all'} onclick={() => setScope('all')}
-			>{m.today_scope_all()}</button
-		>
-		<button type="button" aria-pressed={scope === 'mine'} onclick={() => setScope('mine')}
-			>{m.today_scope_mine()}</button
-		>
-	</div>
+	{#if people.length > 1}
+		<div class="scope pills scroll" role="group" aria-label={m.today_scope_label()}>
+			<button type="button" aria-pressed={scope === ALL} onclick={() => setScope(ALL)}
+				>{m.today_scope_all()}</button
+			>
+			{#each people as person (person.id)}
+				<button
+					type="button"
+					aria-pressed={scope === person.id}
+					onclick={() => setScope(person.id)}
+				>
+					<MemberAvatar name={person.display_name} color={person.color} size={32} />
+					{person.display_name}
+				</button>
+			{/each}
+		</div>
+	{/if}
 </header>
 
 <!-- Kennzahlen: ein Blick, was heute ansteht; jede Zahl führt in den Bereich. -->
@@ -534,31 +550,9 @@
 		gap: 2px;
 	}
 
-	/* Umschalter „Alle / Nur meins“ (wie die Reiter der Aufgaben). */
+	/* Personen-Filter (Pillen aus dem Theme), auf dem Handy wischbar über die volle Breite. */
 	.scope {
-		display: inline-flex;
-		gap: 2px;
-		padding: 3px;
-		border-radius: 12px;
-		background: var(--color-surface-2);
-	}
-
-	.scope button {
-		min-height: var(--touch-target);
-		padding: 0 var(--space-4);
-		border: 0;
-		border-radius: 9px;
-		background: transparent;
-		color: var(--color-text-muted);
-		font: inherit;
-		font-weight: 600;
-		cursor: pointer;
-	}
-
-	.scope button[aria-pressed='true'] {
-		background: var(--color-surface);
-		color: var(--color-text);
-		box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+		max-width: 100%;
 	}
 
 	/* Kennzahlen: auf dem Handy 2 × 2, ab Tablet in einer Reihe. */

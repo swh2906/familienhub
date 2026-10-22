@@ -21,6 +21,7 @@
 		{ value: 'dark', label: m.theme_dark }
 	];
 	const accentLabels: Record<Accent, () => string> = {
+		terrakotta: m.accent_terrakotta,
 		petrol: m.accent_petrol,
 		indigo: m.accent_indigo,
 		graphit: m.accent_graphit

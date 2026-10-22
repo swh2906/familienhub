@@ -175,7 +175,7 @@
 	{/if}
 </div>
 
-<div class="tabs" role="group" aria-label={m.tasks_tabs_label()}>
+<div class="pills" role="group" aria-label={m.tasks_tabs_label()}>
 	{#each tabs as option (option.value)}
 		<button type="button" aria-pressed={tab === option.value} onclick={() => (tab = option.value)}>
 			{option.label()}
@@ -323,6 +323,10 @@
 {/if}
 
 <style>
+	.pills {
+		margin-bottom: var(--space-6);
+	}
+
 	/* Wie im Kalender: Überschrift links, „Neue Aufgabe“ rechts in derselben Zeile. */
 	.head {
 		display: flex;
@@ -377,33 +381,6 @@
 		flex: none;
 		margin-left: auto;
 		padding: 0 var(--space-4);
-	}
-
-	.tabs {
-		display: inline-flex;
-		gap: 2px;
-		margin-bottom: var(--space-4);
-		padding: 3px;
-		border-radius: 12px;
-		background: var(--color-surface-2);
-	}
-
-	.tabs button {
-		min-height: var(--touch-target);
-		padding: 0 var(--space-4);
-		border: 0;
-		border-radius: 9px;
-		background: transparent;
-		color: var(--color-text-muted);
-		font: inherit;
-		font-weight: 600;
-		cursor: pointer;
-	}
-
-	.tabs button[aria-pressed='true'] {
-		background: var(--color-surface);
-		color: var(--color-text);
-		box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
 	}
 
 	.list {

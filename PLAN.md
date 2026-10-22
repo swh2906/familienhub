@@ -392,6 +392,23 @@ Ziel: Termine, Einkauf usw. funktionieren auch ohne erreichbaren Server; beim Wi
 - [x] Behoben: Neustart des Abgleichs bei jeder neu geladenen Mitgliederliste (setzte den Status zurück).
 - [x] Tests: `availability.e2e.ts` (Server lehnt ab / antwortet nicht / Anmeldung abgelaufen / anderes Konto), Engine-Tests, Integrationstest zur Gültigkeit.
 
+### 14. Design-System (Richtung „Mischung“: Farben & Aufbau aus A, Schrift, Formen & Balken aus B)
+
+Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
+
+**14a – Grundlagen, Navigation, Heute** (`feat/schritt-14a-design-grundlagen`)
+
+- [x] Hausschrift Plus Jakarta Sans lokal (`static/fonts/`, SIL OFL), Typo-Skala (`--fs-*`), Radien (`--radius-pill`), Schatten.
+- [x] Farben aus A für Hell und Dunkel (Creme, gedeckte Bereichsfarben), „Tinte“ für dunkle Flächen; Terrakotta als Standard-Akzent (Petrol, Indigo, Graphit wählbar); App-Icons neu.
+- [x] Navigation: schwebende dunkle Leiste am Handy, Pillen-Seitenleiste ab Tablet.
+- [x] Baustein `.pills` (Reiter und Umschalter) ersetzt vier nachgebaute Umschalter (Einkauf, Essen, Aufgaben, Kalender).
+- [x] Heute: Personen-Filter (Alle / je Mitglied) statt „Alle / Nur meins“; Einkaufs-Kacheln in zarter Einkaufsfarbe.
+
+**14b – übrige Seiten** (offen)
+
+- [ ] Einkauf als Liste nach Kategorien (wie Entwurf C), Kalender, Aufgaben, Essen, Einstellungen auf Typo-Skala und Bausteine.
+- [ ] Schnelleingabe als dunkle Pille; danach eigener Schritt: Termine/Aufgaben aus Text erkennen.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

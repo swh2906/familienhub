@@ -6,7 +6,7 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 import { ROOT } from './lib/paths.ts';
 
-const PETROL = '#0e6e66';
+const BRAND = '#a3461f'; // Terrakotta (Akzent seit Schritt 14)
 const OUT = path.join(ROOT, 'static', 'icons');
 
 /** Haus aus H (wie src/lib/ui/Logo.svelte), Größe als Anteil der Kantenlänge, mittig. */
@@ -34,7 +34,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 for (const { file, size, rounded, scale } of variants) {
 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}">
-		<rect width="64" height="64" rx="${rounded ? 14 : 0}" fill="${PETROL}"/>${letter(scale)}</svg>`;
+		<rect width="64" height="64" rx="${rounded ? 14 : 0}" fill="${BRAND}"/>${letter(scale)}</svg>`;
 	await page.setViewportSize({ width: size, height: size });
 	await page.setContent(`<html><body style="margin:0;background:transparent">${svg}</body></html>`);
 	await page.locator('svg').screenshot({ path: path.join(OUT, file), omitBackground: true });

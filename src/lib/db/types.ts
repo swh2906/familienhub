@@ -12,6 +12,8 @@ export interface BaseRecord {
 export interface Household extends BaseRecord {
 	name: string;
 	timezone: string;
+	/** Geplante Mahlzeiten im Wochenplan; leer = alle drei. */
+	meal_slots?: ('breakfast' | 'lunch' | 'dinner')[] | null;
 }
 
 export interface Membership extends BaseRecord {

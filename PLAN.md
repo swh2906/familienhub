@@ -424,6 +424,13 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] Dunkle Eingabe-Pille oben auf „Heute“ mit Live-Vorschau; Art per Tipp umstellbar. Kinder legen nur Einkäufe an.
 - [x] E2E: alle drei Arten landen im richtigen Bereich; Umstellen der Art; Kinder.
 
+### 16. Wochenplan: Ziehen auf iPhone/iPad, wählbare Mahlzeiten (`feat/schritt-16-wochenplan`)
+
+- [x] Ziehen mit Zeiger-Ereignissen statt HTML-Drag-and-Drop (ging auf iPhone gar nicht, auf dem iPad unzuverlässig): Maus sofort, Finger nach langem Drücken; Vorschau am Finger, Ziel hervorgehoben, kein Scrollen während des Ziehens.
+- [x] Geplante Mahlzeiten je Familie (`households.meal_slots`, Migration; leer = alle): Einstellung „Mahlzeiten“ im Wochenplan, mindestens eine bleibt; ausgeblendete mit Einträgen bleiben sichtbar; Dialog bietet nur geplante an.
+- [x] Rechte: Admin und Erwachsene (Erwachsene nur dieses Feld), Kinder nicht – mit Integrationstest.
+- [x] E2E: Ziehen mit dem Finger (langes Drücken), Bewegung vorher = Scrollen, Mahlzeiten einstellen.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

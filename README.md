@@ -96,6 +96,8 @@ flowchart LR
 
 ## Heute: Dashboard
 
+**Schnelleingabe:** Oben auf „Heute“ eine Zeile für alles. „Morgen 15 Uhr Zahnarzt Mia“ wird ein Termin, „Mia Zimmer aufräumen Samstag“ eine Aufgabe für Mia, „2 l Milch“ ein Einkauf. Homi zeigt vor dem Speichern, was es verstanden hat; die Art lässt sich per Tipp umstellen oder mit „Termin:“, „Aufgabe:“, „Einkauf:“ erzwingen. Die Erkennung läuft nur auf dem Gerät.
+
 Die Startseite zeigt oben vier Kennzahlen (Termine heute, Einkauf offen, Aufgaben fällig, Überschneidungen), darunter „Als Nächstes“ (Termine und wann das Kochen beginnt), die fälligen Aufgaben, die nächsten 7 Tage (Termine, Essen, Aufgaben je Tag) und den Einkauf mit Schnelleingabe. „Alle / Nur meins“ filtert Termine und Aufgaben auf die eigenen und die der ganzen Familie; die Auswahl gilt je Gerät, Kinder starten mit „Nur meins“.
 
 ## Kalender: Termine ziehen

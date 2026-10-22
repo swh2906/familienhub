@@ -29,6 +29,7 @@
 		weekKey
 	} from '#lib/features/meals/week.js';
 	import HintCenter from '#lib/features/hints/HintCenter.svelte';
+	import QuickAdd from '#lib/features/quickadd/QuickAdd.svelte';
 	import { formatQuantity, groupItems, parseQuickInput } from '#lib/features/shopping/list.js';
 	import ShoppingTile from '#lib/features/shopping/ShoppingTile.svelte';
 	import { addItem, itemsOf, membersOf, toggleItem } from '#lib/features/shopping/store.js';
@@ -218,6 +219,19 @@
 		</div>
 	{/if}
 </header>
+
+<!-- Schnelleingabe für alles: Termin, Aufgabe oder Einkauf aus einer Zeile. -->
+<div class="quick-all">
+	<QuickAdd
+		{household}
+		{membership}
+		canEdit={session.canEdit}
+		members={data.current.members}
+		items={data.current.items}
+		{today}
+		{timeZone}
+	/>
+</div>
 
 <!-- Kennzahlen: ein Blick, was heute ansteht; jede Zahl führt in den Bereich. -->
 <nav class="stats" aria-label={m.today_stats_label()}>
@@ -553,6 +567,10 @@
 	/* Personen-Filter (Pillen aus dem Theme), auf dem Handy wischbar über die volle Breite. */
 	.scope {
 		max-width: 100%;
+	}
+
+	.quick-all {
+		margin-bottom: var(--space-4);
 	}
 
 	/* Kennzahlen: auf dem Handy 2 × 2, ab Tablet in einer Reihe. */

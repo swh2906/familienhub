@@ -409,6 +409,13 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [ ] Einkauf als Liste nach Kategorien (wie Entwurf C), Kalender, Aufgaben, Essen, Einstellungen auf Typo-Skala und Bausteine.
 - [ ] Schnelleingabe als dunkle Pille; danach eigener Schritt: Termine/Aufgaben aus Text erkennen.
 
+### 15. Schnelleingabe für alles (`feat/schritt-15-schnelleingabe`)
+
+- [x] Erkennung aus einer Zeile, nur lokal (`features/quickadd/parse.ts`, 31 Tests): Datum (heute/morgen/übermorgen, Wochentage, „nächsten …“, „23.10.“), Uhrzeit und Spannen („15 Uhr“, „15:30“, „15–16:30 Uhr“), Personen der Familie (ganze Wörter), Präfixe „Termin:/Aufgabe:/Einkauf:“.
+- [x] Zuordnung: Uhrzeit → Termin; Tätigkeit → Aufgabe (führender Name wird zur Zuweisung); „… kaufen“ → Einkauf; nur Datum → ganztägiger Termin; sonst Einkauf.
+- [x] Dunkle Eingabe-Pille oben auf „Heute“ mit Live-Vorschau; Art per Tipp umstellbar. Kinder legen nur Einkäufe an.
+- [x] E2E: alle drei Arten landen im richtigen Bereich; Umstellen der Art; Kinder.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

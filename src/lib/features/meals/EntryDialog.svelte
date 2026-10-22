@@ -174,7 +174,7 @@
 
 	h2 {
 		margin: 0;
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 	}
 
 	.row {

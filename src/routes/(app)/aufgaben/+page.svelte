@@ -351,7 +351,7 @@
 		gap: var(--space-2);
 		margin: 0 0 var(--space-2);
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		font-weight: 700;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
@@ -368,7 +368,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 	}
 
@@ -472,7 +472,7 @@
 	}
 
 	.title {
-		font-size: 1.0625rem;
+		font-size: var(--fs-lead);
 		font-weight: 600;
 		overflow-wrap: break-word;
 		hyphens: auto;
@@ -487,7 +487,7 @@
 		flex-wrap: wrap;
 		gap: 0 var(--space-3);
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.due.overdue {
@@ -508,7 +508,7 @@
 
 	.notes {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		white-space: pre-line;
 		overflow-wrap: break-word;
 	}
@@ -543,7 +543,7 @@
 
 	.small {
 		padding: 0 var(--space-3);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.toast {

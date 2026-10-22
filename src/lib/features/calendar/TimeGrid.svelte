@@ -384,7 +384,7 @@
 	.dayname {
 		padding: var(--space-2) var(--space-1);
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		text-align: center;
 	}
 
@@ -394,7 +394,7 @@
 	}
 
 	.dayname.today strong {
-		color: var(--color-primary-strong);
+		color: var(--color-calendar);
 	}
 
 	.allday .label {
@@ -451,7 +451,7 @@
 	}
 
 	.column.today {
-		background-color: color-mix(in srgb, var(--color-primary-soft) 35%, transparent);
+		background-color: color-mix(in srgb, var(--color-calendar-bg) 60%, transparent);
 	}
 
 	.slot {

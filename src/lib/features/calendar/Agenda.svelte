@@ -115,7 +115,7 @@
 	.empty {
 		margin: 0;
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	ul {
@@ -154,7 +154,7 @@
 		flex: none;
 		width: 5.25rem;
 		color: var(--color-calendar);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 650;
 		font-variant-numeric: tabular-nums;
 	}
@@ -180,7 +180,7 @@
 
 	.location {
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 	}
 
 	li {

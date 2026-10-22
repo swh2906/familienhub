@@ -177,7 +177,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 		text-wrap: balance;
 	}
@@ -217,7 +217,7 @@
 		border-radius: 999px;
 		background: var(--color-meals-bg);
 		color: var(--color-meals);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		font-weight: 600;
 	}
 
@@ -263,7 +263,7 @@
 		background: var(--color-surface);
 		color: var(--color-text);
 		font: inherit;
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 		cursor: pointer;
 	}
 
@@ -307,7 +307,7 @@
 
 	.muted {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.alt {
@@ -319,7 +319,7 @@
 		border-radius: 999px;
 		background: var(--color-surface-2);
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 	}
 
 	.amount {

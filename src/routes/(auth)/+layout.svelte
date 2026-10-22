@@ -73,7 +73,7 @@
 	.name {
 		margin: 0;
 		font-weight: 750;
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 	}
 
 	.tagline {

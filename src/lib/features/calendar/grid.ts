@@ -70,3 +70,19 @@ export function minutesToTime(minutes: number): string {
 	const m = minutes % 60;
 	return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
+
+/** Unter dieser Dauer (Minuten) zeigt ein Termin nur eine Zeile: Uhrzeit und Titel. */
+export const COMPACT_MINUTES = 50;
+
+/**
+ * Lage eines Termins in einer Gruppe überlappender Termine (Prozent der Spaltenbreite).
+ * Statt gleich schmaler Streifen überlappen sich die Termine leicht: jeder außer dem letzten ist
+ * 1,7-mal so breit wie sein Anteil, spätere liegen darüber. So bleibt mehr Platz für den Titel.
+ */
+export function slotGeometry(column: number, columns: number): { left: number; width: number } {
+	if (columns <= 1) return { left: 0, width: 100 };
+	const share = 100 / columns;
+	const left = column * share;
+	const width = column === columns - 1 ? share : Math.min(100 - left, share * 1.7);
+	return { left, width };
+}

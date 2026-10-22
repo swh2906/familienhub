@@ -112,3 +112,11 @@ export async function login(page: Page, identity: string, password = PASSWORD): 
 	await page.getByRole('button', { name: 'Anmelden' }).click();
 	await expect(page.getByRole('heading', { level: 1, name: 'Heute' })).toBeVisible();
 }
+
+/** Einstellungen: Abschnitt über die Sprungleiste aufklappen (auf dem Handy sind manche zu). */
+export async function openSettingsSection(page: Page, name: string): Promise<void> {
+	await page
+		.getByRole('navigation', { name: 'Bereiche der Einstellungen' })
+		.getByRole('button', { name, exact: true })
+		.click();
+}

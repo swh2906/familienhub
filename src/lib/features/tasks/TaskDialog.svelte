@@ -311,10 +311,18 @@
 		font-weight: 650;
 	}
 
+	/* Speichern/Abbrechen bleiben beim Scrollen unten sichtbar (lange Formulare auf dem Handy). */
 	.actions {
+		position: sticky;
+		bottom: calc(-1 * var(--space-6));
+		z-index: 1;
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-3);
+		margin: 0 calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+		padding: var(--space-4) var(--space-6) var(--space-6);
+		border-top: 1px solid var(--color-border);
+		background: var(--color-surface);
 	}
 
 	.danger {

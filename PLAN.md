@@ -375,10 +375,10 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 
 ### 12b. Feinschliff Kalender, Aufgaben, Einstellungen
 
-- [ ] Kalender: kurze Termine einzeilig mit „…“, eigene Farbe für die Jetzt-Linie (hinter Terminen), breitere Spalten bei Überschneidungen.
-- [ ] Dialoge Termin/Aufgabe: Speichern/Abbrechen bleiben unten sichtbar.
-- [ ] Aufgaben: Kopf wie im Kalender, Gruppen Überfällig/Heute/Diese Woche/Später/Ohne Datum, nächste Fälligkeit bei Wiederholungen.
-- [ ] Einstellungen: Abschnitte einklappbar, Sprungleiste.
+- [x] Kalender: kurze Termine (< 50 Min.) einzeilig, Titel vor Uhrzeit, kein Umbruch mitten im Wort; Jetzt-Linie rot hinter den Terminen; überlappende Termine 1,7-fach breit (`slotGeometry`).
+- [x] Dialoge Termin/Aufgabe: Speichern/Abbrechen bleiben unten sichtbar.
+- [x] Aufgaben: Kopf wie im Kalender, Gruppen Überfällig/Heute/Nächste 7 Tage/Später/Ohne Datum, nächste Fälligkeit bei Wiederholungen ohne Datum.
+- [x] Einstellungen: Sprungleiste, Abschnitte einklappbar (`ui/Collapsible.svelte`); auf dem Handy sind Einladen, Kind, Hinweise, Daten anfangs zu.
 
 ### 13. Verfügbarkeit (`feat/schritt-13-verfuegbarkeit`)
 

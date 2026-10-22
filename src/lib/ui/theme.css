@@ -59,6 +59,50 @@
 	--accent-dark-strong: #93e3d8;
 }
 
+:root[data-accent='salbei'] {
+	--accent-light: #496a4c;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #e3ece2;
+	--accent-light-strong: #35503a;
+	--accent-dark: #9cc59f;
+	--accent-dark-on: #132016;
+	--accent-dark-soft: #23312a;
+	--accent-dark-strong: #c6e2c8;
+}
+
+:root[data-accent='taubenblau'] {
+	--accent-light: #3e5f8a;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #e2e9f3;
+	--accent-light-strong: #2d4769;
+	--accent-dark: #a7c0e6;
+	--accent-dark-on: #111a28;
+	--accent-dark-soft: #222c3d;
+	--accent-dark-strong: #cddcf3;
+}
+
+:root[data-accent='pflaume'] {
+	--accent-light: #7b3f6c;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #f1e3ec;
+	--accent-light-strong: #5e2f52;
+	--accent-dark: #dba6cc;
+	--accent-dark-on: #261321;
+	--accent-dark-soft: #3a2433;
+	--accent-dark-strong: #efcfe4;
+}
+
+:root[data-accent='ocker'] {
+	--accent-light: #865810;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #f5e8cf;
+	--accent-light-strong: #674309;
+	--accent-dark: #e6b866;
+	--accent-dark-on: #251a08;
+	--accent-dark-soft: #3a2e18;
+	--accent-dark-strong: #f3d8a3;
+}
+
 :root[data-accent='indigo'] {
 	--accent-light: #4f46e5;
 	--accent-light-on: #ffffff;
@@ -138,6 +182,10 @@
 
 	/* Vorschaufarben für die Auswahl in den Einstellungen */
 	--swatch-terrakotta: #a3461f;
+	--swatch-salbei: #496a4c;
+	--swatch-taubenblau: #3e5f8a;
+	--swatch-pflaume: #7b3f6c;
+	--swatch-ocker: #865810;
 	--swatch-petrol: #0e6e66;
 	--swatch-indigo: #4f46e5;
 	--swatch-graphit: #2f3136;
@@ -210,6 +258,14 @@
 		--color-tasks: #d2b8ea;
 		--color-tasks-bg: #33283f;
 		--swatch-terrakotta: #eb9a77;
+		--swatch-salbei: #9cc59f;
+		--swatch-taubenblau: #a7c0e6;
+		--swatch-pflaume: #dba6cc;
+		--swatch-ocker: #e6b866;
+		--swatch-salbei: #9cc59f;
+		--swatch-taubenblau: #a7c0e6;
+		--swatch-pflaume: #dba6cc;
+		--swatch-ocker: #e6b866;
 		--swatch-petrol: #4fc9b9;
 		--swatch-indigo: #a5b4fc;
 		--swatch-graphit: #e6e6e4;

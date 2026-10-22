@@ -22,7 +22,11 @@
 	];
 	const accentLabels: Record<Accent, () => string> = {
 		terrakotta: m.accent_terrakotta,
+		salbei: m.accent_salbei,
 		petrol: m.accent_petrol,
+		taubenblau: m.accent_taubenblau,
+		pflaume: m.accent_pflaume,
+		ocker: m.accent_ocker,
 		indigo: m.accent_indigo,
 		graphit: m.accent_graphit
 	};

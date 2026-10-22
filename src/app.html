@@ -8,15 +8,17 @@
 		<meta name="theme-color" content="#f6f2ea" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#1b1916" media="(prefers-color-scheme: dark)" />
 		<link rel="manifest" href="/manifest.webmanifest" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 		<script>
 			// Gespeichertes Farbschema und Akzentfarbe sofort setzen, damit die Seite nicht kurz aufblitzt.
 			try {
 				const theme = localStorage.getItem('fh-theme');
 				if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+				// Muss zu ACCENTS in src/lib/ui/theme.ts passen (Terrakotta ist Standard, ohne Attribut).
 				const accent = localStorage.getItem('fh-accent');
-				if (accent === 'indigo' || accent === 'graphit')
-					document.documentElement.dataset.accent = accent;
+				const accents = ['salbei', 'petrol', 'taubenblau', 'indigo', 'pflaume', 'ocker', 'graphit'];
+				if (accents.includes(accent)) document.documentElement.dataset.accent = accent;
 			} catch {
 				// Speicher nicht verfügbar (z. B. privater Modus): Systemeinstellung gilt.
 			}

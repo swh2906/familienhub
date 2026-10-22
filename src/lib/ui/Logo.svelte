@@ -1,12 +1,12 @@
 <script lang="ts">
-	// Homi-Logo: kleines Haus aus einem H (Giebeldach über den beiden H-Pfosten).
+	// Homi-Logo: Haus mit einem H darin (Umriss mit Dach, Wänden und abgerundetem Boden).
 	// Dieselbe Form wie im Favicon und den App-Icons (scripts/icons.ts). Rein dekorativ.
 	let { size = 28 }: { size?: number } = $props();
 </script>
 
-<svg viewBox="8 8 48 48" width={size} height={size} aria-hidden="true" focusable="false">
-	<path d="M12 30 L32 13 L52 30" stroke-width="5" />
-	<path d="M21 29 V51 M43 29 V51 M21 40 H43" stroke-width="6.5" />
+<svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false">
+	<path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+	<path d="M9.5 21v-7M14.5 21v-7M9.5 16.5h5" />
 </svg>
 
 <style>
@@ -14,6 +14,7 @@
 		display: block;
 		fill: none;
 		stroke: currentColor;
+		stroke-width: 2.1;
 		stroke-linecap: round;
 		stroke-linejoin: round;
 	}

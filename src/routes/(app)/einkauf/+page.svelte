@@ -13,6 +13,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { formatQuantity, groupItems, parseQuickInput } from '#lib/features/shopping/list.js';
+	import ShoppingRow from '#lib/features/shopping/ShoppingRow.svelte';
 	import ShoppingTile from '#lib/features/shopping/ShoppingTile.svelte';
 	import {
 		addItem,
@@ -248,40 +249,43 @@
 	</section>
 {/if}
 
-{#each list.open as group, index (group.category)}
-	<!-- IDs aus der Position, nicht aus dem Namen („Obst & Gemüse“ enthält Leerzeichen). -->
-	<section class="group" aria-labelledby="category-{index}">
-		<h2 id="category-{index}">{group.category}</h2>
-		<ul class="grid">
-			{#each group.items as item (item.id)}
-				<li>
-					<ShoppingTile
-						variant="open"
-						name={item.name}
-						quantity={formatQuantity(item)}
-						category={item.category}
-						adder={adderOf(item)}
-						fromPlan={!!item.reason}
-						editable={editsOnTap(item)}
-						label={editsOnTap(item)
-							? m.shopping_edit({ name: item.name })
-							: tileLabel(item, m.shopping_tile_buy)}
-						onactivate={() => openTile(item)}
-						onlongpress={canChange(item) ? () => (editing = item) : undefined}
-					/>
-				</li>
-			{/each}
-		</ul>
-	</section>
-{/each}
+<div class="groups">
+	{#each list.open as group, index (group.category)}
+		<!-- IDs aus der Position, nicht aus dem Namen („Obst & Gemüse“ enthält Leerzeichen). -->
+		<section class="group" aria-labelledby="category-{index}">
+			<h2 id="category-{index}">{group.category}</h2>
+			<ul class="rows">
+				{#each group.items as item (item.id)}
+					<li>
+						<ShoppingRow
+							variant="open"
+							name={item.name}
+							quantity={formatQuantity(item)}
+							category={item.category}
+							detail={item.reason ?? ''}
+							adder={adderOf(item)}
+							fromPlan={!!item.reason}
+							editable={editsOnTap(item)}
+							label={editsOnTap(item)
+								? m.shopping_edit({ name: item.name })
+								: tileLabel(item, m.shopping_tile_buy)}
+							onactivate={() => openTile(item)}
+							onlongpress={canChange(item) ? () => (editing = item) : undefined}
+						/>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/each}
+</div>
 
 {#if recent.length > 0}
 	<section class="group recent" aria-labelledby="recent-heading">
 		<h2 id="recent-heading">{m.shopping_recent()}</h2>
-		<ul class="grid">
+		<ul class="rows">
 			{#each recent as item (item.id)}
 				<li>
-					<ShoppingTile
+					<ShoppingRow
 						variant="recent"
 						name={item.name}
 						category={item.category}
@@ -334,8 +338,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
-		letter-spacing: -0.02em;
+		font-size: var(--fs-display);
 	}
 
 	.count {
@@ -361,9 +364,9 @@
 	}
 
 	.mode[aria-pressed='true'] {
-		border-color: var(--color-primary);
-		background: var(--color-primary-soft);
-		color: var(--color-primary-strong);
+		border-color: var(--color-ink);
+		background: var(--color-ink);
+		color: var(--color-on-ink);
 	}
 
 	.edit-hint {
@@ -392,13 +395,14 @@
 		flex: 1;
 		min-width: 0;
 		min-height: 52px;
-		padding: 0 var(--space-4);
+		padding: 0 var(--space-6);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
+		border-radius: var(--radius-pill);
 		background: var(--color-surface);
 		color: var(--color-text);
 		font: inherit;
-		font-size: 1.0625rem;
+		font-size: var(--fs-lead);
+		font-weight: 600;
 	}
 
 	.quick input:focus-visible {
@@ -427,17 +431,41 @@
 	}
 
 	.group h2 {
-		margin: 0 0 var(--space-2);
-		color: var(--color-text-muted);
-		font-size: 0.8125rem;
-		font-weight: 700;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
+		margin: 0 var(--space-1) var(--space-2);
+		font-size: var(--fs-lead);
 	}
 
 	.recent h2 {
-		padding-top: var(--space-4);
+		color: var(--color-text-muted);
+	}
+
+	/* Liste je Kategorie als Karte mit Trennlinien (Entwurf C). */
+	.rows {
+		margin: 0;
+		padding: 0 var(--space-4);
+		list-style: none;
+		border-radius: var(--radius-card);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+	}
+
+	.rows > li + li {
 		border-top: 1px solid var(--color-border);
+	}
+
+	.recent .rows {
+		background: var(--color-surface-2);
+		box-shadow: none;
+	}
+
+	/* Breite Bildschirme: Kategorien nebeneinander. */
+	@media (min-width: 900px) {
+		.groups {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+			gap: 0 var(--space-6);
+			align-items: start;
+		}
 	}
 
 	/* Bring-Raster: 3 Kacheln nebeneinander auf dem Handy, mehr auf größeren Bildschirmen. */

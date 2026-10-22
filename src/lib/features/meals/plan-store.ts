@@ -1,6 +1,6 @@
 // Wochenplan lesen und schreiben – nur über die lokale Datenbank; der Sync erledigt den Rest.
 import { repo } from '#lib/db/index.js';
-import type { MealPlanEntry } from '#lib/db/types.js';
+import type { Household, MealPlanEntry } from '#lib/db/types.js';
 import type { Slot } from './plan.js';
 
 /** Einträge eines Haushalts zwischen zwei Tagen (einschließlich), auch gelöschte. */
@@ -14,6 +14,16 @@ export function entriesBetween(
 		.between(from, to, true, true)
 		.and((entry) => entry.household === household)
 		.toArray();
+}
+
+/** Der Familienraum aus der lokalen Datenbank (für Einstellungen wie die geplanten Mahlzeiten). */
+export function householdOf(household: string): Promise<Household | undefined> {
+	return repo('households').table.get(household);
+}
+
+/** Geplante Mahlzeiten der Familie speichern (geht auch offline, Abgleich später). */
+export async function setMealSlots(household: string, slots: Slot[]): Promise<void> {
+	await repo('households').update(household, { meal_slots: slots });
 }
 
 /** Alle Einträge des Haushalts (für Vorschläge häufiger Gerichte). */

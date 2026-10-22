@@ -4,17 +4,25 @@
 	import { page } from '$app/state';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { live } from '#lib/db/live.svelte.js';
-	import type { MealPlanEntry, Recipe } from '#lib/db/types.js';
+	import type { Household, MealPlanEntry, Recipe } from '#lib/db/types.js';
 	import EntryDialog from '#lib/features/meals/EntryDialog.svelte';
 	import {
 		dishSuggestions,
 		groupEntries,
+		plannedSlots,
 		SLOTS,
 		slotKey,
+		visibleSlots,
 		type DialogTarget,
 		type Slot
 	} from '#lib/features/meals/plan.js';
-	import { allEntries, entriesBetween, moveEntry } from '#lib/features/meals/plan-store.js';
+	import {
+		allEntries,
+		entriesBetween,
+		householdOf,
+		moveEntry,
+		setMealSlots
+	} from '#lib/features/meals/plan-store.js';
 	import { recipesOf } from '#lib/features/meals/store.js';
 	import {
 		formatDay,
@@ -54,30 +62,156 @@
 	);
 	const extra = live(
 		() => household,
-		async (h) => ({ entries: await allEntries(h), recipes: await recipesOf(h) }),
-		{ entries: [] as MealPlanEntry[], recipes: [] as Recipe[] }
+		async (h) => ({
+			entries: await allEntries(h),
+			recipes: await recipesOf(h),
+			household: await householdOf(h)
+		}),
+		{
+			entries: [] as MealPlanEntry[],
+			recipes: [] as Recipe[],
+			household: undefined as Household | undefined
+		}
 	);
 
 	const groups = $derived(groupEntries(week.current, days));
 	const suggestions = $derived(dishSuggestions(extra.current.entries, extra.current.recipes));
 	const isEmpty = $derived(groups.size === 0);
+	// Geplante Mahlzeiten der Familie; ausgeblendete mit Einträgen bleiben sichtbar.
+	const planned = $derived(plannedSlots(extra.current.household?.meal_slots));
+	const shownSlots = $derived(visibleSlots(planned, groups, days));
 
 	let target: DialogTarget | null = $state(null);
-	let dragOver: string | null = $state(null);
+	let slotsOpen = $state(false);
+
+	/** Mahlzeit an- oder abwählen; mindestens eine bleibt. */
+	function toggleSlot(slot: Slot) {
+		const next = planned.includes(slot) ? planned.filter((s) => s !== slot) : [...planned, slot];
+		if (next.length === 0) return;
+		void setMealSlots(
+			household,
+			SLOTS.filter((s) => next.includes(s))
+		);
+	}
+
+	// ---- Ziehen: Maus sofort, Finger nach langem Drücken (wie im Kalender) ----
+	// Eingebautes HTML-Drag-and-Drop geht auf iPhone gar nicht und auf dem iPad unzuverlässig.
+	const LONG_PRESS_MS = 400;
+	interface PlanDrag {
+		entry: MealPlanEntry;
+		pointerId: number;
+		touch: boolean;
+		x: number;
+		y: number;
+		/** Aktuelle Zeigerposition (für die Vorschau). */
+		px: number;
+		py: number;
+		active: boolean;
+		/** Ziel unter dem Zeiger („Tag|Mahlzeit“). */
+		over: string | null;
+		timer: ReturnType<typeof setTimeout> | null;
+	}
+	let drag: PlanDrag | null = $state.raw(null);
+	// Nach dem Ziehen kommt noch ein „click“ – der soll keinen Dialog öffnen.
+	let suppressClick = false;
+
+	function slotAt(x: number, y: number): string | null {
+		return (
+			document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-slot]')?.dataset.slot ?? null
+		);
+	}
+
+	function pointerDown(event: PointerEvent, entry: MealPlanEntry) {
+		if (!session.canEdit || event.button !== 0) return;
+		const d: PlanDrag = {
+			entry,
+			pointerId: event.pointerId,
+			touch: event.pointerType !== 'mouse',
+			x: event.clientX,
+			y: event.clientY,
+			px: event.clientX,
+			py: event.clientY,
+			active: false,
+			over: null,
+			timer: null
+		};
+		if (d.touch) {
+			// Touch: erst nach langem Drücken ziehen, sonst scrollt man wie gewohnt.
+			d.timer = setTimeout(() => {
+				if (drag !== d) return;
+				drag = { ...d, active: true, over: slotKey(entry.date, entry.slot) };
+				navigator.vibrate?.(10);
+			}, LONG_PRESS_MS);
+		}
+		drag = d;
+		window.addEventListener('pointermove', pointerMove);
+		window.addEventListener('pointerup', pointerUp);
+		window.addEventListener('pointercancel', cancelDrag);
+	}
+
+	function stopListening() {
+		window.removeEventListener('pointermove', pointerMove);
+		window.removeEventListener('pointerup', pointerUp);
+		window.removeEventListener('pointercancel', cancelDrag);
+	}
+
+	function pointerMove(event: PointerEvent) {
+		const d = drag;
+		if (!d || event.pointerId !== d.pointerId) return;
+		const moved = Math.hypot(event.clientX - d.x, event.clientY - d.y);
+		if (!d.active) {
+			// Finger vor dem langen Drücken bewegt: das ist Scrollen, kein Ziehen.
+			if (d.touch) {
+				if (moved > 8) cancelDrag();
+				return;
+			}
+			if (moved < 4) return;
+		}
+		drag = {
+			...d,
+			active: true,
+			px: event.clientX,
+			py: event.clientY,
+			over: slotAt(event.clientX, event.clientY)
+		};
+	}
+
+	function pointerUp(event: PointerEvent) {
+		const d = drag;
+		if (!d || event.pointerId !== d.pointerId) return;
+		if (d.timer) clearTimeout(d.timer);
+		drag = null;
+		stopListening();
+		if (!d.active) return;
+		suppressClick = true;
+		setTimeout(() => (suppressClick = false), 0);
+		if (!d.over || d.over === slotKey(d.entry.date, d.entry.slot)) return;
+		const [date, slot] = d.over.split('|');
+		void moveEntry(d.entry, date, slot as Slot);
+	}
+
+	function cancelDrag() {
+		if (drag?.timer) clearTimeout(drag.timer);
+		drag = null;
+		stopListening();
+	}
+
+	onMount(() => stopListening);
+
+	/** Während des Ziehens auf Touch nicht scrollen (passive: false nötig). */
+	function blockScroll(node: HTMLElement) {
+		const onTouchMove = (event: TouchEvent) => {
+			if (drag?.active) event.preventDefault();
+		};
+		node.addEventListener('touchmove', onTouchMove, { passive: false });
+		return () => node.removeEventListener('touchmove', onTouchMove);
+	}
 
 	// Handy: Tage stehen untereinander, „heute“ liegt oft weit unten – beim Öffnen dorthin springen.
 	onMount(() => {
 		if (key !== weekKey(new Date()) || !window.matchMedia('(max-width: 699px)').matches) return;
 		document.getElementById(`day-${today}`)?.closest('section')?.scrollIntoView({ block: 'start' });
 	});
-
-	function onDrop(event: DragEvent, date: string, slot: Slot) {
-		event.preventDefault();
-		dragOver = null;
-		const id = event.dataTransfer?.getData('text/plain');
-		const entry = week.current.find((e) => e.id === id);
-		if (entry) void moveEntry(entry, date, slot);
-	}
 </script>
 
 <svelte:head>
@@ -106,13 +240,43 @@
 		{/if}
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	</nav>
+	{#if session.canEdit}
+		<button
+			type="button"
+			class="btn slots-toggle"
+			aria-expanded={slotsOpen}
+			aria-controls="plan-slots"
+			onclick={() => (slotsOpen = !slotsOpen)}
+		>
+			<Icon name="settings" size={18} />
+			{m.plan_slots_button()}
+		</button>
+	{/if}
 </div>
+
+{#if session.canEdit && slotsOpen}
+	<section class="slots-panel" id="plan-slots" aria-labelledby="plan-slots-title">
+		<h2 id="plan-slots-title">{m.plan_slots_label()}</h2>
+		<div class="pills" role="group" aria-labelledby="plan-slots-title">
+			{#each SLOTS as slot (slot)}
+				{@const on = planned.includes(slot)}
+				<button
+					type="button"
+					aria-pressed={on}
+					aria-disabled={on && planned.length === 1}
+					onclick={() => toggleSlot(slot)}>{slotLabels[slot]()}</button
+				>
+			{/each}
+		</div>
+		<p class="hint">{m.plan_slots_hint()}</p>
+	</section>
+{/if}
 
 {#if !session.canEdit && week.loaded && isEmpty}
 	<p class="hint">{m.plan_empty_child()}</p>
 {/if}
 
-<div class="week">
+<div class="week" {@attach blockScroll}>
 	{#each days as day (day)}
 		<section class="day" class:today={day === today} aria-labelledby="day-{day}">
 			<h2 id="day-{day}" aria-label={formatDay(day)}>
@@ -120,23 +284,17 @@
 				<span class="date">{formatShortDate(day)}</span>
 				{#if day === today}<span class="badge">{m.plan_today_badge()}</span>{/if}
 			</h2>
-			{#each SLOTS as slot (slot)}
+			{#each shownSlots as slot (slot)}
 				{@const entries = groups.get(slotKey(day, slot)) ?? []}
 				{@const label = slotLabels[slot]()}
 				{@const addLabel = m.plan_add_label({ slot: label, day: formatDay(day) })}
 				<div
 					class="slot"
-					class:over={dragOver === slotKey(day, slot)}
+					class:over={drag?.active && drag.over === slotKey(day, slot)}
 					class:empty={entries.length === 0}
+					data-slot={slotKey(day, slot)}
 					role="group"
 					aria-label="{label}, {formatDay(day)}"
-					ondragover={(event) => {
-						if (!session.canEdit) return;
-						event.preventDefault();
-						dragOver = slotKey(day, slot);
-					}}
-					ondragleave={() => (dragOver = null)}
-					ondrop={(event) => onDrop(event, day, slot)}
 				>
 					<span class="slot-label">{label}</span>
 					{#if session.canEdit && entries.length > 0}
@@ -154,14 +312,17 @@
 								<button
 									type="button"
 									class="dish"
-									draggable="true"
+									class:dragging={drag?.active && drag.entry.id === entry.id}
 									aria-label={m.plan_edit_label({
 										title: entry.title,
 										slot: label,
 										day: formatDay(day)
 									})}
-									ondragstart={(event) => event.dataTransfer?.setData('text/plain', entry.id)}
-									onclick={() => (target = { entry, date: entry.date, slot: entry.slot })}
+									onpointerdown={(event) => pointerDown(event, entry)}
+									oncontextmenu={(event) => drag?.touch && event.preventDefault()}
+									onclick={() => {
+										if (!suppressClick) target = { entry, date: entry.date, slot: entry.slot };
+									}}
 								>
 									{entry.title}
 								</button>
@@ -209,11 +370,18 @@
 	{/each}
 </div>
 
+{#if drag?.active}
+	<div class="ghost" style:left="{drag.px}px" style:top="{drag.py}px" aria-hidden="true">
+		{drag.entry.title}
+	</div>
+{/if}
+
 {#if session.canEdit}
 	<p class="hint drag-hint">{m.plan_drag_hint()}</p>
 	<EntryDialog
 		{target}
 		{household}
+		slots={planned}
 		{suggestions}
 		recipes={extra.current.recipes}
 		onclose={() => (target = null)}
@@ -368,7 +536,52 @@
 	}
 
 	button.dish {
-		cursor: pointer;
+		cursor: grab;
+		touch-action: pan-y;
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	button.dish.dragging {
+		opacity: 0.4;
+	}
+
+	/* Vorschau am Finger bzw. Mauszeiger während des Ziehens. */
+	.ghost {
+		position: fixed;
+		z-index: 50;
+		padding: var(--space-2) var(--space-4);
+		border-radius: var(--radius-pill);
+		background: var(--color-ink);
+		color: var(--color-on-ink);
+		font-weight: 700;
+		box-shadow: var(--shadow-float);
+		pointer-events: none;
+		transform: translate(-50%, calc(-100% - 12px));
+	}
+
+	.slots-panel {
+		display: grid;
+		gap: var(--space-2);
+		margin-bottom: var(--space-4);
+		padding: var(--space-4);
+		border-radius: var(--radius-card);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+	}
+
+	.slots-panel h2 {
+		margin: 0;
+		font-size: var(--fs-lead);
+	}
+
+	.slots-panel .hint {
+		margin: 0;
+	}
+
+	.pills > [aria-disabled='true'] {
+		cursor: not-allowed;
 	}
 
 	.recipe-link {

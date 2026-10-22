@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { MealPlanEntry, Recipe } from '#lib/db/types.js';
-import { dishSuggestions, groupEntries, matchRecipe, normalizeRecipeUrl, slotKey } from './plan.js';
+import {
+	dishSuggestions,
+	groupEntries,
+	matchRecipe,
+	normalizeRecipeUrl,
+	plannedSlots,
+	slotKey,
+	visibleSlots
+} from './plan.js';
 import {
 	formatDay,
 	formatWeekRange,
@@ -119,6 +127,22 @@ describe('groupEntries', () => {
 		]);
 		expect(groups.has(slotKey('2026-10-13', 'lunch'))).toBe(false);
 		expect(groups.size).toBe(1);
+	});
+});
+
+describe('Geplante Mahlzeiten', () => {
+	it('leer oder unbekannt: alle drei, sonst in fester Reihenfolge', () => {
+		expect(plannedSlots(undefined)).toEqual(['breakfast', 'lunch', 'dinner']);
+		expect(plannedSlots([])).toEqual(['breakfast', 'lunch', 'dinner']);
+		expect(plannedSlots(['snack'])).toEqual(['breakfast', 'lunch', 'dinner']);
+		expect(plannedSlots(['dinner', 'breakfast'])).toEqual(['breakfast', 'dinner']);
+	});
+
+	it('ausgeblendete Mahlzeit mit Einträgen bleibt sichtbar', () => {
+		const days = ['2026-10-12', '2026-10-13'];
+		const groups = groupEntries([entry('a', '2026-10-13', 'lunch', 'Reste')], days);
+		expect(visibleSlots(['dinner'], groups, days)).toEqual(['lunch', 'dinner']);
+		expect(visibleSlots(['dinner'], new Map(), days)).toEqual(['dinner']);
 	});
 });
 

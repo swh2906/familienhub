@@ -49,7 +49,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | Collection | Wichtige Felder | Verweist auf |
 | --- | --- | --- |
 | `users` (Auth) | `name`, `email` (Erwachsene), `username` (Kinder) | – |
-| `households` | `name`, `timezone` | – |
+| `households` | `name`, `timezone`, `meal_slots[]` (leer = alle Mahlzeiten) | – |
 | `memberships` | `role` (admin, adult, child), `color`, `display_name` | `users`, `households` |
 | `invites` | `token_hash`, `code_hash`, `role`, `expires_at`, `uses_left`, `revoked` | `households`, `memberships` |
 | `recipes` | `title`, `servings`, `instructions`, `tags[]`, `is_favorite`, `prep_minutes`, `difficulty` (0–3) | `households` |
@@ -71,6 +71,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | --- | --- | --- | --- |
 | Mitglieder einladen/entfernen, Rollen ändern | ja | nein | nein |
 | Familienraum umbenennen/löschen | ja | nein | nein |
+| Geplante Mahlzeiten im Wochenplan einstellen | ja | ja | nein |
 | Termine sehen | ja | ja | ja |
 | Termine, Rezepte, Essensplan bearbeiten | ja | ja | nein |
 | Einkaufsartikel hinzufügen und abhaken | ja | ja | ja |

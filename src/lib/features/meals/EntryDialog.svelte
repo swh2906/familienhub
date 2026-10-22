@@ -11,14 +11,21 @@
 		household,
 		suggestions,
 		recipes,
+		slots = [...SLOTS],
 		onclose
 	}: {
 		target: DialogTarget | null;
 		household: string;
 		suggestions: string[];
 		recipes: Recipe[];
+		/** Geplante Mahlzeiten der Familie (der Platz eines bestehenden Eintrags bleibt wählbar). */
+		slots?: readonly Slot[];
 		onclose: () => void;
 	} = $props();
+
+	const slotOptions = $derived(
+		SLOTS.filter((option) => slots.includes(option) || option === target?.slot)
+	);
 
 	const slotLabels: Record<Slot, () => string> = {
 		breakfast: m.slot_breakfast,
@@ -126,7 +133,7 @@
 			<div class="field">
 				<label for="plan-slot">{m.plan_slot()}</label>
 				<select id="plan-slot" bind:value={slot}>
-					{#each SLOTS as option (option)}
+					{#each slotOptions as option (option)}
 						<option value={option}>{slotLabels[option]()}</option>
 					{/each}
 				</select>

@@ -411,6 +411,12 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] Rezept-Filter als Pillen; Kalender-Spalte „heute“ in Kalenderfarbe; „Synchron“ grün.
 - [ ] Danach: Schnelleingabe für alles („Morgen 15 Uhr Zahnarzt Mia“) als dunkle Pille – eigener Schritt mit Erkennung aus Text und Tests.
 
+**14c – Logo und Akzentfarben** (`feat/schritt-14c-logo-farben`)
+
+- [x] Logo aus dem Entwurf (Haus-Umriss mit H) für Logo, App-Icons und neues SVG-Favicon (`pnpm icons`).
+- [x] Akzentfarben Salbei, Taubenblau, Pflaume, Ocker (Kontrast ≥ 4,5:1 in Hell und Dunkel); Test prüft Farbsatz, Vorschau und Startskript.
+- [x] Behoben: Startskript in `app.html` übernahm gespeichertes Petrol nicht mehr (seit Terrakotta Standard ist).
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { nextTheme, parseAccent, parseTheme } from './theme.js';
+import { readFileSync } from 'node:fs';
+import { ACCENTS, nextTheme, parseAccent, parseTheme } from './theme.js';
 
 describe('nextTheme', () => {
 	it('wechselt System → Hell → Dunkel → System', () => {
@@ -20,6 +21,7 @@ describe('parseTheme', () => {
 
 describe('parseAccent', () => {
 	it('akzeptiert die angebotenen Akzentfarben', () => {
+		for (const accent of ACCENTS) expect(parseAccent(accent)).toBe(accent);
 		expect(parseAccent('terrakotta')).toBe('terrakotta');
 		expect(parseAccent('petrol')).toBe('petrol');
 		expect(parseAccent('indigo')).toBe('indigo');
@@ -30,5 +32,19 @@ describe('parseAccent', () => {
 		expect(parseAccent(null)).toBe('terrakotta');
 		expect(parseAccent(undefined)).toBe('terrakotta');
 		expect(parseAccent('lila')).toBe('terrakotta');
+	});
+});
+
+describe('Akzentfarben', () => {
+	const css = readFileSync('src/lib/ui/theme.css', 'utf8');
+	const html = readFileSync('src/app.html', 'utf8');
+
+	it('jede Farbe hat einen Farbsatz und eine Vorschau; das Startskript kennt alle', () => {
+		for (const accent of ACCENTS) {
+			expect(css).toContain(`--swatch-${accent}:`);
+			if (accent === 'terrakotta') continue; // Standard: ohne Attribut
+			expect(css).toContain(`:root[data-accent='${accent}']`);
+			expect(html).toContain(`'${accent}'`);
+		}
 	});
 });

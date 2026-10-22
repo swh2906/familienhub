@@ -112,7 +112,7 @@ Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (
 
 ## Gestaltung
 
-Hausschrift ist **Plus Jakarta Sans** (variabel, lokal in `static/fonts/`, SIL Open Font License). Farben, Typo-Skala (`--fs-*`), Radien und Schatten stehen als Variablen in `src/lib/ui/theme.css`; Seiten verwenden nur diese. Gemeinsame Bausteine: `.card`, `.btn`, `.pills` (Reiter und Umschalter, aktiv in dunkler „Tinte“), `.field`. Standard-Akzent ist Terrakotta; Petrol, Indigo und Graphit lassen sich in den Einstellungen wählen.
+Hausschrift ist **Plus Jakarta Sans** (variabel, lokal in `static/fonts/`, SIL Open Font License). Farben, Typo-Skala (`--fs-*`), Radien und Schatten stehen als Variablen in `src/lib/ui/theme.css`; Seiten verwenden nur diese. Gemeinsame Bausteine: `.card`, `.btn`, `.pills` (Reiter und Umschalter, aktiv in dunkler „Tinte“), `.field`. Standard-Akzent ist Terrakotta; Salbei, Petrol, Taubenblau, Indigo, Pflaume, Ocker und Graphit lassen sich in den Einstellungen wählen. Logo, App-Icons und Favicon erzeugt `pnpm icons` aus derselben Form wie `src/lib/ui/Logo.svelte`.
 
 ## Datenschutz
 

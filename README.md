@@ -110,6 +110,10 @@ Unter **Aufgaben → Feedback** schreibt die Familie Rückmeldungen (Text, Berei
 
 Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (Prinzip aus der COOK-App): bildschirmfüllend, große Schrift, Portionen umrechnen, Zutaten abhaken (nur lokal), Bildschirm bleibt an (Wake Lock, wo der Browser es kann). Schwierigkeit (Kochmützen) und Dauer setzen Admins und Erwachsene; die Handschrift „Patrick Hand“ liegt lokal in `static/fonts/` (SIL Open Font License, keine externen Schriften).
 
+## Gestaltung
+
+Hausschrift ist **Plus Jakarta Sans** (variabel, lokal in `static/fonts/`, SIL Open Font License). Farben, Typo-Skala (`--fs-*`), Radien und Schatten stehen als Variablen in `src/lib/ui/theme.css`; Seiten verwenden nur diese. Gemeinsame Bausteine: `.card`, `.btn`, `.pills` (Reiter und Umschalter, aktiv in dunkler „Tinte“), `.field`. Standard-Akzent ist Terrakotta; Petrol, Indigo und Graphit lassen sich in den Einstellungen wählen.
+
 ## Datenschutz
 
 - **Datenexport** (Einstellungen → Daten und Konto): alle Daten der Familie als JSON-Datei, direkt aus der lokalen Datenbank (geht auch offline). Gelöschte Einträge und Einladungen sind nicht enthalten.

@@ -20,14 +20,15 @@ describe('parseTheme', () => {
 
 describe('parseAccent', () => {
 	it('akzeptiert die angebotenen Akzentfarben', () => {
+		expect(parseAccent('terrakotta')).toBe('terrakotta');
 		expect(parseAccent('petrol')).toBe('petrol');
 		expect(parseAccent('indigo')).toBe('indigo');
 		expect(parseAccent('graphit')).toBe('graphit');
 	});
 
-	it('fällt bei fehlenden oder unbekannten Werten auf Petrol zurück', () => {
-		expect(parseAccent(null)).toBe('petrol');
-		expect(parseAccent(undefined)).toBe('petrol');
-		expect(parseAccent('lila')).toBe('petrol');
+	it('fällt bei fehlenden oder unbekannten Werten auf Terrakotta zurück', () => {
+		expect(parseAccent(null)).toBe('terrakotta');
+		expect(parseAccent(undefined)).toBe('terrakotta');
+		expect(parseAccent('lila')).toBe('terrakotta');
 	});
 });

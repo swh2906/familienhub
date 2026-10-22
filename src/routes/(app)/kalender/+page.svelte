@@ -157,7 +157,7 @@
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- href() nutzt resolve() -->
 <div class="toolbar">
-	<nav class="views" aria-label={m.cal_views_label()}>
+	<nav class="views pills" aria-label={m.cal_views_label()}>
 		{#each VIEWS as option (option)}
 			<a href={href(option, date)} aria-current={view === option ? 'page' : undefined}>
 				{viewLabels[option]()}
@@ -179,10 +179,9 @@
 <h2 class="range" aria-live="polite">{title}</h2>
 
 {#if activeMembers.length > 1}
-	<div class="filter" role="group" aria-label={m.cal_filter_label()}>
+	<div class="filter pills scroll" role="group" aria-label={m.cal_filter_label()}>
 		<button
 			type="button"
-			class="chip"
 			aria-pressed={selectedPeople.length === 0}
 			onclick={() => (selectedPeople = [])}
 		>
@@ -192,7 +191,6 @@
 			{@const pressed = selectedPeople.includes(member.id)}
 			<button
 				type="button"
-				class="chip"
 				aria-pressed={pressed}
 				onclick={() =>
 					(selectedPeople = pressed
@@ -366,31 +364,6 @@
 		gap: var(--space-3);
 	}
 
-	.views {
-		display: inline-flex;
-		gap: 2px;
-		padding: 3px;
-		border-radius: 12px;
-		background: var(--color-surface-2);
-	}
-
-	.views a {
-		display: inline-flex;
-		align-items: center;
-		min-height: var(--touch-target);
-		padding: 0 var(--space-4);
-		border-radius: 9px;
-		color: var(--color-text-muted);
-		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.views a[aria-current='page'] {
-		background: var(--color-surface);
-		color: var(--color-text);
-		box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
-	}
-
 	.nav {
 		display: flex;
 		gap: var(--space-2);
@@ -411,38 +384,8 @@
 	}
 
 	.filter {
-		display: flex;
-		gap: var(--space-2);
-		overflow-x: auto;
 		margin-bottom: var(--space-4);
 		padding-bottom: var(--space-1);
-		scrollbar-width: none;
-	}
-
-	.chip {
-		display: inline-flex;
-		flex: none;
-		align-items: center;
-		gap: var(--space-2);
-		min-height: var(--touch-target);
-		padding: 0 var(--space-3);
-		border: 1px solid var(--color-border);
-		border-radius: 999px;
-		background: var(--color-surface);
-		color: var(--color-text);
-		font: inherit;
-		cursor: pointer;
-	}
-
-	.chip:has(:global(.avatar)) {
-		padding-left: var(--space-1);
-	}
-
-	.chip[aria-pressed='true'] {
-		border-color: var(--color-primary);
-		background: var(--color-primary-soft);
-		color: var(--color-primary-strong);
-		font-weight: 650;
 	}
 
 	.below {

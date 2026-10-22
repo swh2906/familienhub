@@ -40,7 +40,7 @@ test('Akzentfarbe in den Einstellungen wählen und behalten', async ({ page }) =
 	await expect(page.getByRole('heading', { level: 1, name: 'Einstellungen' })).toBeVisible();
 
 	const accent = page.getByRole('group', { name: 'Akzentfarbe' });
-	await expect(accent.getByRole('radio', { name: 'Petrol' })).toBeChecked();
+	await expect(accent.getByRole('radio', { name: 'Terrakotta' })).toBeChecked();
 	await expect(page.locator('html')).not.toHaveAttribute('data-accent');
 
 	await accent.getByText('Indigo').click();

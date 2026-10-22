@@ -14,6 +14,10 @@ function card(page: Page, name: string) {
 	return page.getByRole('region', { name });
 }
 
+function people(page: Page) {
+	return page.getByRole('group', { name: 'Für wen anzeigen' });
+}
+
 async function seed(admin: string, household: string) {
 	const token = await apiToken(admin);
 	// In zwei Stunden, aber spätestens 23 Uhr – sonst rutscht der Termin abends auf morgen.
@@ -111,7 +115,8 @@ test('Leere Zustände und Kinder', async ({ page }) => {
 	).toHaveCount(0);
 	// Kinder planen kein Essen; sie sehen nur, dass nichts geplant ist.
 	await expect(card(page, 'Nächste 7 Tage').getByText('Kein Essen geplant')).toHaveCount(7);
-	await expect(page.getByRole('button', { name: 'Nur meins' })).toHaveAttribute(
+	// Kinder sehen zuerst sich selbst (Personen-Filter).
+	await expect(people(page).getByRole('button', { name: 'Mia' })).toHaveAttribute(
 		'aria-pressed',
 		'true'
 	);
@@ -126,15 +131,20 @@ test('Leere Zustände und Kinder', async ({ page }) => {
 	).toBeVisible();
 });
 
-test('„Alle / Nur meins“ bleibt auf dem Gerät gespeichert', async ({ page }) => {
+test('Personen-Filter bleibt auf dem Gerät gespeichert', async ({ page }) => {
 	const family = await createFamilyWithMember();
 	await login(page, family.admin);
-	const mine = page.getByRole('button', { name: 'Nur meins' });
-	await expect(page.getByRole('button', { name: 'Alle' })).toHaveAttribute('aria-pressed', 'true');
-	await mine.click();
-	await expect(mine).toHaveAttribute('aria-pressed', 'true');
+	await expect(people(page).getByRole('button', { name: 'Alle' })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+	await people(page).getByRole('button', { name: 'Tom' }).click();
+	await expect(people(page).getByRole('button', { name: 'Tom' })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
 	await page.reload();
-	await expect(page.getByRole('button', { name: 'Nur meins' })).toHaveAttribute(
+	await expect(people(page).getByRole('button', { name: 'Tom' })).toHaveAttribute(
 		'aria-pressed',
 		'true'
 	);

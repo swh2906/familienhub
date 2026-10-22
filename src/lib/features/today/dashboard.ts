@@ -12,20 +12,31 @@ import {
 import { SLOTS } from '#lib/features/meals/plan.js';
 import { isAssignedTo, isOpen } from '#lib/features/tasks/list.js';
 
-/** Alles aus der Familie oder nur, was mich betrifft. */
-export type Scope = 'all' | 'mine';
+/** Personen-Filter: `'all'` = ganze Familie, sonst die ID der Mitgliedschaft, für die gefiltert wird. */
+export type Scope = string;
+
+export const ALL: Scope = 'all';
 
 export const SCOPE_STORAGE_KEY = 'fh-today-scope';
 
-/** Gespeicherte Auswahl dieses Geräts; ohne Auswahl sehen Kinder „Nur meins“, Erwachsene alles. */
-export function loadScope(isChild: boolean): Scope {
+/**
+ * Gespeicherte Auswahl dieses Geräts; ohne Auswahl sehen Kinder sich selbst, Erwachsene alle.
+ * Der alte Wert „mine“ (vor dem Personen-Filter) wird zur eigenen Mitgliedschaft.
+ */
+export function loadScope(isChild: boolean, membership: string): Scope {
 	try {
 		const value = localStorage.getItem(SCOPE_STORAGE_KEY);
-		if (value === 'all' || value === 'mine') return value;
+		if (value === 'mine') return membership || ALL;
+		if (value) return value;
 	} catch {
 		// Speicher gesperrt (privates Fenster): Standard verwenden.
 	}
-	return isChild ? 'mine' : 'all';
+	return isChild && membership ? membership : ALL;
+}
+
+/** Auswahl gilt nur, solange es die Person in der Familie gibt; sonst alle. */
+export function validScope(scope: Scope, members: readonly { id: string }[]): Scope {
+	return scope === ALL || members.some((m) => m.id === scope) ? scope : ALL;
 }
 
 export function saveScope(scope: Scope): void {
@@ -47,16 +58,14 @@ export function isMyTask(task: Task, membership: string): boolean {
 	return (task.assignees ?? []).length === 0 || isAssignedTo(task, membership);
 }
 
-export function eventsInScope(
-	occurrences: readonly Occurrence[],
-	scope: Scope,
-	membership: string
-): Occurrence[] {
-	return scope === 'all' ? [...occurrences] : occurrences.filter((o) => isMyEvent(o, membership));
+/** Termine der gewählten Person (inklusive Familien-Termine ohne Teilnehmer). */
+export function eventsInScope(occurrences: readonly Occurrence[], scope: Scope): Occurrence[] {
+	return scope === ALL ? [...occurrences] : occurrences.filter((o) => isMyEvent(o, scope));
 }
 
-export function tasksInScope(tasks: readonly Task[], scope: Scope, membership: string): Task[] {
-	return scope === 'all' ? [...tasks] : tasks.filter((t) => isMyTask(t, membership));
+/** Aufgaben der gewählten Person (inklusive nicht zugewiesener). */
+export function tasksInScope(tasks: readonly Task[], scope: Scope): Task[] {
+	return scope === ALL ? [...tasks] : tasks.filter((t) => isMyTask(t, scope));
 }
 
 /** Offene Aufgaben, die bis einschließlich `date` fällig sind (überfällige zählen mit). */

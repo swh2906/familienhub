@@ -217,7 +217,7 @@
 
 	h2 {
 		margin: 0;
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 	}
 
 	.hint,
@@ -276,7 +276,7 @@
 	}
 
 	.details {
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	summary {

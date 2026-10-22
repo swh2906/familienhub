@@ -232,7 +232,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 	}
 
@@ -262,7 +262,7 @@
 
 	.range span {
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 	}
 
 	/* ---- Handy: Tage untereinander, Mahlzeiten als Zeilen ---- */
@@ -292,13 +292,13 @@
 		align-items: baseline;
 		gap: 0 var(--space-2);
 		margin: 0 0 var(--space-1);
-		font-size: 1rem;
+		font-size: var(--fs-body);
 	}
 
 	.date {
 		color: var(--color-text-muted);
 		font-weight: 500;
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.badge {
@@ -335,7 +335,7 @@
 		grid-column: 1;
 		grid-row: 1;
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 600;
 	}
 
@@ -378,7 +378,7 @@
 		min-width: var(--touch-target);
 		min-height: var(--touch-target);
 		color: var(--color-primary-strong);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		font-weight: 600;
 		text-decoration: none;
 	}
@@ -392,7 +392,7 @@
 	}
 
 	.recipe-link.external {
-		font-size: 1rem;
+		font-size: var(--fs-body);
 	}
 
 	/* „+“: auf dem Handy immer am Zeilenende (leer und gefüllt gleich). */
@@ -409,7 +409,7 @@
 		background: transparent;
 		color: var(--color-text-muted);
 		font: inherit;
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 		line-height: 1;
 		cursor: pointer;
 	}
@@ -481,12 +481,12 @@
 			width: auto;
 			height: auto;
 			min-height: var(--touch-target);
-			font-size: 1rem;
+			font-size: var(--fs-body);
 		}
 
 		.add-text {
 			display: inline;
-			font-size: 0.875rem;
+			font-size: var(--fs-small);
 		}
 
 		/* Gefüllt: kleines „+“ oben rechts im Kasten. */
@@ -527,7 +527,7 @@
 		/* Schmale Spalten: etwas kleinere Chips, damit kurze Gerichte in eine Zeile passen. */
 		.dish {
 			padding: var(--space-1) var(--space-2);
-			font-size: 0.875rem;
+			font-size: var(--fs-small);
 		}
 
 		.add-text {

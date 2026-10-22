@@ -211,7 +211,7 @@
 	.status {
 		padding: 0 var(--space-2);
 		border-radius: 999px;
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 600;
 	}
 
@@ -242,6 +242,6 @@
 	}
 
 	.answers .btn {
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 </style>

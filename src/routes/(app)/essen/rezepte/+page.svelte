@@ -63,14 +63,13 @@
 				bind:value={query}
 			/>
 		</label>
-		<div class="chips" role="group" aria-label={m.recipes_filter_label()}>
-			<button type="button" class="chip" aria-pressed={tag === null} onclick={() => (tag = null)}
+		<div class="chips pills scroll" role="group" aria-label={m.recipes_filter_label()}>
+			<button type="button" aria-pressed={tag === null} onclick={() => (tag = null)}
 				>{m.recipes_filter_all()}</button
 			>
 			{#each tags as option (option)}
 				<button
 					type="button"
-					class="chip"
 					aria-pressed={tag === option}
 					onclick={() => (tag = tag === option ? null : option)}>{option}</button
 				>
@@ -126,7 +125,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 	}
 
@@ -147,17 +146,9 @@
 
 	/* Handy: Filter in einer Zeile zum Wischen, damit die Rezepte nicht nach unten rutschen. */
 	.chips {
-		display: flex;
-		gap: var(--space-2);
-		overflow-x: auto;
 		padding-bottom: var(--space-1);
-		scrollbar-width: none;
 		/* Sanft ausblenden am rechten Rand: zeigt, dass man weiterwischen kann. */
 		mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
-	}
-
-	.chips > * {
-		flex: none;
 	}
 
 	@media (min-width: 700px) {
@@ -166,25 +157,6 @@
 			overflow-x: visible;
 			mask-image: none;
 		}
-	}
-
-	.chip {
-		min-height: var(--touch-target);
-		padding: 0 var(--space-4);
-		border: 1px solid var(--color-border);
-		border-radius: 999px;
-		background: var(--color-surface);
-		color: var(--color-text);
-		font: inherit;
-		font-size: 0.9375rem;
-		cursor: pointer;
-	}
-
-	.chip[aria-pressed='true'] {
-		border-color: var(--color-primary);
-		background: var(--color-primary-soft);
-		color: var(--color-primary-strong);
-		font-weight: 600;
 	}
 
 	.list {
@@ -212,7 +184,7 @@
 	.title {
 		grid-column: 1;
 		color: var(--color-text);
-		font-size: 1.0625rem;
+		font-size: var(--fs-lead);
 		font-weight: 650;
 		text-decoration: none;
 	}
@@ -238,7 +210,7 @@
 		grid-column: 1;
 		margin: 0;
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.star {

@@ -324,7 +324,7 @@
 
 	.scope h2 {
 		margin: 0 0 var(--space-2);
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 	}
 
 	.scope p {
@@ -347,7 +347,7 @@
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 	}
 
@@ -380,7 +380,7 @@
 
 	.range {
 		margin: var(--space-4) 0 var(--space-3);
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 	}
 
 	.filter {

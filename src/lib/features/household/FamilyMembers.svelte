@@ -178,7 +178,7 @@
 	.you,
 	.role {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		font-weight: 500;
 	}
 
@@ -229,6 +229,6 @@
 
 	h3 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--fs-body);
 	}
 </style>

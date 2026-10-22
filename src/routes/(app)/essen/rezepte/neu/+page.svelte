@@ -37,7 +37,7 @@
 <style>
 	h1 {
 		margin: 0 0 var(--space-6);
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 	}
 </style>

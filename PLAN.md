@@ -404,10 +404,12 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] Baustein `.pills` (Reiter und Umschalter) ersetzt vier nachgebaute Umschalter (Einkauf, Essen, Aufgaben, Kalender).
 - [x] Heute: Personen-Filter (Alle / je Mitglied) statt „Alle / Nur meins“; Einkaufs-Kacheln in zarter Einkaufsfarbe.
 
-**14b – übrige Seiten** (offen)
+**14b – übrige Seiten** (`feat/schritt-14b-design-seiten`)
 
-- [ ] Einkauf als Liste nach Kategorien (wie Entwurf C), Kalender, Aufgaben, Essen, Einstellungen auf Typo-Skala und Bausteine.
-- [ ] Schnelleingabe als dunkle Pille; danach eigener Schritt: Termine/Aufgaben aus Text erkennen.
+- [x] Einkauf als Liste nach Kategorien (Entwurf C, `ShoppingRow`), Desktop mit Kategorien nebeneinander; Vorschläge beim Tippen bleiben Kacheln.
+- [x] 75 Schriftgrößen auf die Typo-Skala (`--fs-*`) umgestellt (nur exakte Treffer, optisch unverändert).
+- [x] Rezept-Filter als Pillen; Kalender-Spalte „heute“ in Kalenderfarbe; „Synchron“ grün.
+- [ ] Danach: Schnelleingabe für alles („Morgen 15 Uhr Zahnarzt Mia“) als dunkle Pille – eigener Schritt mit Erkennung aus Text und Tests.
 
 ### 2. Weitere offene Punkte
 

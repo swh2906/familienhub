@@ -33,9 +33,9 @@
 		height: 32px;
 		padding: 0 var(--space-3);
 		border-radius: 999px;
-		background: var(--color-primary-soft);
-		color: var(--color-primary-strong);
-		font-size: 0.8125rem;
+		background: var(--color-shopping-bg);
+		color: var(--color-shopping);
+		font-size: var(--fs-mini);
 		font-weight: 600;
 		white-space: nowrap;
 	}

@@ -614,7 +614,7 @@
 
 	.stat .label {
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 600;
 	}
 
@@ -631,7 +631,7 @@
 	h1 {
 		margin: 0;
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		font-weight: 700;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
@@ -639,7 +639,7 @@
 
 	.greeting {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		font-weight: 750;
 		letter-spacing: -0.02em;
 		line-height: 1.15;
@@ -685,7 +685,7 @@
 
 	.count {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		font-weight: 600;
 	}
 
@@ -765,12 +765,12 @@
 
 	.detail {
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 	}
 
 	.clash {
 		color: var(--color-warning);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 650;
 	}
 
@@ -842,14 +842,14 @@
 	.day-date,
 	.muted {
 		color: var(--color-text-muted);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 	}
 
 	.day-events {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 	}
 
 	.dots {
@@ -862,7 +862,7 @@
 
 	.day-tasks {
 		color: var(--color-tasks);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 650;
 	}
 
@@ -890,7 +890,7 @@
 		flex: none;
 		width: 5.25rem;
 		color: var(--color-calendar);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 650;
 		font-variant-numeric: tabular-nums;
 	}
@@ -1014,7 +1014,7 @@
 
 	.overdue {
 		color: var(--color-warning);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 700;
 	}
 

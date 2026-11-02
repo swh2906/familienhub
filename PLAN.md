@@ -436,6 +436,7 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] Route `POST /api/fh/recipes/import` (nur Erwachsene, 20 Abrufe pro Stunde, keine Heimnetz-Adressen, 10 s, 2 MB) liest schema.org `Recipe` (JSON-LD).
 - [x] Editor „Rezept aus dem Internet übernehmen“ (nur beim Anlegen, nur online): füllt leere Felder, Zutaten über die vorhandene Erkennung (gelernte Korrekturen gelten), unsichere Zeilen markiert.
 - [x] `recipes.source_url`, Anzeige „Quelle: …“ am Rezept.
+- [x] Titel ohne angehängtes „von <Autor>“ (z. B. Chefkoch), nur wenn es genau dem Autor-Feld entspricht.
 - Grenzen: Seiten ohne Rezeptdaten (Instagram, Bezahlseiten) gehen nicht; Weiterleitungen und DNS-Antworten prüft der Hook nicht (darum nur Erwachsene und gedrosselt).
 
 ### 2. Weitere offene Punkte

@@ -13,7 +13,7 @@ const RECIPE_PAGE = `<!doctype html><html><head>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
 	{"@type":"BreadcrumbList"},
-	{"@type":["Recipe","NewsArticle"],"name":"Linsensuppe","recipeYield":"4 Portionen",
+	{"@type":["Recipe","NewsArticle"],"name":"Linsensuppe von Geheim","recipeYield":"4 Portionen",
 	 "totalTime":"PT45M","recipeIngredient":["250 g Linsen","1 Zwiebel"],
 	 "recipeInstructions":[{"@type":"HowToStep","text":"Kochen."}],
 	 "author":{"@type":"Person","name":"Geheim"},"review":[{"reviewBody":"lang"}]}
@@ -29,6 +29,12 @@ beforeAll(async () => {
 		if (req.url === '/rezept') {
 			res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
 			res.end(RECIPE_PAGE);
+		} else if (req.url === '/oma') {
+			res.writeHead(200, { 'content-type': 'text/html' });
+			res.end(
+				'<script type="application/ld+json">{"@type":"Recipe","name":"Kuchen von Oma",' +
+					'"author":[{"@type":"Person","name":"Surina"}]}</script>'
+			);
 		} else if (req.url === '/blog') {
 			res.writeHead(200, { 'content-type': 'text/html' });
 			res.end('<html><body><h1>Nur Text</h1></body></html>');
@@ -74,6 +80,12 @@ describe('Rezept-Import per Link', () => {
 			recipeIngredient: ['250 g Linsen', '1 Zwiebel'],
 			recipeInstructions: [{ '@type': 'HowToStep', text: 'Kochen.' }]
 		});
+	});
+
+	it('„von <Autor>“ fällt nur weg, wenn es wirklich der Autor ist', async () => {
+		const f = await family('h');
+		const result = await importFrom(f.admin, f.household, `${siteUrl}/oma`);
+		expect(result.recipe).toEqual({ name: 'Kuchen von Oma' });
 	});
 
 	it('Seite ohne Rezept oder nicht erreichbar: verständliche Meldung', async () => {

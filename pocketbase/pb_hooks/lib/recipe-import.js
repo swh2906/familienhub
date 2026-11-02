@@ -139,6 +139,23 @@ const RECIPE_FIELDS = [
 	'recipeCuisine'
 ];
 
+/**
+ * Manche Seiten (z. B. Chefkoch) hängen „von <Autor>“ an den Titel. Gekürzt wird nur, wenn das
+ * Ende genau dem Autor-Feld entspricht – „Kuchen von Oma“ bleibt. Der Autor selbst bleibt hier.
+ */
+function withoutAuthor(name, author) {
+	if (typeof name !== 'string') return name;
+	const authors = Array.isArray(author) ? author : [author];
+	for (const a of authors) {
+		const who = typeof a === 'string' ? a : a && typeof a.name === 'string' ? a.name : '';
+		const suffix = ' von ' + who.trim();
+		if (who.trim() && name.endsWith(suffix) && name.length > suffix.length) {
+			return name.slice(0, -suffix.length).trim();
+		}
+	}
+	return name;
+}
+
 /** POST /api/fh/recipes/import: Rezeptdaten einer Webseite für den Editor. */
 function importRecipe(e) {
 	const { findMembership } = require(`${__hooks}/lib/familienhub.js`);
@@ -183,6 +200,7 @@ function importRecipe(e) {
 	for (const field of RECIPE_FIELDS) {
 		if (recipe[field] !== undefined) picked[field] = recipe[field];
 	}
+	if (typeof picked.name === 'string') picked.name = withoutAuthor(picked.name, recipe.author);
 	return e.json(200, { recipe: picked, url });
 }
 

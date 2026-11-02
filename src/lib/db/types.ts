@@ -33,6 +33,8 @@ export interface Recipe extends BaseRecord {
 	prep_minutes?: number;
 	/** 1 leicht, 2 mittel, 3 schwer; 0 = keine Angabe. */
 	difficulty?: number;
+	/** Webseite, von der das Rezept übernommen wurde (leer = selbst angelegt). */
+	source_url?: string;
 }
 
 /** Wie genau die Menge ist: genau, ungefähr („ca.“, „eine Prise“), nicht messbar („nach Geschmack“). */

@@ -14,6 +14,8 @@ export interface RecipeForm {
 	instructions: string;
 	prep_minutes: number;
 	difficulty: number;
+	/** Nur beim Import gesetzt; fehlt = unverändert lassen. */
+	source_url?: string;
 }
 
 /** Alle Rezepte des Haushalts (auch gelöschte; die Liste filtert selbst). */
@@ -48,7 +50,8 @@ export async function saveRecipe(
 		is_favorite: form.is_favorite,
 		instructions: form.instructions.trim(),
 		prep_minutes: clampMinutes(form.prep_minutes),
-		difficulty: clampDifficulty(form.difficulty)
+		difficulty: clampDifficulty(form.difficulty),
+		...(form.source_url !== undefined && { source_url: form.source_url.trim() })
 	};
 
 	let id: string;

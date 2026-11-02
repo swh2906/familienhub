@@ -362,6 +362,13 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 - [x] Tag/Woche springt zur aktuellen Uhrzeit.
 - [ ] Vor dem Abschluss der Testphase: Feedback auswerten, `HOMI_FEEDBACK` auf '0' setzen.
 
+### Rezept-Import per Link (`feat/schritt-12a-rezept-import`) – erledigt
+
+- [x] Route `POST /api/fh/recipes/import` (nur Erwachsene, 20 Abrufe pro Stunde, keine Heimnetz-Adressen, 10 s, 2 MB) liest schema.org `Recipe` (JSON-LD).
+- [x] Editor „Rezept aus dem Internet übernehmen“ (nur beim Anlegen, nur online): füllt leere Felder, Zutaten über die vorhandene Erkennung (gelernte Korrekturen gelten), unsichere Zeilen markiert.
+- [x] `recipes.source_url`, Anzeige „Quelle: …“ am Rezept.
+- Grenzen: Seiten ohne Rezeptdaten (Instagram, Bezahlseiten) gehen nicht; Weiterleitungen und DNS-Antworten prüft der Hook nicht (darum nur Erwachsene und gedrosselt).
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).
@@ -374,7 +381,7 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 Push-Benachrichtigungen für Erinnerungen, Punkte und Belohnungen, ICS-Kalender-Abo, Rezept-Import per Link und Fotos, native Apps über Capacitor.
 
 Rezept-Import im Detail (Reihenfolge nach Nutzen/Aufwand):
-1. Import per Webadresse: strukturierte Daten (schema.org `Recipe`, JSON-LD) serverseitig per PocketBase-Hook holen und in den Editor übernehmen.
+1. ~~Import per Webadresse~~ (erledigt, siehe Roadmap): strukturierte Daten (schema.org `Recipe`, JSON-LD) serverseitig per PocketBase-Hook holen und in den Editor übernehmen.
 2. Foto am Rezept speichern (PocketBase-Datei-Feld; offline: Bild in Dexie zwischenspeichern und später hochladen).
 3. Scan direkt in der App: entweder Texterkennung auf dem Gerät (z. B. Tesseract.js, mehrere MB, mittlere Genauigkeit) oder KI-Erkennung über einen externen Dienst (sehr gut, aber Datenschutz-Entscheidung und API-Schlüssel nötig).
 Bis dahin: „Zutaten aus Text einfügen“ zusammen mit der Texterkennung des Handys (Live Text, Google Lens).

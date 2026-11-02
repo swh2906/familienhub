@@ -17,6 +17,9 @@
 		learnCorrection
 	} from '#lib/features/pantry/learn.js';
 	import { baseIngredientsOf } from '#lib/features/pantry/store.js';
+	import { errorStatus, serverMessage } from '#lib/auth/family.js';
+	import { importRecipeFromLink } from '#lib/auth/recipe-import.js';
+	import { syncStatus } from '#lib/sync/status.svelte.js';
 	import { parsePastedLines, type PastedIngredient } from './paste.js';
 	import { saveRecipe } from './store.js';
 	import TagPicker from './TagPicker.svelte';
@@ -51,6 +54,8 @@
 		note: string;
 		/** Von Hand gewählter Basisartikel; leer = automatisch. */
 		base: string;
+		/** Beim Einfügen/Import unsicher erkannt – bitte prüfen. */
+		unsure: boolean;
 	}
 
 	let nextKey = 0;
@@ -67,6 +72,7 @@
 			amountKind: 'exact',
 			note: '',
 			base: '',
+			unsure: false,
 			...data
 		};
 	}
@@ -90,7 +96,8 @@
 			optional: draft.optional,
 			alternatives: draft.alternatives.join(', '),
 			amountKind: draft.amountKind,
-			note: draft.note === 'nach Geschmack' ? '' : draft.note
+			note: draft.note === 'nach Geschmack' ? '' : draft.note,
+			unsure: draft.confidence === 'low'
 		};
 	}
 
@@ -172,7 +179,8 @@
 		rows = rows.length > 1 ? rows.filter((_, i) => i !== index) : [row()];
 	}
 
-	function applyPaste() {
+	/** Hängt die erkannten Zeilen an und gibt zurück, wie viele davon unsicher sind. */
+	function applyPaste(): number {
 		const filled = rows.filter((r) => r.name.trim() || r.amountText.trim());
 		const added: Row[] = [];
 		for (const line of pastedLines) {
@@ -187,6 +195,56 @@
 		rows = [...filled, ...added];
 		pasteText = '';
 		pasteOpen = false;
+		return added.filter((r) => r.unsure).length;
+	}
+
+	// Rezept aus Link (nur beim Anlegen, nur online). Füllt nur leere Felder; Zutaten werden
+	// angehängt und laufen durch dieselbe Erkennung wie „Zutaten aus Text einfügen“.
+	let importUrl = $state('');
+	let importBusy = $state(false);
+	let importError = $state('');
+	let importStatus = $state('');
+	let sourceUrl = $state<string | undefined>(undefined);
+
+	async function runImport() {
+		if (importBusy || !importUrl.trim()) return;
+		importBusy = true;
+		importError = '';
+		importStatus = '';
+		try {
+			const result = await importRecipeFromLink(household, importUrl.trim());
+			if (!title.trim()) title = result.title;
+			// 4 ist der Startwert des Felds, also noch nicht von Hand geändert.
+			if (result.servings && servings === 4) servings = result.servings;
+			if (!prepMinutes && result.prepMinutes) prepMinutes = result.prepMinutes;
+			if (!instructions.trim()) instructions = result.instructions;
+			tags = [...tags, ...result.tags.filter((t) => !tags.includes(t))];
+			pasteText = result.ingredientLines.join('\n');
+			const count = pastedLines.reduce((n, line) => n + line.items.length, 0);
+			const unsure = count > 0 ? applyPaste() : 0;
+			pasteText = '';
+			sourceUrl = result.sourceUrl;
+			importUrl = '';
+			importStatus = [
+				m.editor_import_done({ count }),
+				unsure > 0 ? m.editor_import_unsure({ count: unsure }) : ''
+			]
+				.filter(Boolean)
+				.join(' ');
+		} catch (err) {
+			importError =
+				serverMessage(err) ??
+				(errorStatus(err) === 0 ? m.editor_import_offline() : m.editor_import_error());
+		} finally {
+			importBusy = false;
+		}
+	}
+
+	function importKey(event: KeyboardEvent) {
+		// Enter holt das Rezept, statt das ganze Formular abzuschicken.
+		if (event.key !== 'Enter') return;
+		event.preventDefault();
+		void runImport();
 	}
 
 	/** Eingefügte Zeilen, die jemand nachträglich geändert hat, als Korrektur merken. */
@@ -223,7 +281,8 @@
 					is_favorite: favorite,
 					instructions,
 					prep_minutes: Number(prepMinutes) || 0,
-					difficulty: Number(difficulty)
+					difficulty: Number(difficulty),
+					source_url: sourceUrl
 				},
 				rows.map((r) => ({
 					id: r.id,
@@ -249,6 +308,40 @@
 </script>
 
 <form class="editor" onsubmit={submit} novalidate>
+	{#if !initial.recipe}
+		<section class="import" aria-labelledby="import-title">
+			<h2 id="import-title">{m.editor_import_title()}</h2>
+			<div class="import-row">
+				<label class="field">
+					<span>{m.editor_import_label()}</span>
+					<input
+						id="import-url"
+						type="url"
+						inputmode="url"
+						autocomplete="off"
+						placeholder={m.editor_import_placeholder()}
+						aria-describedby="import-hint"
+						disabled={!syncStatus.online}
+						bind:value={importUrl}
+						onkeydown={importKey}
+					/>
+				</label>
+				<button
+					class="btn"
+					type="button"
+					disabled={importBusy || !syncStatus.online || !importUrl.trim()}
+					onclick={runImport}
+					>{importBusy ? m.editor_import_busy() : m.editor_import_button()}</button
+				>
+			</div>
+			<p class="hint" id="import-hint">
+				{syncStatus.online ? m.editor_import_hint() : m.editor_import_offline()}
+			</p>
+			{#if importError}<p class="form-error" role="alert">{importError}</p>{/if}
+			<p class="hint" role="status">{importStatus}</p>
+		</section>
+	{/if}
+
 	<div class="grid-2">
 		<label class="field title">
 			<span>{m.editor_name()}</span>
@@ -360,6 +453,7 @@
 					<details class="extras" open={hasExtras(item)}>
 						<summary>
 							{m.editor_ingredient_more()}
+							{#if item.unsure}<span class="badge warn">{m.paste_badge_unsure()}</span>{/if}
 							{#if item.optional}<span class="badge">{m.paste_badge_optional()}</span>{/if}
 							{#if item.amountKind === 'approx'}<span class="badge">{m.paste_badge_approx()}</span
 								>{/if}
@@ -702,6 +796,45 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-3);
+	}
+
+	.import {
+		display: grid;
+		gap: var(--space-2);
+		padding: var(--space-4);
+		border-radius: var(--radius);
+		background: var(--color-surface-2);
+	}
+
+	.import h2 {
+		margin: 0;
+		font-size: 1rem;
+	}
+
+	.import p {
+		margin: 0;
+	}
+
+	.import-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		gap: var(--space-3);
+	}
+
+	.import-row .field {
+		flex: 1 1 16rem;
+		min-width: 0;
+	}
+
+	.import-row input {
+		min-height: var(--touch-target);
+		padding: 0 var(--space-3);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-surface);
+		color: var(--color-text);
+		font: inherit;
 	}
 
 	.paste {

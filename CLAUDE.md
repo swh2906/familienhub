@@ -52,7 +52,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | `households` | `name`, `timezone` | – |
 | `memberships` | `role` (admin, adult, child), `color`, `display_name` | `users`, `households` |
 | `invites` | `token_hash`, `code_hash`, `role`, `expires_at`, `uses_left`, `revoked` | `households`, `memberships` |
-| `recipes` | `title`, `servings`, `instructions`, `tags[]`, `is_favorite`, `prep_minutes`, `difficulty` (0–3) | `households` |
+| `recipes` | `title`, `servings`, `instructions`, `tags[]`, `is_favorite`, `prep_minutes`, `difficulty` (0–3), `source_url` | `households` |
 | `ingredients` (Basisartikel) | `name`, `key` (je Familie eindeutig, feste ID daraus), `aliases[]`, `unit`, `category`, `pack_amount` | `households` |
 | `recipe_ingredients` | `name`, `amount`, `unit`, `category`, `sort`, `optional`, `alternatives[]`, `amount_kind`, `note` | `recipes`, `ingredients` (optional) |
 | `parse_corrections` | `key` (normalisierte Zeile), `input`, `result` (JSON) | `households` |
@@ -109,7 +109,7 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 9. Heute-Ansicht ✓
 10. Feinschliff, Offline-Tests, Deployment, Backups ✓ (Abnahme auf ZimaOS steht aus)
 11. Zutaten, Vorrat und intelligente Einkaufsliste ✓ (Phasen A–E in PLAN.md)
-12. **Roadmap-Punkte aus PLAN.md** ← als Nächstes (Abnahme auf ZimaOS, Familientest)
+12. **Roadmap-Punkte aus PLAN.md** ← als Nächstes (Rezept-Import per Link ✓; Abnahme auf ZimaOS, Familientest)
 
 Details, Aufgaben und Abnahmekriterien pro Schritt stehen in **PLAN.md**. Dort Checkboxen abhaken, sobald etwas erledigt ist.
 

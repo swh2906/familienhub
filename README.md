@@ -79,6 +79,9 @@ flowchart LR
 ```
 
 - Ohne Verbindung arbeitet die App normal weiter; die Kopfzeile zeigt „Offline“ bzw. „N ausstehend“.
+- Auch ein Start ganz ohne Netz geht: Die Live-Updates werden nachgeholt, sobald der Server wieder erreichbar ist.
+- Ist der Server nicht erreichbar (aus, oder unterwegs ohne Verbindung ins Heimnetz), startet die App nach höchstens 4 s mit den gespeicherten Daten; jede Anfrage bricht nach 15 s ab, statt zu hängen.
+- Die Anmeldung gilt 365 Tage und verlängert sich bei jedem Start. Ist sie doch abgelaufen, arbeitet die App lokal weiter und zeigt „Neu anmelden“; lokale Daten und ausstehende Änderungen bleiben dabei erhalten. Nur ein anderes Konto oder „Abmelden“ löscht die lokalen Daten.
 - Konflikte: pro Feld gewinnt die zuletzt beim Server angekommene Änderung.
 - Lehnt der Server eine Änderung ab (z. B. fehlende Rechte), wird sie zurückgesetzt und ein Hinweis angezeigt.
 - Abmelden löscht die lokale Datenbank.
@@ -90,6 +93,12 @@ flowchart LR
 - Nach einem Update erscheint „Neue Version verfügbar“. Erst „Neu laden“ aktiviert sie, damit keine Eingaben verloren gehen.
 - Tastatur: Der erste Tab-Stopp ist „Zum Inhalt springen“; die Taste **N** startet „Neu“ (Aufgabe, Termin, Rezept, Einkaufsfeld).
 - `pnpm test:e2e` prüft alle Seiten mit axe (WCAG 2.1 AA) in Hell und Dunkel sowie den Offline-Start.
+
+## Heute: Dashboard
+
+**Schnelleingabe:** Oben auf „Heute“ eine Zeile für alles. „Morgen 15 Uhr Zahnarzt Mia“ wird ein Termin, „Mia Zimmer aufräumen Samstag“ eine Aufgabe für Mia, „2 l Milch“ ein Einkauf. Homi zeigt vor dem Speichern, was es verstanden hat; die Art lässt sich per Tipp umstellen oder mit „Termin:“, „Aufgabe:“, „Einkauf:“ erzwingen. Die Erkennung läuft nur auf dem Gerät.
+
+Die Startseite zeigt oben vier Kennzahlen (Termine heute, Einkauf offen, Aufgaben fällig, Überschneidungen), darunter „Als Nächstes“ (Termine und wann das Kochen beginnt), die fälligen Aufgaben, die nächsten 7 Tage (Termine, Essen, Aufgaben je Tag) und den Einkauf mit Schnelleingabe. „Alle / Nur meins“ filtert Termine und Aufgaben auf die eigenen und die der ganzen Familie; die Auswahl gilt je Gerät, Kinder starten mit „Nur meins“.
 
 ## Kalender: Termine ziehen
 
@@ -105,12 +114,16 @@ Rezepte lassen sich per Link übernehmen: Beim Anlegen den Link einfügen, Pocke
 
 Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (Prinzip aus der COOK-App): bildschirmfüllend, große Schrift, Portionen umrechnen, Zutaten abhaken (nur lokal), Bildschirm bleibt an (Wake Lock, wo der Browser es kann). Schwierigkeit (Kochmützen) und Dauer setzen Admins und Erwachsene; die Handschrift „Patrick Hand“ liegt lokal in `static/fonts/` (SIL Open Font License, keine externen Schriften).
 
+## Gestaltung
+
+Hausschrift ist **Plus Jakarta Sans** (variabel, lokal in `static/fonts/`, SIL Open Font License). Farben, Typo-Skala (`--fs-*`), Radien und Schatten stehen als Variablen in `src/lib/ui/theme.css`; Seiten verwenden nur diese. Gemeinsame Bausteine: `.card`, `.btn`, `.pills` (Reiter und Umschalter, aktiv in dunkler „Tinte“), `.field`. Standard-Akzent ist Terrakotta; Salbei, Petrol, Taubenblau, Indigo, Pflaume, Ocker und Graphit lassen sich in den Einstellungen wählen. Logo, App-Icons und Favicon erzeugt `pnpm icons` aus derselben Form wie `src/lib/ui/Logo.svelte`.
+
 ## Datenschutz
 
 - **Datenexport** (Einstellungen → Daten und Konto): alle Daten der Familie als JSON-Datei, direkt aus der lokalen Datenbank (geht auch offline). Gelöschte Einträge und Einladungen sind nicht enthalten.
 - **Konto löschen**: mit Passwort. Das Konto verschwindet, die Mitgliedschaft bleibt ohne Namen bestehen; Einträge zeigen „Ehemaliges Mitglied“. Der letzte Admin muss vorher die Admin-Rolle übergeben oder den Familienraum löschen.
 - **Familienraum löschen** (Admin): mit dem Namen als Bestätigung; alle Daten werden sofort endgültig gelöscht. Andere Geräte merken das beim nächsten Abgleich und verwerfen ihre lokalen Daten (ebenso, wenn jemand aus der Familie entfernt wurde).
-- **Aufräum-Job**: Gelöschte Einträge (`deleted_at`) werden nach 30 Tagen endgültig entfernt, täglich um 3:30 Uhr (Serverzeit). Mitgliedschaften bleiben für „Ehemaliges Mitglied“.
+- **Aufräum-Job**: Gelöschte Einträge (`deleted_at`) werden nach 30 Tagen endgültig entfernt, der Erledigt-Verlauf der Aufgaben nach 14 Tagen; täglich um 3:30 Uhr (Serverzeit), die Geräte räumen lokal genauso auf. Mitgliedschaften bleiben für „Ehemaliges Mitglied“.
 
 ## Datenmodell und Rechte
 

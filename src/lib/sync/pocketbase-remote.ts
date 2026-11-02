@@ -42,6 +42,18 @@ export class PocketBaseRemote implements Remote {
 		}
 	}
 
+	async verifyAuth(): Promise<boolean> {
+		if (!this.pb.authStore.token) return false;
+		try {
+			await this.pb.collection('users').authRefresh(NO_CANCEL);
+			return true;
+		} catch (error) {
+			const remoteError = toRemoteError(error);
+			if (remoteError.kind === 'network') throw remoteError;
+			return false;
+		}
+	}
+
 	async fetchOne(collection: CollectionName, id: string): Promise<RemoteRecord | null> {
 		try {
 			return await this.pb.collection(collection).getOne<RemoteRecord>(id, NO_CANCEL);

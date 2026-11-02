@@ -8,12 +8,14 @@ import {
 	createFamily,
 	createFamilyWithMember,
 	login,
+	openSettingsSection,
 	PASSWORD
 } from './helpers.ts';
 
 async function openSettings(page: Page) {
 	await page.goto('/einstellungen');
 	await expect(page.getByRole('heading', { level: 1, name: 'Einstellungen' })).toBeVisible();
+	await openSettingsSection(page, 'Daten');
 }
 
 test('Datenexport enthält die Daten der Familie als JSON', async ({ page }) => {

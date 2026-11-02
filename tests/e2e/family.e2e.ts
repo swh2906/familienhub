@@ -1,7 +1,7 @@
 // Kompletter Ablauf über die Oberfläche: Admin registriert sich und legt die Familie an,
 // lädt per Link ein, ein zweiter Nutzer tritt bei; dazu ein Kinderkonto mit Benutzername.
 import { expect, test, type Page } from '@playwright/test';
-import { PASSWORD, unique } from './helpers.ts';
+import { openSettingsSection, PASSWORD, unique } from './helpers.ts';
 
 async function register(page: Page, name: string, email: string) {
 	await page.getByLabel('Dein Name').fill(name);
@@ -29,6 +29,7 @@ test('Admin registriert sich, lädt ein, zweiter Nutzer tritt per Link bei', asy
 	// Einladung als Erwachsener erstellen.
 	await page.getByRole('link', { name: 'Einstellungen' }).click();
 	await expect(page.getByRole('heading', { name: /Familie: Familie Sonnenschein/ })).toBeVisible();
+	await openSettingsSection(page, 'Einladen');
 	await page.getByRole('button', { name: 'Einladung erstellen' }).click();
 	const link = (await page.getByTestId('invite-link').textContent())?.trim() ?? '';
 	expect(link).toMatch(/\/join\/[A-Za-z0-9]{40}$/);
@@ -63,6 +64,7 @@ test('Admin registriert sich, lädt ein, zweiter Nutzer tritt per Link bei', asy
 	// Admin legt ein Kinderkonto an; das Kind meldet sich mit Benutzername an.
 	const username = unique('mia').toLowerCase().slice(0, 30);
 	await page.reload();
+	await openSettingsSection(page, 'Kind');
 	await page.getByLabel('Name', { exact: true }).fill('Mia');
 	await page.getByLabel('Benutzername').fill(username);
 	await page.getByLabel('Passwort', { exact: true }).fill(PASSWORD);
@@ -86,6 +88,7 @@ test('Beitritt per Code im Onboarding', async ({ page, browser }) => {
 	await page.getByLabel('Name des Familienraums').fill('Familie Code');
 	await page.getByRole('button', { name: 'Anlegen' }).click();
 	await page.getByRole('link', { name: 'Einstellungen' }).click();
+	await openSettingsSection(page, 'Einladen');
 	await page.getByRole('combobox', { name: 'Rolle', exact: true }).selectOption('child');
 	await page.getByRole('button', { name: 'Einladung erstellen' }).click();
 	const code = (await page.getByTestId('invite-code').textContent())?.trim() ?? '';

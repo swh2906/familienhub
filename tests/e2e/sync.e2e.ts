@@ -1,6 +1,6 @@
 // Zwei Geräte derselben Familie: Änderungen kommen live an, auch nach einer Offline-Phase.
-// Daten werden über den Test-Zugang window.__familienhub geschrieben (dieselben Repositories wie die App),
-// bis es in Schritt 5 mit der Einkaufsliste eine echte Oberfläche dafür gibt.
+// Der erste Test schreibt über den Test-Zugang window.__familienhub (dieselben Repositories wie die
+// App), die Einkaufs-Tests über die echte Oberfläche.
 import { expect, test, type Page } from '@playwright/test';
 import { createFamilyWithMember, login } from './helpers.ts';
 
@@ -88,4 +88,99 @@ test('Abmelden löscht die lokalen Daten', async ({ page }) => {
 		(await indexedDB.databases()).map((db) => db.name)
 	);
 	expect(databases).not.toContain('familienhub');
+});
+
+/** Einkaufsliste über die echte Oberfläche öffnen und warten, bis der Abgleich steht. */
+async function openShopping(page: Page): Promise<void> {
+	await page
+		.getByRole('navigation', { name: 'Hauptnavigation' })
+		.getByRole('link', { name: 'Einkauf', exact: true })
+		.click();
+	await expect(page.getByRole('status', { name: 'Abgleich: Synchron' })).toBeVisible({
+		timeout: 10_000
+	});
+}
+
+async function addItem(page: Page, text: string): Promise<void> {
+	await page.getByLabel('Was braucht ihr?').fill(text);
+	await page.getByLabel('Was braucht ihr?').press('Enter');
+}
+
+test('Einkauf: beide Geräte ändern offline, danach haben beide denselben Stand', async ({
+	browser
+}) => {
+	const family = await createFamilyWithMember();
+	const contextA = await browser.newContext();
+	const contextB = await browser.newContext();
+	const a = await contextA.newPage();
+	const b = await contextB.newPage();
+	await login(a, family.admin);
+	await login(b, family.member);
+	await openShopping(a);
+	await openShopping(b);
+	await addItem(a, 'Brot');
+	await expect(b.getByRole('button', { name: 'Brot als gekauft markieren' })).toBeVisible({
+		timeout: 10_000
+	});
+
+	// Beide offline: A legt an und hakt ab, B legt an; alles bleibt lokal gespeichert.
+	await contextA.setOffline(true);
+	await contextB.setOffline(true);
+	await addItem(a, '2 l Milch');
+	await a.getByRole('button', { name: 'Brot als gekauft markieren' }).click();
+	await expect(a.getByRole('button', { name: 'Brot als gekauft markieren' })).toHaveCount(0);
+	await addItem(b, 'Äpfel');
+	await expect(b.getByRole('button', { name: /^Äpfel als gekauft markieren/ })).toBeVisible();
+	await expect(a.getByRole('status', { name: /Abgleich: (Offline|\d+ ausstehend)/ })).toBeVisible();
+
+	// A startet die App sogar offline neu: die Änderungen sind noch da.
+	await a.reload();
+	await expect(a.getByRole('button', { name: /^Milch 2 l als gekauft markieren/ })).toBeVisible();
+
+	await contextA.setOffline(false);
+	await contextB.setOffline(false);
+	for (const page of [a, b]) {
+		await expect(
+			page.getByRole('button', { name: /^Milch 2 l als gekauft markieren/ })
+		).toBeVisible({ timeout: 15_000 });
+		await expect(page.getByRole('button', { name: /^Äpfel als gekauft markieren/ })).toBeVisible({
+			timeout: 15_000
+		});
+		await expect(page.getByRole('button', { name: 'Brot als gekauft markieren' })).toHaveCount(0);
+	}
+
+	await contextA.close();
+	await contextB.close();
+});
+
+test('App offline gestartet: nach dem Wiederverbinden kommen Änderungen sofort live an', async ({
+	browser
+}) => {
+	const family = await createFamilyWithMember();
+	const contextA = await browser.newContext();
+	const contextB = await browser.newContext();
+	const a = await contextA.newPage();
+	const b = await contextB.newPage();
+	await login(a, family.admin);
+	await login(b, family.member);
+	await openShopping(a);
+	await openShopping(b);
+
+	// Start ohne Netz: die Live-Abos kommen nicht zustande und werden später nachgeholt.
+	await contextA.setOffline(true);
+	await a.reload();
+	await expect(a.getByRole('heading', { level: 1, name: 'Einkauf' })).toBeVisible();
+	await contextA.setOffline(false);
+	await expect(a.getByRole('status', { name: 'Abgleich: Synchron' })).toBeVisible({
+		timeout: 15_000
+	});
+
+	// Deutlich schneller als der Abgleich alle 60 Sekunden.
+	await addItem(b, 'Käse');
+	await expect(a.getByRole('button', { name: 'Käse als gekauft markieren' })).toBeVisible({
+		timeout: 10_000
+	});
+
+	await contextA.close();
+	await contextB.close();
 });

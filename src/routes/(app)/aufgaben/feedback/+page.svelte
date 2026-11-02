@@ -140,7 +140,7 @@
 <style>
 	h1 {
 		margin: 0 0 var(--space-3);
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 	}
 
@@ -212,7 +212,7 @@
 		gap: var(--space-2);
 		margin: 0;
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.status {

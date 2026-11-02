@@ -49,7 +49,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | Collection | Wichtige Felder | Verweist auf |
 | --- | --- | --- |
 | `users` (Auth) | `name`, `email` (Erwachsene), `username` (Kinder) | – |
-| `households` | `name`, `timezone` | – |
+| `households` | `name`, `timezone`, `meal_slots[]` (leer = alle Mahlzeiten) | – |
 | `memberships` | `role` (admin, adult, child), `color`, `display_name` | `users`, `households` |
 | `invites` | `token_hash`, `code_hash`, `role`, `expires_at`, `uses_left`, `revoked` | `households`, `memberships` |
 | `recipes` | `title`, `servings`, `instructions`, `tags[]`, `is_favorite`, `prep_minutes`, `difficulty` (0–3), `source_url` | `households` |
@@ -71,6 +71,7 @@ Gemeinsame Felder aller Familien-Tabellen: `id`, `created`, `updated`, `updated_
 | --- | --- | --- | --- |
 | Mitglieder einladen/entfernen, Rollen ändern | ja | nein | nein |
 | Familienraum umbenennen/löschen | ja | nein | nein |
+| Geplante Mahlzeiten im Wochenplan einstellen | ja | ja | nein |
 | Termine sehen | ja | ja | ja |
 | Termine, Rezepte, Essensplan bearbeiten | ja | ja | nein |
 | Einkaufsartikel hinzufügen und abhaken | ja | ja | ja |
@@ -109,7 +110,7 @@ Nicht im MVP (Phase 2 oder später): Push-Benachrichtigungen, Punkte/Belohnungen
 9. Heute-Ansicht ✓
 10. Feinschliff, Offline-Tests, Deployment, Backups ✓ (Abnahme auf ZimaOS steht aus)
 11. Zutaten, Vorrat und intelligente Einkaufsliste ✓ (Phasen A–E in PLAN.md)
-12. **Roadmap-Punkte aus PLAN.md** ← als Nächstes (Rezept-Import per Link ✓; Abnahme auf ZimaOS, Familientest)
+12. **Roadmap-Punkte aus PLAN.md** ← als Nächstes (Abnahme auf ZimaOS, Familientest; erledigt: 12a–17, zuletzt 17 Rezept-Import per Link)
 
 Details, Aufgaben und Abnahmekriterien pro Schritt stehen in **PLAN.md**. Dort Checkboxen abhaken, sobald etwas erledigt ist.
 

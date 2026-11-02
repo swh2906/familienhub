@@ -189,6 +189,24 @@ describe('Familienraum (households)', () => {
 		expect(renamed.name).toBe('Familie A.');
 	});
 
+	it('Mahlzeiten im Wochenplan: Admin und Erwachsene stellen ein, Kinder nicht', async () => {
+		const households = (role: 'admin' | 'adult' | 'child') => as[role].collection('households');
+		const adult = await households('adult').update(householdA, { meal_slots: ['dinner'] });
+		expect(adult.meal_slots).toEqual(['dinner']);
+		// Erwachsene dürfen dabei nichts anderes ändern.
+		await expectDenied(
+			households('adult').update(householdA, { meal_slots: ['lunch'], name: 'X' })
+		);
+		await expectDenied(households('child').update(householdA, { meal_slots: ['lunch'] }));
+		// Nur bekannte Mahlzeiten.
+		await expectDenied(households('admin').update(householdA, { meal_slots: ['snack'] }), [400]);
+		const admin = await households('admin').update(householdA, {
+			meal_slots: ['breakfast', 'dinner']
+		});
+		expect(admin.meal_slots).toEqual(['breakfast', 'dinner']);
+		await households('admin').update(householdA, { meal_slots: [] });
+	});
+
 	it('löschen nur über die eigene Route (siehe privacy.test.ts), nicht direkt', async () => {
 		for (const role of ['admin', 'adult', 'child'] as const) {
 			await expectDenied(as[role].collection('households').delete(householdA));
@@ -721,5 +739,23 @@ describe('Antworten auf Hinweise (hint_responses)', () => {
 			response: 'not_today'
 		});
 		expect(child.membership).toBe(membership.child);
+	});
+});
+
+describe('Anmeldung', () => {
+	it('gilt 365 Tage und wird bei jeder Verlängerung erneuert', async () => {
+		const { pb } = await signUp(server.url, { email: 'lang@r.test', name: 'Lang' });
+		const exp = (token: string) =>
+			(
+				JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as {
+					exp: number;
+				}
+			).exp;
+		const days = (exp(pb.authStore.token) * 1000 - Date.now()) / 86_400_000;
+		expect(days).toBeGreaterThan(364);
+		expect(days).toBeLessThanOrEqual(365);
+
+		await pb.collection('users').authRefresh();
+		expect(exp(pb.authStore.token) * 1000 - Date.now()).toBeGreaterThan(364 * 86_400_000);
 	});
 });

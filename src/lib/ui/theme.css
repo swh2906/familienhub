@@ -13,8 +13,42 @@
 	font-display: swap;
 }
 
+/* Hausschrift (Schritt 14): Plus Jakarta Sans, variabel 400–800, lokal mitgeliefert
+   (SIL OFL, static/fonts/plus-jakarta-sans-OFL.txt). */
+@font-face {
+	font-family: 'Plus Jakarta Sans';
+	src: url('/fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+	font-weight: 400 800;
+	font-display: swap;
+	unicode-range:
+		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+	font-family: 'Plus Jakarta Sans';
+	src: url('/fonts/plus-jakarta-sans-latin-ext.woff2') format('woff2');
+	font-weight: 400 800;
+	font-display: swap;
+	unicode-range:
+		U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F,
+		U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
 	--font-hand: 'Patrick Hand', 'Noteworthy', 'Bradley Hand', cursive;
+	/* Standard: Terrakotta (warm, passend zum Creme-Hintergrund) */
+	--accent-light: #a3461f;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #f6e3d8;
+	--accent-light-strong: #7e3417;
+	--accent-dark: #eb9a77;
+	--accent-dark-on: #1b1916;
+	--accent-dark-soft: #3d2b22;
+	--accent-dark-strong: #f6c2a9;
+}
+
+:root[data-accent='petrol'] {
 	--accent-light: #0e6e66;
 	--accent-light-on: #ffffff;
 	--accent-light-soft: #ddf1ee;
@@ -23,6 +57,50 @@
 	--accent-dark-on: #052a26;
 	--accent-dark-soft: #143330;
 	--accent-dark-strong: #93e3d8;
+}
+
+:root[data-accent='salbei'] {
+	--accent-light: #496a4c;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #e3ece2;
+	--accent-light-strong: #35503a;
+	--accent-dark: #9cc59f;
+	--accent-dark-on: #132016;
+	--accent-dark-soft: #23312a;
+	--accent-dark-strong: #c6e2c8;
+}
+
+:root[data-accent='taubenblau'] {
+	--accent-light: #3e5f8a;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #e2e9f3;
+	--accent-light-strong: #2d4769;
+	--accent-dark: #a7c0e6;
+	--accent-dark-on: #111a28;
+	--accent-dark-soft: #222c3d;
+	--accent-dark-strong: #cddcf3;
+}
+
+:root[data-accent='pflaume'] {
+	--accent-light: #7b3f6c;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #f1e3ec;
+	--accent-light-strong: #5e2f52;
+	--accent-dark: #dba6cc;
+	--accent-dark-on: #261321;
+	--accent-dark-soft: #3a2433;
+	--accent-dark-strong: #efcfe4;
+}
+
+:root[data-accent='ocker'] {
+	--accent-light: #865810;
+	--accent-light-on: #ffffff;
+	--accent-light-soft: #f5e8cf;
+	--accent-light-strong: #674309;
+	--accent-dark: #e6b866;
+	--accent-dark-on: #251a08;
+	--accent-dark-soft: #3a2e18;
+	--accent-dark-strong: #f3d8a3;
 }
 
 :root[data-accent='indigo'] {
@@ -48,14 +126,19 @@
 }
 
 :root {
-	/* Neutrale Grundfarben, leicht warm */
-	--color-bg: #f5f5f3;
-	--color-surface: #ffffff;
-	--color-surface-2: #efefec;
-	--color-text: #1f2023;
-	--color-text-muted: #62646a;
-	--color-border: #e4e4e0;
-	--shadow-card: 0 1px 2px rgb(20 20 25 / 0.06), 0 2px 8px rgb(20 20 25 / 0.04);
+	/* Warme Grundfarben (Design-Richtung „Mischung“): Creme-Hintergrund, helle Karten mit Rand. */
+	--color-bg: #f6f2ea;
+	--color-surface: #fffdf9;
+	--color-surface-2: #ede6d9;
+	--color-text: #24211c;
+	--color-text-muted: #625c52;
+	--color-border: #e2dacb;
+	--shadow-card: 0 0 0 1px #e2dacb, 0 1px 2px rgb(40 30 20 / 0.05);
+	--shadow-float: 0 12px 32px rgb(36 33 28 / 0.28);
+	/* „Tinte“: dunkle Flächen wie Schnelleingabe und schwebende Leiste */
+	--color-ink: #24211c;
+	--color-on-ink: #fffdf9;
+	--color-on-ink-muted: #c9c0b2;
 
 	/* Akzent (aus dem gewählten Satz) */
 	--color-primary: var(--accent-light);
@@ -65,7 +148,7 @@
 	--color-focus: var(--accent-light);
 
 	/* Hinweise */
-	--color-warning: #8a5a00;
+	--color-warning: #7f5300;
 	--color-danger: #b42318;
 	--paper: #ebe7d9;
 	--paper-line: rgb(37 99 235 / 0.22);
@@ -74,17 +157,17 @@
 	--paper-heading: #9b2318;
 	--paper-meta: #1d4aa0;
 	--paper-tape: rgb(234 196 53 / 0.55);
-	--color-warning-bg: #fdf3dc;
+	--color-warning-bg: #faefd8;
 
-	/* Bereichsfarben: nur für kleine Symbole, nie für große Flächen */
-	--color-meals: #b4410f;
-	--color-meals-bg: #fdeee4;
-	--color-shopping: #18733b;
-	--color-shopping-bg: #e4f4e9;
-	--color-calendar: #2453c7;
-	--color-calendar-bg: #e6edfc;
-	--color-tasks: #7a3bd1;
-	--color-tasks-bg: #f0e9fc;
+	/* Bereichsfarben (gedeckt): Schrift, Symbole, Markierungen; „-bg“ für zarte Flächen */
+	--color-meals: #a3461f;
+	--color-meals-bg: #f6e3d8;
+	--color-shopping: #2d6a3f;
+	--color-shopping-bg: #e1eee3;
+	--color-calendar: #2f4c8c;
+	--color-calendar-bg: #e6ebf5;
+	--color-tasks: #6b4290;
+	--color-tasks-bg: #eee6f4;
 
 	/* Mitgliedsfarben: immer mit weißer Initiale, in beiden Modi gleich */
 	--member-1: #2453c7;
@@ -98,13 +181,29 @@
 	--member-text: #ffffff;
 
 	/* Vorschaufarben für die Auswahl in den Einstellungen */
+	--swatch-terrakotta: #a3461f;
+	--swatch-salbei: #496a4c;
+	--swatch-taubenblau: #3e5f8a;
+	--swatch-pflaume: #7b3f6c;
+	--swatch-ocker: #865810;
 	--swatch-petrol: #0e6e66;
 	--swatch-indigo: #4f46e5;
 	--swatch-graphit: #2f3136;
 
-	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-	--radius: 12px;
-	--radius-card: 18px;
+	--font-sans:
+		'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+		sans-serif;
+	/* Typo-Skala: nur diese Größen verwenden */
+	--fs-display: 2rem;
+	--fs-title: 1.25rem;
+	--fs-lead: 1.0625rem;
+	--fs-body: 1rem;
+	--fs-small: 0.875rem;
+	--fs-mini: 0.8125rem;
+	--tracking-tight: -0.03em;
+	--radius: 14px;
+	--radius-card: 24px;
+	--radius-pill: 999px;
 	--space-1: 4px;
 	--space-2: 8px;
 	--space-3: 12px;
@@ -113,7 +212,8 @@
 	--space-8: 32px;
 	--touch-target: 48px;
 	--header-height: 56px;
-	--nav-height: 64px;
+	/* Platz, den die schwebende Leiste unten belegt (Leiste 72 px + Abstand 16 px) */
+	--nav-height: 88px;
 	--rail-width: 96px;
 	--sidebar-width: 248px;
 	--content-max-width: 1080px;
@@ -123,19 +223,23 @@
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--color-bg: #121314;
-		--color-surface: #1b1c1e;
-		--color-surface-2: #242528;
-		--color-text: #ededeb;
-		--color-text-muted: #a4a6ab;
-		--color-border: #2e3033;
-		--shadow-card: 0 0 0 1px #2a2b2e;
+		--color-bg: #1b1916;
+		--color-surface: #25231f;
+		--color-surface-2: #302c27;
+		--color-text: #f2ece3;
+		--color-text-muted: #b8afa1;
+		--color-border: #3a362f;
+		--shadow-card: 0 0 0 1px #3a362f;
+		--shadow-float: 0 12px 32px rgb(0 0 0 / 0.5);
+		--color-ink: #f2ece3;
+		--color-on-ink: #1b1916;
+		--color-on-ink-muted: #5e574c;
 		--color-primary: var(--accent-dark);
 		--color-primary-text: var(--accent-dark-on);
 		--color-primary-soft: var(--accent-dark-soft);
 		--color-primary-strong: var(--accent-dark-strong);
 		--color-focus: var(--accent-dark);
-		--color-warning: #f5c76b;
+		--color-warning: #f2c66e;
 		--color-danger: #ff9b8f;
 		--paper: #2a2823;
 		--paper-line: rgb(140 170 255 / 0.2);
@@ -144,15 +248,24 @@
 		--paper-heading: #ff9b8f;
 		--paper-meta: #a9c1ff;
 		--paper-tape: rgb(234 196 53 / 0.35);
-		--color-warning-bg: #3a2e12;
-		--color-meals: #ffb48a;
-		--color-meals-bg: #3a2418;
-		--color-shopping: #86dba4;
-		--color-shopping-bg: #17301f;
-		--color-calendar: #a8c1ff;
-		--color-calendar-bg: #1b2846;
-		--color-tasks: #cfb3ff;
-		--color-tasks-bg: #2c2045;
+		--color-warning-bg: #372e1d;
+		--color-meals: #eb9a77;
+		--color-meals-bg: #3d2b22;
+		--color-shopping: #9fd5ae;
+		--color-shopping-bg: #213529;
+		--color-calendar: #afc2ee;
+		--color-calendar-bg: #252f47;
+		--color-tasks: #d2b8ea;
+		--color-tasks-bg: #33283f;
+		--swatch-terrakotta: #eb9a77;
+		--swatch-salbei: #9cc59f;
+		--swatch-taubenblau: #a7c0e6;
+		--swatch-pflaume: #dba6cc;
+		--swatch-ocker: #e6b866;
+		--swatch-salbei: #9cc59f;
+		--swatch-taubenblau: #a7c0e6;
+		--swatch-pflaume: #dba6cc;
+		--swatch-ocker: #e6b866;
 		--swatch-petrol: #4fc9b9;
 		--swatch-indigo: #a5b4fc;
 		--swatch-graphit: #e6e6e4;
@@ -161,19 +274,23 @@
 }
 
 :root[data-theme='dark'] {
-	--color-bg: #121314;
-	--color-surface: #1b1c1e;
-	--color-surface-2: #242528;
-	--color-text: #ededeb;
-	--color-text-muted: #a4a6ab;
-	--color-border: #2e3033;
-	--shadow-card: 0 0 0 1px #2a2b2e;
+	--color-bg: #1b1916;
+	--color-surface: #25231f;
+	--color-surface-2: #302c27;
+	--color-text: #f2ece3;
+	--color-text-muted: #b8afa1;
+	--color-border: #3a362f;
+	--shadow-card: 0 0 0 1px #3a362f;
+	--shadow-float: 0 12px 32px rgb(0 0 0 / 0.5);
+	--color-ink: #f2ece3;
+	--color-on-ink: #1b1916;
+	--color-on-ink-muted: #5e574c;
 	--color-primary: var(--accent-dark);
 	--color-primary-text: var(--accent-dark-on);
 	--color-primary-soft: var(--accent-dark-soft);
 	--color-primary-strong: var(--accent-dark-strong);
 	--color-focus: var(--accent-dark);
-	--color-warning: #f5c76b;
+	--color-warning: #f2c66e;
 	--color-danger: #ff9b8f;
 	--paper: #2a2823;
 	--paper-line: rgb(140 170 255 / 0.2);
@@ -182,15 +299,16 @@
 	--paper-heading: #ff9b8f;
 	--paper-meta: #a9c1ff;
 	--paper-tape: rgb(234 196 53 / 0.35);
-	--color-warning-bg: #3a2e12;
-	--color-meals: #ffb48a;
-	--color-meals-bg: #3a2418;
-	--color-shopping: #86dba4;
-	--color-shopping-bg: #17301f;
-	--color-calendar: #a8c1ff;
-	--color-calendar-bg: #1b2846;
-	--color-tasks: #cfb3ff;
-	--color-tasks-bg: #2c2045;
+	--color-warning-bg: #372e1d;
+	--color-meals: #eb9a77;
+	--color-meals-bg: #3d2b22;
+	--color-shopping: #9fd5ae;
+	--color-shopping-bg: #213529;
+	--color-calendar: #afc2ee;
+	--color-calendar-bg: #252f47;
+	--color-tasks: #d2b8ea;
+	--color-tasks-bg: #33283f;
+	--swatch-terrakotta: #eb9a77;
 	--swatch-petrol: #4fc9b9;
 	--swatch-indigo: #a5b4fc;
 	--swatch-graphit: #e6e6e4;
@@ -211,6 +329,14 @@ body {
 	font-family: var(--font-sans);
 	line-height: 1.5;
 	-webkit-text-size-adjust: 100%;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+	font-weight: 800;
+	letter-spacing: var(--tracking-tight);
 }
 
 :focus-visible {
@@ -285,11 +411,11 @@ body {
 	min-height: var(--touch-target);
 	padding: 0 var(--space-6);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius);
+	border-radius: var(--radius-pill);
 	background: var(--color-surface);
 	color: var(--color-text);
 	font: inherit;
-	font-weight: 600;
+	font-weight: 700;
 	text-decoration: none;
 	cursor: pointer;
 }
@@ -336,4 +462,57 @@ body {
 	clip: rect(0 0 0 0);
 	white-space: nowrap;
 	border: 0;
+}
+
+/* ---- Pillen: Reiter (Links mit aria-current) und Umschalter (Knöpfe mit aria-pressed) ----
+   Aktiv = dunkle „Tinte“. Mit .scroll in einer Zeile wischbar (z. B. Personen-Filter). */
+
+.pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.pills.scroll {
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.pills > a,
+.pills > button {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: var(--touch-target);
+	padding: 0 18px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-pill);
+	background: var(--color-surface);
+	color: var(--color-text);
+	font: inherit;
+	font-weight: 700;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+/* Mit Avatar: Avatar sitzt bündig im linken Rund. */
+.pills > :has(.avatar) {
+	padding-left: 6px;
+}
+
+.pills > a:hover,
+.pills > button:hover {
+	background: var(--color-surface-2);
+}
+
+.pills > [aria-current='page'],
+.pills > [aria-pressed='true'],
+.pills > [aria-current='page']:hover,
+.pills > [aria-pressed='true']:hover {
+	border-color: var(--color-ink);
+	background: var(--color-ink);
+	color: var(--color-on-ink);
 }

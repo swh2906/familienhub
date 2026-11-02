@@ -246,7 +246,7 @@
 
 	.awake {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	/* Karteikarte: Papier, blaue Linien im Zeilenabstand, rote Randlinie links. */
@@ -274,7 +274,7 @@
 		background-position:
 			0 0,
 			0 calc(var(--line) * -0.26);
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 		line-height: var(--line);
 		overflow: hidden;
 	}

@@ -1,6 +1,7 @@
 // Aufgaben lesen und schreiben – nur über die lokale Datenbank; der Sync erledigt den Rest.
 import { repo } from '#lib/db/index.js';
 import type { Task, TaskCompletion } from '#lib/db/types.js';
+import { dueAfterRevert } from './list.js';
 import { nextDueDate } from './recurrence.js';
 
 export function tasksOf(household: string): Promise<Task[]> {
@@ -87,7 +88,22 @@ export async function undoCompletion(undo: CompletionUndo): Promise<void> {
 	await repo('task_completions').remove(undo.completionId);
 }
 
-/** Erledigte einmalige Aufgabe wieder öffnen. */
-export async function reopenTask(task: Task): Promise<void> {
-	await repo('tasks').update(task.id, { status: 'open' });
+/**
+ * Erledigt nachträglich zurücknehmen (Reiter „Erledigt“): Eintrag löschen; einmalige Aufgaben
+ * sind wieder offen, wiederkehrende wieder fällig (siehe `dueAfterRevert`).
+ */
+export async function revertCompletion(
+	completion: TaskCompletion,
+	task: Task | undefined,
+	completedOn: string
+): Promise<void> {
+	if (task && !task.deleted_at) {
+		await repo('tasks').update(
+			task.id,
+			task.rrule
+				? { due_date: dueAfterRevert(task.due_date ?? '', completedOn) }
+				: { status: 'open' }
+		);
+	}
+	await repo('task_completions').remove(completion.id);
 }

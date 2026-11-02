@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { Task, TaskCompletion } from '#lib/db/types.js';
-import { canComplete, dueKind, isOverdue, recentCompletions, tasksForTab } from './list.js';
+import {
+	canComplete,
+	dueAfterRevert,
+	dueKind,
+	effectiveDue,
+	groupOf,
+	groupTasks,
+	isOverdue,
+	recentCompletions,
+	tasksForTab
+} from './list.js';
 import {
 	nextDueDate,
 	presetToRrule,
@@ -201,8 +211,63 @@ describe('Aufgabenliste', () => {
 				deleted_at: 'x'
 			}
 		];
-		const result = recentCompletions(completions, tasks);
+		const now = Date.parse('2026-10-14T12:00:00Z');
+		const result = recentCompletions(completions, tasks, now);
 		expect(result.map((e) => e.completion.id)).toEqual(['2', '1']);
 		expect(result[0].task?.title).toBe('Zimmer aufräumen');
+		// Nach 14 Tagen verschwindet Erledigtes aus der Liste.
+		const later = Date.parse('2026-10-25T12:00:00Z');
+		expect(recentCompletions(completions, tasks, later).map((e) => e.completion.id)).toEqual(['2']);
+	});
+});
+
+describe('Erledigt zurücknehmen', () => {
+	it('Serie: wieder fällig am Tag des Abhakens, ein früheres altes Datum bleibt', () => {
+		expect(dueAfterRevert('2026-10-26', '2026-10-21')).toBe('2026-10-21');
+		expect(dueAfterRevert('2026-10-14', '2026-10-21')).toBe('2026-10-14');
+		expect(dueAfterRevert('', '2026-10-21')).toBe('2026-10-21');
+	});
+});
+
+describe('Gruppen nach Fälligkeit', () => {
+	const today = '2026-10-21'; // Mittwoch
+
+	it('ordnet nach Datum ein', () => {
+		expect(groupOf('2026-10-19', today)).toBe('overdue');
+		expect(groupOf(today, today)).toBe('today');
+		expect(groupOf('2026-10-22', today)).toBe('week');
+		expect(groupOf('2026-10-27', today)).toBe('week');
+		expect(groupOf('2026-10-28', today)).toBe('later');
+		expect(groupOf('', today)).toBe('none');
+	});
+
+	it('Wiederholung ohne Datum: nächstes Vorkommen ab heute', () => {
+		expect(effectiveDue(task('a', 'Müll', { rrule: 'FREQ=WEEKLY;BYDAY=WE' }), today)).toBe(today);
+		expect(effectiveDue(task('b', 'Blumen', { rrule: 'FREQ=WEEKLY;BYDAY=MO,TH' }), today)).toBe(
+			'2026-10-22'
+		);
+		expect(
+			effectiveDue(task('c', 'Fest', { due_date: '2026-11-01', rrule: 'FREQ=DAILY' }), today)
+		).toBe('2026-11-01');
+		expect(effectiveDue(task('d', 'Ohne'), today)).toBe('');
+	});
+
+	it('feste Reihenfolge, nur nicht leere Gruppen, Reihenfolge innerhalb bleibt', () => {
+		const groups = groupTasks(
+			[
+				task('1', 'Später', { due_date: '2026-12-01' }),
+				task('2', 'Ohne'),
+				task('3', 'Alt', { due_date: '2026-10-01' }),
+				task('4', 'Heute B', { due_date: today }),
+				task('5', 'Heute A', { due_date: today })
+			],
+			today
+		);
+		expect(groups.map((g) => [g.group, g.tasks.map((t) => t.id)])).toEqual([
+			['overdue', ['3']],
+			['today', ['4', '5']],
+			['later', ['1']],
+			['none', ['2']]
+		]);
 	});
 });

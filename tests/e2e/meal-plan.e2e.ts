@@ -148,6 +148,136 @@ test('Ziehen auf einen anderen Platz (Desktop)', async ({ page, isMobile }) => {
 	).toHaveCount(0);
 });
 
+test('Ziehen mit dem Finger: lange drücken, dann auf einen anderen Tag (iPhone/iPad)', async ({
+	page
+}) => {
+	const { email, household } = await createFamily();
+	const week = thisWeek();
+	await apiCreate(await apiToken(email), 'meal_plan_entries', {
+		household,
+		date: week.monday,
+		slot: 'dinner',
+		title: 'Suppe'
+	});
+	await login(page, email);
+	await openPlan(page);
+
+	const dish = slot(page, 'Abend', week.mondayLabel).getByRole('button', { name: /Suppe/ });
+	const target = slot(page, 'Abend', week.tuesdayLabel);
+	await target.scrollIntoViewIfNeeded();
+	await dish.scrollIntoViewIfNeeded();
+	const from = (await dish.boundingBox())!;
+	const touch = { pointerType: 'touch', pointerId: 7, isPrimary: true, button: 0, bubbles: true };
+	await dish.dispatchEvent('pointerdown', {
+		...touch,
+		clientX: from.x + from.width / 2,
+		clientY: from.y + from.height / 2
+	});
+	// Langes Drücken: danach erscheint die Vorschau am Finger.
+	await page.waitForTimeout(550);
+	const to = (await target.boundingBox())!;
+	const point = { x: to.x + to.width / 2, y: to.y + to.height / 2 };
+	await page.evaluate(
+		({ x, y, touch }) =>
+			window.dispatchEvent(new PointerEvent('pointermove', { ...touch, clientX: x, clientY: y })),
+		{ ...point, touch }
+	);
+	await expect(page.locator('.ghost')).toHaveText('Suppe');
+	await page.evaluate(
+		({ x, y, touch }) =>
+			window.dispatchEvent(new PointerEvent('pointerup', { ...touch, clientX: x, clientY: y })),
+		{ ...point, touch }
+	);
+
+	await expect(target.getByRole('button', { name: /Suppe/ })).toBeVisible();
+	await expect(
+		slot(page, 'Abend', week.mondayLabel).getByRole('button', { name: /Suppe/ })
+	).toHaveCount(0);
+});
+
+test('Finger, der sich vor dem langen Drücken bewegt, scrollt nur (kein Ziehen)', async ({
+	page
+}) => {
+	const { email, household } = await createFamily();
+	const week = thisWeek();
+	await apiCreate(await apiToken(email), 'meal_plan_entries', {
+		household,
+		date: week.monday,
+		slot: 'dinner',
+		title: 'Suppe'
+	});
+	await login(page, email);
+	await openPlan(page);
+	const dish = slot(page, 'Abend', week.mondayLabel).getByRole('button', { name: /Suppe/ });
+	await dish.scrollIntoViewIfNeeded();
+	const from = (await dish.boundingBox())!;
+	const touch = { pointerType: 'touch', pointerId: 8, isPrimary: true, button: 0, bubbles: true };
+	const x = from.x + from.width / 2;
+	const y = from.y + from.height / 2;
+	await dish.dispatchEvent('pointerdown', { ...touch, clientX: x, clientY: y });
+	await page.evaluate(
+		({ x, y, touch }) =>
+			window.dispatchEvent(
+				new PointerEvent('pointermove', { ...touch, clientX: x, clientY: y + 40 })
+			),
+		{ x, y, touch }
+	);
+	await page.waitForTimeout(550);
+	await expect(page.locator('.ghost')).toHaveCount(0);
+	await page.evaluate(
+		({ x, y, touch }) =>
+			window.dispatchEvent(
+				new PointerEvent('pointerup', { ...touch, clientX: x, clientY: y + 40 })
+			),
+		{ x, y, touch }
+	);
+	await expect(dish).toBeVisible();
+});
+
+test('Geplante Mahlzeiten einstellen: gilt für die Familie, nichts verschwindet', async ({
+	page
+}) => {
+	const { email, household } = await createFamily();
+	const week = thisWeek();
+	await apiCreate(await apiToken(email), 'meal_plan_entries', {
+		household,
+		date: week.monday,
+		slot: 'breakfast',
+		title: 'Müsli'
+	});
+	await login(page, email);
+	await openPlan(page);
+
+	await page.getByRole('button', { name: 'Mahlzeiten' }).click();
+	const choice = page.getByRole('group', { name: 'Geplante Mahlzeiten' });
+	await choice.getByRole('button', { name: 'Frühstück' }).click();
+	await choice.getByRole('button', { name: 'Mittag' }).click();
+	await expect(choice.getByRole('button', { name: 'Abend' })).toHaveAttribute(
+		'aria-pressed',
+		'true'
+	);
+	// Die letzte Mahlzeit bleibt (gesperrt, damit der Plan nie leer ist).
+	await expect(choice.getByRole('button', { name: 'Abend' })).toHaveAttribute(
+		'aria-disabled',
+		'true'
+	);
+
+	// Mittag ist ausgeblendet, Frühstück bleibt sichtbar, weil am Montag schon Müsli geplant ist.
+	await expect(slot(page, 'Mittag', week.tuesdayLabel)).toHaveCount(0);
+	await expect(slot(page, 'Abend', week.tuesdayLabel)).toBeVisible();
+	await expect(
+		slot(page, 'Frühstück', week.mondayLabel).getByRole('button', { name: /Müsli/ })
+	).toBeVisible();
+
+	// Bleibt nach dem Neuladen (in der Familie gespeichert und abgeglichen).
+	await expect(page.getByRole('status', { name: 'Abgleich: Synchron' })).toBeVisible({
+		timeout: 10_000
+	});
+	await page.reload();
+	await expect(slot(page, 'Mittag', week.tuesdayLabel)).toHaveCount(0);
+	await expect(slot(page, 'Abend', week.tuesdayLabel)).toBeVisible();
+});
+
 test('Wochen blättern und Kinder nur lesend', async ({ page }) => {
 	const { email, household } = await createFamily();
 	const week = thisWeek();

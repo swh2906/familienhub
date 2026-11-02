@@ -620,7 +620,7 @@
 		border-radius: 999px;
 		background: var(--color-meals-bg);
 		color: var(--color-meals);
-		font-size: 0.8125rem;
+		font-size: var(--fs-mini);
 		font-weight: 600;
 	}
 
@@ -631,7 +631,7 @@
 
 	.note {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.editor {
@@ -747,7 +747,7 @@
 		gap: var(--space-1) var(--space-2);
 		min-height: 36px;
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		cursor: pointer;
 	}
 
@@ -808,7 +808,7 @@
 
 	.import h2 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--fs-body);
 	}
 
 	.import p {

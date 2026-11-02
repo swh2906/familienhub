@@ -107,7 +107,7 @@
 		min-height: var(--touch-target);
 		padding: var(--space-2) var(--space-1);
 		border: 0;
-		border-radius: 14px;
+		border-radius: 20px;
 		font: inherit;
 		text-align: center;
 		cursor: pointer;
@@ -123,14 +123,15 @@
 		transform: scale(0.95);
 	}
 
-	/* Offene Artikel in der Akzentfarbe (Petrol, Indigo oder Graphit). */
+	/* Offene Artikel: zarte Einkaufsfarbe mit dunkler Schrift (ruhiger als eine volle Akzentfläche). */
 	.open {
-		background: var(--color-primary);
-		color: var(--color-primary-text);
+		background: var(--color-shopping-bg);
+		color: var(--color-text);
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-shopping) 22%, transparent);
 	}
 
 	.open:hover {
-		filter: brightness(1.08);
+		filter: brightness(0.97);
 	}
 
 	.recent,
@@ -161,8 +162,8 @@
 	/* Außen ohne overflow, damit die Kachel für zwei Zeilen mitwächst; innen auf zwei Zeilen gekürzt. */
 	.name {
 		max-width: 100%;
-		font-size: 0.875rem;
-		font-weight: 650;
+		font-size: var(--fs-small);
+		font-weight: 700;
 		line-height: 1.2;
 	}
 

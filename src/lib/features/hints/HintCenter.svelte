@@ -322,7 +322,7 @@
 	.meta {
 		margin: var(--space-1) 0 0;
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.answers {
@@ -346,7 +346,7 @@
 		background: none;
 		color: var(--color-text-muted);
 		font: inherit;
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		text-decoration: underline;
 		cursor: pointer;
 	}

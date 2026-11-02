@@ -362,7 +362,76 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 - [x] Tag/Woche springt zur aktuellen Uhrzeit.
 - [ ] Vor dem Abschluss der Testphase: Feedback auswerten, `HOMI_FEEDBACK` auf '0' setzen.
 
-### Rezept-Import per Link (`feat/schritt-12a-rezept-import`) – erledigt
+### 12a. Heute als Dashboard (`feat/schritt-12a-dashboard`)
+
+- [x] Kennzahlen oben (Termine heute, Einkauf offen, Aufgaben fällig/überfällig, Überschneidungen), jede antippbar.
+- [x] „Als Nächstes“: Termine und Kochbeginn (Essenszeit minus Zubereitungszeit) zeitlich sortiert, läuft gerade, Überschneidung im Klartext; ganztägige Termine darüber.
+- [x] „Nächste 7 Tage“: je Tag Personen, Termine, Konflikt, fällige Aufgaben und Essen (Handy Zeilen, Desktop 7 Spalten); Tag → Kalender, Essen → Kochansicht bzw. Wochenplan.
+- [x] Filter „Alle / Nur meins“ je Gerät (`fh-today-scope`), Kinder standardmäßig „Nur meins“.
+- [x] Logik in `features/today/dashboard.ts` mit Unit-Tests; E2E `today.e2e.ts` angepasst.
+- [x] Heller Modus mit mehr Kontrast: dunklerer Hintergrund, kräftigere Ränder, Schatten und Nebentext.
+- [x] Aufgaben → Erledigt: jeder Haken lässt sich antippen und nimmt das Erledigt zurück (einmalige wieder offen, Serien wieder fällig am Tag des Abhakens); Erledigtes lässt sich bearbeiten.
+- [x] Erledigt-Verlauf nur 14 Tage: Liste blendet Älteres aus, Aufräum-Job (Server und Gerät) löscht es endgültig. Hinweis: Punkte (Phase 2) lassen sich damit nicht rückwirkend über 14 Tage hinaus berechnen.
+
+### 12b. Feinschliff Kalender, Aufgaben, Einstellungen
+
+- [x] Kalender: kurze Termine (< 50 Min.) einzeilig, Titel vor Uhrzeit, kein Umbruch mitten im Wort; Jetzt-Linie rot hinter den Terminen; überlappende Termine 1,7-fach breit (`slotGeometry`).
+- [x] Dialoge Termin/Aufgabe: Speichern/Abbrechen bleiben unten sichtbar.
+- [x] Aufgaben: Kopf wie im Kalender, Gruppen Überfällig/Heute/Nächste 7 Tage/Später/Ohne Datum, nächste Fälligkeit bei Wiederholungen ohne Datum.
+- [x] Einstellungen: Sprungleiste, Abschnitte einklappbar (`ui/Collapsible.svelte`); auf dem Handy sind Einladen, Kind, Hinweise, Daten anfangs zu.
+
+### 13. Verfügbarkeit (`feat/schritt-13-verfuegbarkeit`)
+
+Ziel: Termine, Einkauf usw. funktionieren auch ohne erreichbaren Server; beim Wiederverbinden wird abgeglichen. So selten wie möglich neu anmelden, nie Daten verlieren.
+
+- [x] Start-Zeitlimit 4 s (`session.svelte.ts`), danach mit gespeicherten Daten weiter; Verlängerung läuft im Hintergrund.
+- [x] Zeitlimit 15 s pro Anfrage (`pb/client.ts`), gilt als Netzwerkfehler.
+- [x] Anmeldung 365 statt 7 Tage (Migration `1793100001_users_long_session.js`), bei jedem Start verlängert.
+- [x] Abgelaufene Anmeldung: kein Rauswurf, lokal weiterarbeiten; „Neu anmelden“ behält lokale Daten (nur anderes Konto oder Abmelden löscht).
+- [x] Behoben: Der Server behandelt ungültige Anmeldungen still als Gast. Der Abgleich hielt das für „abgelehnt“ bzw. „kein Zugriff“ und verwarf Änderungen bzw. löschte die lokale Datenbank. Jetzt prüft er die Anmeldung (`verifyAuth`), bevor er verwirft oder löscht.
+- [x] Behoben: Neustart des Abgleichs bei jeder neu geladenen Mitgliederliste (setzte den Status zurück).
+- [x] Tests: `availability.e2e.ts` (Server lehnt ab / antwortet nicht / Anmeldung abgelaufen / anderes Konto), Engine-Tests, Integrationstest zur Gültigkeit.
+
+### 14. Design-System (Richtung „Mischung“: Farben & Aufbau aus A, Schrift, Formen & Balken aus B)
+
+Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
+
+**14a – Grundlagen, Navigation, Heute** (`feat/schritt-14a-design-grundlagen`)
+
+- [x] Hausschrift Plus Jakarta Sans lokal (`static/fonts/`, SIL OFL), Typo-Skala (`--fs-*`), Radien (`--radius-pill`), Schatten.
+- [x] Farben aus A für Hell und Dunkel (Creme, gedeckte Bereichsfarben), „Tinte“ für dunkle Flächen; Terrakotta als Standard-Akzent (Petrol, Indigo, Graphit wählbar); App-Icons neu.
+- [x] Navigation: schwebende dunkle Leiste am Handy, Pillen-Seitenleiste ab Tablet.
+- [x] Baustein `.pills` (Reiter und Umschalter) ersetzt vier nachgebaute Umschalter (Einkauf, Essen, Aufgaben, Kalender).
+- [x] Heute: Personen-Filter (Alle / je Mitglied) statt „Alle / Nur meins“; Einkaufs-Kacheln in zarter Einkaufsfarbe.
+
+**14b – übrige Seiten** (`feat/schritt-14b-design-seiten`)
+
+- [x] Einkauf als Liste nach Kategorien (Entwurf C, `ShoppingRow`), Desktop mit Kategorien nebeneinander; Vorschläge beim Tippen bleiben Kacheln.
+- [x] 75 Schriftgrößen auf die Typo-Skala (`--fs-*`) umgestellt (nur exakte Treffer, optisch unverändert).
+- [x] Rezept-Filter als Pillen; Kalender-Spalte „heute“ in Kalenderfarbe; „Synchron“ grün.
+- [ ] Danach: Schnelleingabe für alles („Morgen 15 Uhr Zahnarzt Mia“) als dunkle Pille – eigener Schritt mit Erkennung aus Text und Tests.
+
+**14c – Logo und Akzentfarben** (`feat/schritt-14c-logo-farben`)
+
+- [x] Logo aus dem Entwurf (Haus-Umriss mit H) für Logo, App-Icons und neues SVG-Favicon (`pnpm icons`).
+- [x] Akzentfarben Salbei, Taubenblau, Pflaume, Ocker (Kontrast ≥ 4,5:1 in Hell und Dunkel); Test prüft Farbsatz, Vorschau und Startskript.
+- [x] Behoben: Startskript in `app.html` übernahm gespeichertes Petrol nicht mehr (seit Terrakotta Standard ist).
+
+### 15. Schnelleingabe für alles (`feat/schritt-15-schnelleingabe`)
+
+- [x] Erkennung aus einer Zeile, nur lokal (`features/quickadd/parse.ts`, 31 Tests): Datum (heute/morgen/übermorgen, Wochentage, „nächsten …“, „23.10.“), Uhrzeit und Spannen („15 Uhr“, „15:30“, „15–16:30 Uhr“), Personen der Familie (ganze Wörter), Präfixe „Termin:/Aufgabe:/Einkauf:“.
+- [x] Zuordnung: Uhrzeit → Termin; Tätigkeit → Aufgabe (führender Name wird zur Zuweisung); „… kaufen“ → Einkauf; nur Datum → ganztägiger Termin; sonst Einkauf.
+- [x] Dunkle Eingabe-Pille oben auf „Heute“ mit Live-Vorschau; Art per Tipp umstellbar. Kinder legen nur Einkäufe an.
+- [x] E2E: alle drei Arten landen im richtigen Bereich; Umstellen der Art; Kinder.
+
+### 16. Wochenplan: Ziehen auf iPhone/iPad, wählbare Mahlzeiten (`feat/schritt-16-wochenplan`)
+
+- [x] Ziehen mit Zeiger-Ereignissen statt HTML-Drag-and-Drop (ging auf iPhone gar nicht, auf dem iPad unzuverlässig): Maus sofort, Finger nach langem Drücken; Vorschau am Finger, Ziel hervorgehoben, kein Scrollen während des Ziehens.
+- [x] Geplante Mahlzeiten je Familie (`households.meal_slots`, Migration; leer = alle): Einstellung „Mahlzeiten“ im Wochenplan, mindestens eine bleibt; ausgeblendete mit Einträgen bleiben sichtbar; Dialog bietet nur geplante an.
+- [x] Rechte: Admin und Erwachsene (Erwachsene nur dieses Feld), Kinder nicht – mit Integrationstest.
+- [x] E2E: Ziehen mit dem Finger (langes Drücken), Bewegung vorher = Scrollen, Mahlzeiten einstellen.
+
+### 17. Rezept-Import per Link (`feat/schritt-12a-rezept-import`)
 
 - [x] Route `POST /api/fh/recipes/import` (nur Erwachsene, 20 Abrufe pro Stunde, keine Heimnetz-Adressen, 10 s, 2 MB) liest schema.org `Recipe` (JSON-LD).
 - [x] Editor „Rezept aus dem Internet übernehmen“ (nur beim Anlegen, nur online): füllt leere Felder, Zutaten über die vorhandene Erkennung (gelernte Korrekturen gelten), unsichere Zeilen markiert.
@@ -381,7 +450,7 @@ Server und Sync sind unkritisch (256 MB-Grenze im Container reicht). Bei realist
 Push-Benachrichtigungen für Erinnerungen, Punkte und Belohnungen, ICS-Kalender-Abo, Rezept-Import per Link und Fotos, native Apps über Capacitor.
 
 Rezept-Import im Detail (Reihenfolge nach Nutzen/Aufwand):
-1. ~~Import per Webadresse~~ (erledigt, siehe Roadmap): strukturierte Daten (schema.org `Recipe`, JSON-LD) serverseitig per PocketBase-Hook holen und in den Editor übernehmen.
+1. ~~Import per Webadresse~~ (erledigt, Schritt 17): strukturierte Daten (schema.org `Recipe`, JSON-LD) serverseitig per PocketBase-Hook holen und in den Editor übernehmen.
 2. Foto am Rezept speichern (PocketBase-Datei-Feld; offline: Bild in Dexie zwischenspeichern und später hochladen).
 3. Scan direkt in der App: entweder Texterkennung auf dem Gerät (z. B. Tesseract.js, mehrere MB, mittlere Genauigkeit) oder KI-Erkennung über einen externen Dienst (sehr gut, aber Datenschutz-Entscheidung und API-Schlüssel nötig).
 Bis dahin: „Zutaten aus Text einfügen“ zusammen mit der Texterkennung des Handys (Live Text, Google Lens).

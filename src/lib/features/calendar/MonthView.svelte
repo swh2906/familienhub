@@ -150,7 +150,7 @@
 		background: transparent;
 		color: var(--color-text);
 		font: inherit;
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		font-weight: 600;
 		cursor: pointer;
 	}

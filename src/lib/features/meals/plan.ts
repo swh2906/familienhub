@@ -5,6 +5,28 @@ import { normalize } from './recipes.js';
 export const SLOTS = ['breakfast', 'lunch', 'dinner'] as const;
 export type Slot = (typeof SLOTS)[number];
 
+/** Geplante Mahlzeiten der Familie in fester Reihenfolge; leer oder unbekannt → alle drei. */
+export function plannedSlots(mealSlots: readonly string[] | null | undefined): Slot[] {
+	const chosen = SLOTS.filter((slot) => mealSlots?.includes(slot));
+	return chosen.length > 0 ? chosen : [...SLOTS];
+}
+
+/**
+ * Sichtbare Mahlzeiten: die geplanten plus jede, die an den Tagen schon Einträge hat – beim
+ * Umstellen verschwindet nichts.
+ */
+export function visibleSlots(
+	planned: readonly Slot[],
+	groups: ReadonlyMap<string, readonly MealPlanEntry[]>,
+	days: readonly string[]
+): Slot[] {
+	return SLOTS.filter(
+		(slot) =>
+			planned.includes(slot) ||
+			days.some((day) => (groups.get(slotKey(day, slot))?.length ?? 0) > 0)
+	);
+}
+
 /** Was der Eintrag-Dialog bearbeitet: bestehender Eintrag oder neuer an Tag und Mahlzeit. */
 export interface DialogTarget {
 	entry?: MealPlanEntry;

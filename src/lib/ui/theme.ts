@@ -38,13 +38,24 @@ export function applyTheme(theme: ThemePreference): void {
 	}
 }
 
-// Akzentfarbe für Aktionen (Buttons, aktive Navigation, Häkchen). Petrol ist Standard.
+// Akzentfarbe für Aktionen (Buttons, aktive Navigation, Häkchen). Terrakotta ist Standard.
 
-export const ACCENTS = ['petrol', 'indigo', 'graphit'] as const;
+// Reihenfolge = Anzeige in den Einstellungen; warme, zum Creme-Hintergrund passende Töne zuerst.
+// Liste auch in src/app.html (Startskript) pflegen.
+export const ACCENTS = [
+	'terrakotta',
+	'salbei',
+	'petrol',
+	'taubenblau',
+	'indigo',
+	'pflaume',
+	'ocker',
+	'graphit'
+] as const;
 
 export type Accent = (typeof ACCENTS)[number];
 
-export const DEFAULT_ACCENT: Accent = 'petrol';
+export const DEFAULT_ACCENT: Accent = 'terrakotta';
 
 export const ACCENT_STORAGE_KEY = 'fh-accent';
 

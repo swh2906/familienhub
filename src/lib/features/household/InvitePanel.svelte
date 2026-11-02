@@ -169,13 +169,13 @@
 	.label {
 		grid-column: 1 / -1;
 		font-weight: 600;
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	code {
 		min-width: 0;
 		overflow-wrap: anywhere;
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		user-select: all;
 	}
 
@@ -188,7 +188,7 @@
 
 	h3 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--fs-body);
 	}
 
 	.invites {

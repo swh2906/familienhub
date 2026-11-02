@@ -5,10 +5,14 @@
 	import type { Membership, Task, TaskCompletion } from '#lib/db/types.js';
 	import { formatCompactDay, toDateString } from '#lib/features/meals/week.js';
 	import { membersOf } from '#lib/features/shopping/store.js';
+	import { parseUtc } from '#lib/features/calendar/tz.js';
 	import { describeRrule } from '#lib/features/tasks/describe.js';
 	import {
 		canComplete,
 		dueKind,
+		effectiveDue,
+		groupTasks,
+		type TaskGroup,
 		isOpen,
 		recentCompletions,
 		tasksForTab,
@@ -18,7 +22,7 @@
 		completeTask,
 		completionsOf,
 		deleteTask,
-		reopenTask,
+		revertCompletion,
 		restoreTask,
 		tasksOf,
 		undoCompletion,
@@ -50,7 +54,31 @@
 	const visible = $derived(
 		tab === 'done' ? [] : tasksForTab(data.current.tasks, tab, membership, today)
 	);
+	const groups = $derived(groupTasks(visible, today));
+	const groupLabels: Record<TaskGroup, () => string> = {
+		overdue: m.tasks_group_overdue,
+		today: m.tasks_group_today,
+		week: m.tasks_group_week,
+		later: m.tasks_group_later,
+		none: m.tasks_group_none
+	};
 	const done = $derived(recentCompletions(data.current.completions, data.current.tasks));
+
+	/** Zurücknehmen: Admins und Erwachsene alles, Kinder ihr eigenes Erledigt (wie die Server-Regel). */
+	function canRevert(completion: TaskCompletion, task: Task | undefined): boolean {
+		return !!task && !task.deleted_at && (session.canEdit || completion.membership === membership);
+	}
+
+	async function revert(completion: TaskCompletion, task: Task) {
+		await revertCompletion(
+			completion,
+			task,
+			toDateString(new Date(parseUtc(completion.completed_at)))
+		);
+		showToast(m.task_reverted({ title: task.title }), () =>
+			completeTask(task, membership, today).then(() => undefined)
+		);
+	}
 	const openCount = $derived(tasksForTab(data.current.tasks, 'mine', membership, today).length);
 	const members = $derived(new Map(data.current.members.map((member) => [member.id, member])));
 	const activeMembers = $derived(data.current.members.filter((member) => !member.deleted_at));
@@ -92,15 +120,16 @@
 	}
 
 	function dueText(task: Task): string {
-		switch (dueKind(task.due_date, today)) {
+		const due = effectiveDue(task, today);
+		switch (dueKind(due, today)) {
 			case 'overdue':
-				return m.task_due_overdue({ date: formatCompactDay(task.due_date) });
+				return m.task_due_overdue({ date: formatCompactDay(due) });
 			case 'today':
 				return m.task_due_today();
 			case 'tomorrow':
 				return m.task_due_tomorrow();
 			case 'later':
-				return formatCompactDay(task.due_date);
+				return formatCompactDay(due);
 			default:
 				return '';
 		}
@@ -126,8 +155,10 @@
 </svelte:head>
 
 <div class="head">
-	<h1>{m.tasks_title()}</h1>
-	{#if openCount > 0}<span class="count">{m.tasks_open_count({ count: openCount })}</span>{/if}
+	<div class="heading">
+		<h1>{m.tasks_title()}</h1>
+		{#if openCount > 0}<span class="count">{m.tasks_open_count({ count: openCount })}</span>{/if}
+	</div>
 	{#if session.canEdit}
 		<button
 			class="btn btn-primary new"
@@ -144,7 +175,7 @@
 	{/if}
 </div>
 
-<div class="tabs" role="group" aria-label={m.tasks_tabs_label()}>
+<div class="pills" role="group" aria-label={m.tasks_tabs_label()}>
 	{#each tabs as option (option.value)}
 		<button type="button" aria-pressed={tab === option.value} onclick={() => (tab = option.value)}>
 			{option.label()}
@@ -160,7 +191,16 @@
 			{#each done as { completion, task } (completion.id)}
 				{@const person = members.get(completion.membership)}
 				<li class="row done">
-					<span class="check checked" aria-hidden="true"></span>
+					{#if task && canRevert(completion, task)}
+						<button
+							type="button"
+							class="check checked"
+							aria-label={m.task_revert_label({ title: task.title })}
+							onclick={() => revert(completion, task)}
+						></button>
+					{:else}
+						<span class="check checked" aria-hidden="true"></span>
+					{/if}
 					<div class="body">
 						<span class="title">{task?.title ?? '–'}</span>
 						<span class="meta">
@@ -175,13 +215,18 @@
 							color={person.color}
 							size={28}
 						/>{/if}
-					{#if task && task.status === 'done' && !task.rrule && canComplete(task, membership, session.canEdit) && !task.deleted_at}
+					{#if task && !task.deleted_at && session.canEdit}
 						<button
-							class="btn small"
 							type="button"
-							aria-label={m.task_reopen_label({ title: task.title })}
-							onclick={() => reopenTask(task)}>{m.task_reopen()}</button
+							class="edit"
+							aria-label={m.task_edit({ title: task.title })}
+							onclick={() => {
+								editing = task;
+								dialogOpen = true;
+							}}
 						>
+							<Icon name="edit" size={20} />
+						</button>
 					{/if}
 				</li>
 			{/each}
@@ -190,62 +235,69 @@
 {:else if data.loaded && visible.length === 0}
 	<p class="hint">{tab === 'mine' ? m.tasks_empty_mine() : m.tasks_empty_all()}</p>
 {:else}
-	<ul class="card list" aria-label={tab === 'mine' ? m.tasks_tab_mine() : m.tasks_tab_all()}>
-		{#each visible as task (task.id)}
-			{@const allowed = canComplete(task, membership, session.canEdit)}
-			{@const kind = dueKind(task.due_date, today)}
-			<li class="row">
-				<button
-					type="button"
-					class="check"
-					disabled={!allowed || !isOpen(task)}
-					title={allowed ? undefined : m.task_complete_denied({ title: task.title })}
-					aria-label={allowed
-						? m.task_complete({ title: task.title })
-						: m.task_complete_denied({ title: task.title })}
-					onclick={() => complete(task)}
-				></button>
-				<div class="body">
-					<span class="title">{task.title}</span>
-					<span class="meta">
-						{#if kind !== 'none'}
-							<span class="due {kind}">{dueText(task)}</span>
-						{/if}
-						{#if task.rrule}
-							<span class="repeat"
-								><Icon name="pending" size={14} />{describeRrule(task.rrule)}</span
+	{#each groups as { group, tasks: items } (group)}
+		<section class="group" aria-labelledby="tasks-group-{group}">
+			<h2 class="group-title" class:overdue={group === 'overdue'} id="tasks-group-{group}">
+				{groupLabels[group]()} <span class="group-count">{items.length}</span>
+			</h2>
+			<ul class="card list" aria-labelledby="tasks-group-{group}">
+				{#each items as task (task.id)}
+					{@const allowed = canComplete(task, membership, session.canEdit)}
+					{@const kind = dueKind(effectiveDue(task, today), today)}
+					<li class="row">
+						<button
+							type="button"
+							class="check"
+							disabled={!allowed || !isOpen(task)}
+							title={allowed ? undefined : m.task_complete_denied({ title: task.title })}
+							aria-label={allowed
+								? m.task_complete({ title: task.title })
+								: m.task_complete_denied({ title: task.title })}
+							onclick={() => complete(task)}
+						></button>
+						<div class="body">
+							<span class="title">{task.title}</span>
+							<span class="meta">
+								{#if kind !== 'none'}
+									<span class="due {kind}">{dueText(task)}</span>
+								{/if}
+								{#if task.rrule}
+									<span class="repeat"
+										><Icon name="pending" size={14} />{describeRrule(task.rrule)}</span
+									>
+								{/if}
+								<span class="visually-hidden">{assigneeNames(task)}</span>
+							</span>
+							{#if task.notes}<span class="notes">{task.notes}</span>{/if}
+						</div>
+						<span class="avatars" aria-hidden="true">
+							{#each task.assignees ?? [] as id (id)}
+								{@const person = members.get(id)}
+								{#if person}<MemberAvatar
+										name={person.display_name}
+										color={person.color}
+										size={28}
+									/>{/if}
+							{/each}
+						</span>
+						{#if session.canEdit}
+							<button
+								type="button"
+								class="edit"
+								aria-label={m.task_edit({ title: task.title })}
+								onclick={() => {
+									editing = task;
+									dialogOpen = true;
+								}}
 							>
+								<Icon name="edit" size={20} />
+							</button>
 						{/if}
-						<span class="visually-hidden">{assigneeNames(task)}</span>
-					</span>
-					{#if task.notes}<span class="notes">{task.notes}</span>{/if}
-				</div>
-				<span class="avatars" aria-hidden="true">
-					{#each task.assignees ?? [] as id (id)}
-						{@const person = members.get(id)}
-						{#if person}<MemberAvatar
-								name={person.display_name}
-								color={person.color}
-								size={28}
-							/>{/if}
-					{/each}
-				</span>
-				{#if session.canEdit}
-					<button
-						type="button"
-						class="edit"
-						aria-label={m.task_edit({ title: task.title })}
-						onclick={() => {
-							editing = task;
-							dialogOpen = true;
-						}}
-					>
-						<Icon name="edit" size={20} />
-					</button>
-				{/if}
-			</li>
-		{/each}
-	</ul>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/each}
 {/if}
 
 {#if toast}
@@ -271,17 +323,52 @@
 {/if}
 
 <style>
+	.pills {
+		margin-bottom: var(--space-6);
+	}
+
+	/* Wie im Kalender: Überschrift links, „Neue Aufgabe“ rechts in derselben Zeile. */
 	.head {
 		display: flex;
-		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--space-2) var(--space-3);
+		gap: var(--space-3);
 		margin-bottom: var(--space-3);
+	}
+
+	.heading {
+		display: grid;
+		min-width: 0;
+	}
+
+	/* Gruppen: Überfällig, Heute, Nächste 7 Tage, Später, Ohne Datum. */
+	.group + .group {
+		margin-top: var(--space-4);
+	}
+
+	.group-title {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		margin: 0 0 var(--space-2);
+		color: var(--color-text-muted);
+		font-size: var(--fs-small);
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.group-title.overdue {
+		color: var(--color-warning);
+	}
+
+	.group-count {
+		font-weight: 600;
+		letter-spacing: 0;
 	}
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-display);
 		letter-spacing: -0.02em;
 	}
 
@@ -291,35 +378,9 @@
 	}
 
 	.new {
+		flex: none;
 		margin-left: auto;
 		padding: 0 var(--space-4);
-	}
-
-	.tabs {
-		display: inline-flex;
-		gap: 2px;
-		margin-bottom: var(--space-4);
-		padding: 3px;
-		border-radius: 12px;
-		background: var(--color-surface-2);
-	}
-
-	.tabs button {
-		min-height: var(--touch-target);
-		padding: 0 var(--space-4);
-		border: 0;
-		border-radius: 9px;
-		background: transparent;
-		color: var(--color-text-muted);
-		font: inherit;
-		font-weight: 600;
-		cursor: pointer;
-	}
-
-	.tabs button[aria-pressed='true'] {
-		background: var(--color-surface);
-		color: var(--color-text);
-		box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
 	}
 
 	.list {
@@ -383,6 +444,14 @@
 		background: var(--color-tasks);
 	}
 
+	button.check.checked {
+		cursor: pointer;
+	}
+
+	button.check.checked:hover::before {
+		opacity: 0.75;
+	}
+
 	.check.checked::after {
 		content: '';
 		position: absolute;
@@ -403,7 +472,7 @@
 	}
 
 	.title {
-		font-size: 1.0625rem;
+		font-size: var(--fs-lead);
 		font-weight: 600;
 		overflow-wrap: break-word;
 		hyphens: auto;
@@ -418,7 +487,7 @@
 		flex-wrap: wrap;
 		gap: 0 var(--space-3);
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.due.overdue {
@@ -439,7 +508,7 @@
 
 	.notes {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 		white-space: pre-line;
 		overflow-wrap: break-word;
 	}
@@ -474,7 +543,7 @@
 
 	.small {
 		padding: 0 var(--space-3);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	.toast {

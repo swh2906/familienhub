@@ -1,7 +1,7 @@
 // Hinweise auf Heute (Schritt 11 D): Kochzeit-Konflikt mit Vorschlägen, Ausblenden mit
 // „Später“ und „Nie wieder so“, Zurücknehmen in den Einstellungen.
 import { expect, test, type Page } from '@playwright/test';
-import { apiCreate, apiToken, createFamily, login } from './helpers.ts';
+import { apiCreate, apiToken, createFamily, login, openSettingsSection } from './helpers.ts';
 
 function iso(date: Date): string {
 	const pad = (n: number) => String(n).padStart(2, '0');
@@ -88,6 +88,7 @@ test('Ausblenden: „Später“ bleibt nach dem Neuladen, „Nie wieder so“ l�
 
 	// „Später“ ist kein dauerhaftes Ausblenden: die Einstellungen zeigen nichts zum Zurücknehmen.
 	await page.goto('/einstellungen');
+	await openSettingsSection(page, 'Hinweise');
 	await expect(page.getByText('Keine Hinweise ausgeblendet.')).toBeVisible();
 });
 
@@ -102,6 +103,7 @@ test('„Nie wieder so“ blendet Konflikt-Hinweise aus, Einstellungen zeigen si
 	await expect(hints(page)).toHaveCount(0);
 
 	await page.goto('/einstellungen');
+	await openSettingsSection(page, 'Hinweise');
 	await page.getByRole('button', { name: 'Ausgeblendete Hinweise wieder zeigen' }).click();
 	await expect(page.getByText('Hinweise werden wieder gezeigt.')).toBeVisible();
 

@@ -135,12 +135,12 @@
 
 	h2 {
 		margin: 0;
-		font-size: 1.25rem;
+		font-size: var(--fs-title);
 	}
 
 	h3 {
 		margin: var(--space-2) 0 0;
-		font-size: 1rem;
+		font-size: var(--fs-body);
 	}
 
 	p {
@@ -149,7 +149,7 @@
 
 	.hint {
 		color: var(--color-text-muted);
-		font-size: 0.875rem;
+		font-size: var(--fs-small);
 	}
 
 	ul {

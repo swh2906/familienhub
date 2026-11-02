@@ -48,6 +48,13 @@ export interface Remote {
 		household: string,
 		since: string
 	): Promise<RemoteRecord[]>;
+	/**
+	 * Gilt die Anmeldung beim Server noch? Verlängert sie dabei. Wichtig, weil der Server ungültige
+	 * Anmeldungen still wie Gäste behandelt: leere Listen, „nicht gefunden“, „abgelehnt“ – die Engine
+	 * darf daraus erst Schlüsse ziehen (verwerfen, löschen), wenn die Anmeldung gültig ist.
+	 * Netzwerkfehler → RemoteError 'network'.
+	 */
+	verifyAuth(): Promise<boolean>;
 	/** Live-Abo; liefert eine Funktion zum Abmelden. */
 	subscribe(
 		collection: CollectionName,

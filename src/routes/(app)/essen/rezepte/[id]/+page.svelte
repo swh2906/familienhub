@@ -11,6 +11,7 @@
 		ingredientAmount,
 		ingredientExtras
 	} from '#lib/features/meals/cooking.js';
+	import { sourceLabel } from '#lib/features/meals/import.js';
 	import { deleteRecipe, ingredientsOf } from '#lib/features/meals/store.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { PageProps } from './$types';
@@ -40,6 +41,11 @@
 			: []
 	);
 
+	// Nur echte Web-Links anzeigen (Schutz vor javascript:-Adressen aus fremden Daten).
+	const source = $derived(
+		recipe?.source_url && /^https?:\/\//i.test(recipe.source_url) ? recipe.source_url : ''
+	);
+
 	async function remove() {
 		if (!recipe) return;
 		await deleteRecipe(recipe);
@@ -63,6 +69,14 @@
 				{#if recipe.is_favorite}<span class="star" title={m.recipe_favorite()}>★</span>{/if}
 			</h1>
 			{#if facts.length > 0}<p class="facts">{facts.join(' · ')}</p>{/if}
+			{#if source}
+				<p class="facts">
+					{m.recipe_source()}
+					<a class="link" href={source} target="_blank" rel="noopener noreferrer external"
+						>{sourceLabel(source)}</a
+					>
+				</p>
+			{/if}
 			{#if (recipe.tags ?? []).length > 0}
 				<ul class="tags">
 					{#each recipe.tags ?? [] as tag (tag)}<li>{tag}</li>{/each}

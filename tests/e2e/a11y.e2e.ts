@@ -55,7 +55,8 @@ async function seed(admin: string, household: string): Promise<string> {
 		title: 'Pfannkuchen',
 		servings: 4,
 		instructions: 'Alles verrühren und ausbacken.',
-		tags: ['schnell']
+		tags: ['schnell'],
+		source_url: 'https://www.example.org/pfannkuchen'
 	});
 	// Zutaten mit Zusatzangaben, damit Hinweise (ca., optional, Alternativen) mitgeprüft werden.
 	await apiCreate(token, 'recipe_ingredients', {

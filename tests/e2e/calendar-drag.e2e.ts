@@ -63,7 +63,9 @@ test('Maus: verschieben auf anderen Tag und andere Uhrzeit, Dauer ändern, Rück
 		.poll(async () => (await serverEvents(token)).find((e) => e.id === id)?.start)
 		.toBe('2026-11-04 10:00:00.000Z');
 
-	// Dauer: unteren Rand eine halbe Stunde nach unten ziehen.
+	// Dauer: unteren Rand eine halbe Stunde nach unten ziehen. Vorher in die Mitte scrollen, damit
+	// die Meldung „Termin verschoben“ unten nicht über dem Rand liegt (je nach Scroll-Position).
+	await chip(page, '11:00–12:00').evaluate((el) => el.scrollIntoView({ block: 'center' }));
 	const moved = (await chip(page, '11:00–12:00').boundingBox())!;
 	const handleY = moved.y + moved.height - 2;
 	await page.mouse.move(moved.x + moved.width / 2, handleY);

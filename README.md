@@ -110,6 +110,8 @@ Unter **Aufgaben → Feedback** schreibt die Familie Rückmeldungen (Text, Berei
 
 ## Kochansicht
 
+Rezepte lassen sich per Link übernehmen: Beim Anlegen den Link einfügen, PocketBase holt die Seite und liest die Rezeptdaten (schema.org `Recipe`, z. B. Chefkoch); der Editor ist danach ausgefüllt und wird vor dem Speichern geprüft. Kein externer Dienst, Heimnetz-Adressen sind gesperrt. Ohne Rezeptdaten bleibt „Zutaten aus Text einfügen“.
+
 Auf jeder Rezeptseite öffnet „Kochen“ das Rezept als linierte Karteikarte (Prinzip aus der COOK-App): bildschirmfüllend, große Schrift, Portionen umrechnen, Zutaten abhaken (nur lokal), Bildschirm bleibt an (Wake Lock, wo der Browser es kann). Schwierigkeit (Kochmützen) und Dauer setzen Admins und Erwachsene; die Handschrift „Patrick Hand“ liegt lokal in `static/fonts/` (SIL Open Font License, keine externen Schriften).
 
 ## Gestaltung

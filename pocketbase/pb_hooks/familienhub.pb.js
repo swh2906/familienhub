@@ -64,6 +64,13 @@ routerAdd(
 	$apis.requireAuth('users')
 );
 
+routerAdd(
+	'POST',
+	'/api/fh/recipes/import',
+	(e) => require(`${__hooks}/lib/recipe-import.js`).importRecipe(e),
+	$apis.requireAuth('users')
+);
+
 // ---- Aufräum-Job: gelöschte Einträge nach 30 Tagen, Erledigt-Verlauf nach 14 Tagen entfernen ----
 
 cronAdd('fh_purge_deleted', '30 3 * * *', () => {

@@ -573,6 +573,7 @@ function stampFeedback(e) {
 }
 
 module.exports = {
+	findMembership,
 	features,
 	stampFeedback,
 	deleteAccount,

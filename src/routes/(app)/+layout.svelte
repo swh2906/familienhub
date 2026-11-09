@@ -9,6 +9,7 @@
 	import { live } from '#lib/db/live.svelte.js';
 	import { entriesWithoutRecipe } from '#lib/features/meals/plan.js';
 	import { allEntries, linkPlannedRecipes } from '#lib/features/meals/plan-store.js';
+	import { recipesOf } from '#lib/features/meals/store.js';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { startSync, stopSync } from '#lib/sync/service.js';
@@ -50,7 +51,7 @@
 	// ohne Rezept verknüpfen, sobald sie lokal da sind (nur wer Rezepte anlegen darf).
 	const unlinked = live(
 		() => (session.canEdit ? (session.householdId ?? '') : ''),
-		async (h) => (h ? entriesWithoutRecipe(await allEntries(h)).length : 0),
+		async (h) => (h ? entriesWithoutRecipe(await allEntries(h), await recipesOf(h)).length : 0),
 		0
 	);
 	let linking = false;

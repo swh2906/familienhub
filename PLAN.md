@@ -453,6 +453,14 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] Dialog: Überschrift und Knöpfe bleiben stehen, nur die Liste scrollt; kurzes Datum („Mo., 9. Nov.“), kompaktere Zeilen, Knöpfe nebeneinander.
 - [x] Tests: Unit (`suggest.test.ts`), E2E bei 375 × 667 px mit fester Uhrzeit.
 
+### 19. Abendessen aus mehreren Gerichten (`feat/schritt-19-gerichte-aufteilen`)
+
+- [x] `splitDish` schlägt das Aufteilen vor (Komma, +, &, „und“, „mit“, „dazu“); gibt es schon ein Rezept mit dem ganzen Titel, bleibt es ein Gericht.
+- [x] Eintrag-Dialog: „Als 3 einzelne Gerichte planen“ (standardmäßig an, abwählbar für z. B. „Lasagne mit Spinat“); je Gericht ein Eintrag in derselben Mahlzeit mit eigenem Rezept, der Link bleibt am ersten.
+- [x] Nachtrag im Hintergrund legt für zusammengesetzte Titel kein Sammelrezept mehr an (entscheidet jemand im Dialog).
+- [x] Rezeptliste: leere Sammelrezepte „In 2 Gerichte aufteilen“ – Einträge werden aufgeteilt, das Sammelrezept gelöscht.
+- [x] Tests: Unit (`plan-recipes.test.ts`), E2E in `meal-plan.e2e.ts`.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

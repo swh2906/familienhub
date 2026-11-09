@@ -7,6 +7,7 @@
 	import { recipeFacts } from '#lib/features/meals/cooking.js';
 	import { availableTags, filterRecipes, incompleteIds } from '#lib/features/meals/recipes.js';
 	import { ingredientsOfRecipes, recipesOf, toggleFavorite } from '#lib/features/meals/store.js';
+	import { splitRecipe, splittableRecipe } from '#lib/features/meals/plan-store.js';
 	import { m } from '#lib/paraglide/messages.js';
 
 	const data = live(
@@ -28,6 +29,15 @@
 	);
 	// Rezepte ohne Zutaten und Zubereitung (meist aus dem Wochenplan übernommen).
 	const incomplete = $derived(incompleteIds(data.current.recipes, data.current.ingredients));
+	// Leere Sammelrezepte („Schnitzel mit Pommes“) lassen sich in einzelne Gerichte aufteilen.
+	const splits = $derived(
+		new Map(
+			data.current.recipes
+				.filter((r) => incomplete.has(r.id))
+				.map((r) => [r.id, splittableRecipe(r, data.current.recipes)] as const)
+				.filter(([, parts]) => parts.length > 1)
+		)
+	);
 	const hasAny = $derived(data.current.recipes.some((r) => !r.deleted_at));
 
 	function servings(count: number): string {
@@ -103,6 +113,20 @@
 								href={resolve('/(app)/essen/rezepte/[id]/bearbeiten', { id: recipe.id })}
 								>{m.recipes_incomplete_edit()}</a
 							>
+							{#if splits.has(recipe.id)}
+								{@const parts = splits.get(recipe.id) ?? []}
+								<button
+									type="button"
+									class="btn split"
+									aria-label={m.recipes_split_label({
+										title: recipe.title,
+										parts: parts.join(', ')
+									})}
+									onclick={() => void splitRecipe(recipe)}
+								>
+									{m.recipes_split({ count: parts.length })}
+								</button>
+							{/if}
 						{:else}
 							<p class="incomplete">{m.recipes_incomplete()}</p>
 						{/if}
@@ -239,6 +263,13 @@
 		color: var(--color-warning);
 		font-size: var(--fs-small);
 		font-weight: 600;
+	}
+
+	.split {
+		position: relative;
+		z-index: 1;
+		grid-column: 1;
+		justify-self: start;
 	}
 
 	a.incomplete {

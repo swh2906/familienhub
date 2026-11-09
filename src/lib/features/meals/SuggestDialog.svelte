@@ -4,8 +4,14 @@
 	import type { MealPlanEntry, Recipe } from '#lib/db/types.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { addEntry } from './plan-store.js';
-	import { alternativeFor, suggestWeek, type SuggestInput, type Suggestion } from './suggest.js';
-	import { formatDay } from './week.js';
+	import {
+		alternativeFor,
+		openDinnerDates,
+		suggestWeek,
+		type SuggestInput,
+		type Suggestion
+	} from './suggest.js';
+	import { formatCompactDay, formatDay, toDateString } from './week.js';
 
 	let {
 		open,
@@ -36,11 +42,8 @@
 	let error = $state('');
 
 	function input(): SuggestInput {
-		const taken = new Set(
-			weekEntries.filter((e) => !e.deleted_at && e.slot === 'dinner').map((e) => e.date)
-		);
 		return {
-			dates: days.filter((d) => !taken.has(d)),
+			dates: openDinnerDates(days, weekEntries, toDateString(new Date())),
 			week: { from: days[0], to: days[days.length - 1] },
 			recipes,
 			entries
@@ -96,40 +99,43 @@
 	<form onsubmit={apply} novalidate>
 		<h2 id="suggest-title">{m.plan_suggest_title()}</h2>
 
-		{#if freeDays === 0}
-			<p class="hint">{m.plan_suggest_full()}</p>
-		{:else if suggestions.length === 0}
-			<p class="hint">{m.plan_suggest_no_recipes()}</p>
-		{:else}
-			<p class="hint">{m.plan_suggest_hint()}</p>
-			<ul class="list">
-				{#each suggestions as s, index (s.date)}
-					{@const day = formatDay(s.date)}
-					<li class:off={!chosen[index]}>
-						<label class="pick">
-							<input
-								type="checkbox"
-								bind:checked={chosen[index]}
-								aria-label={m.plan_suggest_include({ day, title: s.recipe.title })}
-							/>
-							<span class="text">
-								<span class="day">{day}</span>
-								<strong>{s.recipe.title}</strong>
-							</span>
-						</label>
-						<button
-							type="button"
-							class="btn"
-							aria-label={m.plan_suggest_other_label({ day })}
-							onclick={() => swap(index)}>{m.plan_suggest_other()}</button
-						>
-					</li>
-				{/each}
-			</ul>
-			{#if suggestions.length < freeDays}
-				<p class="hint">{m.plan_suggest_some()}</p>
+		<div class="scroll">
+			{#if freeDays === 0}
+				<p class="hint">{m.plan_suggest_full()}</p>
+			{:else if suggestions.length === 0}
+				<p class="hint">{m.plan_suggest_no_recipes()}</p>
+			{:else}
+				<p class="hint">{m.plan_suggest_hint()}</p>
+				<ul class="list">
+					{#each suggestions as s, index (s.date)}
+						{@const day = formatDay(s.date)}
+						{@const short = formatCompactDay(s.date)}
+						<li class:off={!chosen[index]}>
+							<label class="pick">
+								<input
+									type="checkbox"
+									bind:checked={chosen[index]}
+									aria-label={m.plan_suggest_include({ day, title: s.recipe.title })}
+								/>
+								<span class="text">
+									<span class="day">{short}</span>
+									<strong>{s.recipe.title}</strong>
+								</span>
+							</label>
+							<button
+								type="button"
+								class="btn"
+								aria-label={m.plan_suggest_other_label({ day })}
+								onclick={() => swap(index)}>{m.plan_suggest_other()}</button
+							>
+						</li>
+					{/each}
+				</ul>
+				{#if suggestions.length < freeDays}
+					<p class="hint">{m.plan_suggest_some()}</p>
+				{/if}
 			{/if}
-		{/if}
+		</div>
 
 		{#if error}
 			<p class="form-error" role="alert">{error}</p>
@@ -150,7 +156,8 @@
 	dialog {
 		width: min(32rem, calc(100vw - 2 * var(--space-4)));
 		max-height: calc(100dvh - 2 * var(--space-4));
-		padding: var(--space-6);
+		padding: 0;
+		overflow: hidden;
 		border: 0;
 		border-radius: var(--radius-card);
 		background: var(--color-surface);
@@ -162,9 +169,27 @@
 		background: rgb(0 0 0 / 0.45);
 	}
 
+	/* Überschrift und Knöpfe bleiben stehen, nur die Liste dazwischen scrollt (kleine Handys). */
 	form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		max-height: calc(100dvh - 2 * var(--space-4));
+		padding: var(--space-6);
+	}
+
+	.scroll {
 		display: grid;
-		gap: var(--space-4);
+		gap: var(--space-3);
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	@media (max-width: 30rem) {
+		form {
+			padding: var(--space-4);
+		}
 	}
 
 	h2 {
@@ -174,6 +199,8 @@
 
 	.hint {
 		margin: 0;
+		color: var(--color-text-muted);
+		font-size: var(--fs-small);
 	}
 
 	.list {
@@ -187,8 +214,7 @@
 	li {
 		display: flex;
 		align-items: center;
-		gap: var(--space-3);
-		padding-block: var(--space-1);
+		gap: var(--space-2);
 		border-bottom: 1px solid var(--color-border);
 	}
 
@@ -218,14 +244,29 @@
 		min-width: 0;
 	}
 
+	.text strong {
+		overflow-wrap: anywhere;
+	}
+
+	li .btn {
+		flex: none;
+		padding-inline: var(--space-3);
+	}
+
 	.day {
 		color: var(--color-text-muted);
 		font-size: var(--fs-small);
 	}
 
 	.actions {
+		flex: none;
 		display: flex;
-		flex-wrap: wrap;
 		gap: var(--space-3);
+	}
+
+	/* Beide Knöpfe nebeneinander, auch auf schmalen Handys. */
+	.actions .btn {
+		flex: 1 1 0;
+		padding-inline: var(--space-3);
 	}
 </style>

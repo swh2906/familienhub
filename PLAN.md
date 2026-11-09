@@ -447,6 +447,12 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] „Woche vorschlagen“ (nur Abendessen, nur freie Abende): gewichtete Auswahl – Favoriten doppelt, lange nicht gegessen höher, in der Woche davor/danach nur zur Not, unter der Woche schnelle Gerichte bevorzugt, kein Gericht doppelt in der Woche. Vorschau mit „Anderes“ und Abwählen, erst „Übernehmen“ speichert.
 - [x] Tests: Unit (`plan-recipes.test.ts`, `suggest.test.ts`), E2E in `meal-plan.e2e.ts`.
 
+### 18b. Wochenvorschlag auf dem Handy (`fix/wochenvorschlag-mobil`)
+
+- [x] Vorgeschlagen wird nur für Abende ab heute (`openDinnerDates`); in vergangenen Wochen kein Knopf.
+- [x] Dialog: Überschrift und Knöpfe bleiben stehen, nur die Liste scrollt; kurzes Datum („Mo., 9. Nov.“), kompaktere Zeilen, Knöpfe nebeneinander.
+- [x] Tests: Unit (`suggest.test.ts`), E2E bei 375 × 667 px mit fester Uhrzeit.
+
 ### 19. Abendessen aus mehreren Gerichten (`feat/schritt-19-gerichte-aufteilen`)
 
 - [x] `splitDish` schlägt das Aufteilen vor (Komma, +, &, „und“, „mit“, „dazu“); gibt es schon ein Rezept mit dem ganzen Titel, bleibt es ein Gericht.

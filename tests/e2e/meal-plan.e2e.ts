@@ -321,6 +321,8 @@ test('geplante Gerichte werden Rezepte, Woche vorschlagen', async ({ page }) => 
 		title: 'Pfannkuchen'
 	});
 	await apiCreate(token, 'recipes', { household, title: 'Spaghetti', is_favorite: true });
+	// Vorgeschlagen wird erst ab heute: in der App ist Montag früh, damit die Woche frei ist.
+	await page.clock.setFixedTime(new Date(`${week.monday}T08:00:00`));
 	await login(page, email);
 	await openPlan(page);
 
@@ -365,6 +367,41 @@ test('geplante Gerichte werden Rezepte, Woche vorschlagen', async ({ page }) => 
 	await expect(suggest).toBeHidden();
 	await expect(page.getByRole('button', { name: /^Spaghetti \(Abend/ })).toBeVisible();
 	await expect(page.getByRole('button', { name: /^Pfannkuchen \(Abend/ })).toBeVisible();
+});
+
+test.describe('kleines Handy', () => {
+	test.use({ viewport: { width: 375, height: 667 } });
+
+	test('Woche vorschlagen: nur ab heute, „Übernehmen“ ohne Scrollen sichtbar', async ({ page }) => {
+		const { email, household } = await createFamily();
+		const token = await apiToken(email);
+		const week = thisWeek();
+		for (const title of [
+			'Spaghetti Bolognese',
+			'Gemüse-Lasagne mit Spinat und Ricotta',
+			'Pfannkuchen',
+			'Linsensuppe',
+			'Fisch',
+			'Chili con Carne',
+			'Kartoffelsalat',
+			'Gulasch'
+		]) {
+			await apiCreate(token, 'recipes', { household, title });
+		}
+		// In der App ist Mittwoch: Montag und Dienstag sind vorbei.
+		const wednesday = new Date(`${week.monday}T08:00:00`);
+		wednesday.setDate(wednesday.getDate() + 2);
+		await page.clock.setFixedTime(wednesday);
+		await login(page, email);
+		await openPlan(page);
+
+		await page.getByRole('button', { name: 'Woche vorschlagen' }).click();
+		const suggest = page.getByRole('dialog', { name: 'Abendessen vorschlagen' });
+		await expect(suggest.getByRole('checkbox')).toHaveCount(5);
+		await expect(suggest.getByRole('checkbox', { name: /Montag|Dienstag/ })).toHaveCount(0);
+		await expect(suggest.getByRole('button', { name: '5 übernehmen' })).toBeInViewport();
+		await expect(suggest.getByRole('heading', { name: 'Abendessen vorschlagen' })).toBeInViewport();
+	});
 });
 
 test('Abendessen aus mehreren Gerichten aufteilen, altes Sammelrezept nachträglich', async ({

@@ -128,3 +128,18 @@ export function alternativeFor(
 	for (const s of suggestions) used.add(s.recipe.id);
 	return pick(current.date, input, used);
 }
+
+/**
+ * Abende, für die vorgeschlagen wird: ab heute (vergangene Abende nicht mehr) und nur solche ohne
+ * geplantes Abendessen. Datumswerte als „JJJJ-MM-TT“, darum genügt der Textvergleich.
+ */
+export function openDinnerDates(
+	days: readonly string[],
+	weekEntries: readonly MealPlanEntry[],
+	today: string
+): string[] {
+	const taken = new Set(
+		weekEntries.filter((e) => !e.deleted_at && e.slot === 'dinner').map((e) => e.date)
+	);
+	return days.filter((d) => d >= today && !taken.has(d));
+}

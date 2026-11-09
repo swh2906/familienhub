@@ -10,6 +10,7 @@
 		MealPlanEntry,
 		Membership,
 		Recipe,
+		RecipeIngredient,
 		ShoppingItem,
 		Task
 	} from '#lib/db/types.js';
@@ -18,7 +19,8 @@
 	import { eventsOf } from '#lib/features/calendar/store.js';
 	import { deviceTimeZone, utcToZoned } from '#lib/features/calendar/tz.js';
 	import { entriesBetween } from '#lib/features/meals/plan-store.js';
-	import { recipesOf } from '#lib/features/meals/store.js';
+	import { incompleteIds } from '#lib/features/meals/recipes.js';
+	import { ingredientsOfRecipes, recipesOf } from '#lib/features/meals/store.js';
 	import {
 		formatCompactDay,
 		formatDay,
@@ -68,18 +70,25 @@
 
 	const data = live(
 		() => household,
-		async (h) => ({
-			events: await eventsOf(h),
-			meals: await entriesBetween(h, today, lastDay),
-			recipes: await recipesOf(h),
-			items: await itemsOf(h),
-			tasks: await tasksOf(h),
-			members: await membersOf(h)
-		}),
+		async (h) => {
+			const meals = await entriesBetween(h, today, lastDay);
+			const recipeIds = meals.map((e) => e.recipe).filter(Boolean);
+			const recipes = (await recipesOf(h)).filter((r) => recipeIds.includes(r.id));
+			return {
+				events: await eventsOf(h),
+				meals,
+				recipes,
+				ingredients: await ingredientsOfRecipes(recipeIds),
+				items: await itemsOf(h),
+				tasks: await tasksOf(h),
+				members: await membersOf(h)
+			};
+		},
 		{
 			events: [] as CalendarEvent[],
 			meals: [] as MealPlanEntry[],
 			recipes: [] as Recipe[],
+			ingredients: [] as RecipeIngredient[],
 			items: [] as ShoppingItem[],
 			tasks: [] as Task[],
 			members: [] as Membership[]
@@ -124,6 +133,8 @@
 			nowMinutes: utcToZoned(now, timeZone).minutes
 		})
 	);
+	// Leere Rezepte (aus dem Wochenplan übernommen) führen nicht in die Kochansicht.
+	const incomplete = $derived(incompleteIds(data.current.recipes, data.current.ingredients));
 	const week = $derived(weekStrip({ occurrences, meals: data.current.meals, tasks, today }));
 	const due = $derived(tasksForToday(tasks, membership, today));
 
@@ -452,7 +463,7 @@
 					</a>
 					<span class="day-meals">
 						{#each day.meals as entry (entry.id)}
-							{#if day.isToday && entry.recipe}
+							{#if day.isToday && entry.recipe && !incomplete.has(entry.recipe)}
 								<a
 									class="dish"
 									href={resolve('/(app)/essen/rezepte/[id]/kochen', { id: entry.recipe })}

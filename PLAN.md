@@ -439,6 +439,14 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] Titel ohne angehängtes „von <Autor>“ (z. B. Chefkoch), nur wenn es genau dem Autor-Feld entspricht.
 - Grenzen: Seiten ohne Rezeptdaten (Instagram, Bezahlseiten) gehen nicht; Weiterleitungen und DNS-Antworten prüft der Hook nicht (darum nur Erwachsene und gedrosselt).
 
+### 18. Rezepte aus dem Wochenplan, Woche vorschlagen (`feat/schritt-18-rezepte-wochenvorschlag`)
+
+- [x] Jedes geplante Gericht wird einmal zum Rezept (nur Titel, ggf. Link als Quelle); feste ID aus Familie + Titel (`recipeIdFor`), damit zwei Geräte offline kein Doppeltes anlegen. Gelöschtes Rezept wird wiederhergestellt. Umbenennen im Plan legt ein neues Rezept an, das alte bleibt.
+- [x] Bestehende und per Sync eingetroffene Einträge ohne Rezept werden app-weit nachgetragen (Live-Abfrage im Layout, nur Erwachsene/Admin).
+- [x] Rezepte ohne Zutaten und Zubereitung: „Noch unvollständig – ergänzen“ in der Liste, „Ergänzen“ statt „Kochen“ im Wochenplan; die Heute-Ansicht führt nicht in die leere Kochansicht.
+- [x] „Woche vorschlagen“ (nur Abendessen, nur freie Abende): gewichtete Auswahl – Favoriten doppelt, lange nicht gegessen höher, in der Woche davor/danach nur zur Not, unter der Woche schnelle Gerichte bevorzugt, kein Gericht doppelt in der Woche. Vorschau mit „Anderes“ und Abwählen, erst „Übernehmen“ speichert.
+- [x] Tests: Unit (`plan-recipes.test.ts`, `suggest.test.ts`), E2E in `meal-plan.e2e.ts`.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

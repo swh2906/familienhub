@@ -4,6 +4,7 @@ import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
 import { learnAlias } from '#lib/features/pantry/learn.js';
 import { ensureIngredients } from '#lib/features/pantry/store.js';
 import { clampDifficulty, clampMinutes } from './cooking.js';
+import { matchRecipe, recipeIdFor } from './plan.js';
 import { cleanTags, diffIngredients, type IngredientDraft } from './recipes.js';
 
 export interface RecipeForm {
@@ -95,6 +96,36 @@ export async function saveRecipe(
 	for (const ingredientId of changes.remove) {
 		await ingredients.remove(ingredientId);
 	}
+	return id;
+}
+
+/**
+ * Rezept zu einem geplanten Gericht: vorhandenes mit gleichem Titel, sonst ein neues nur mit Titel
+ * (und Link) – Zutaten und Zubereitung ergänzt man später. Feste ID aus Familie + Titel, damit zwei
+ * Geräte offline kein Doppeltes anlegen. Bewusst nur wenige Felder: Legt ein zweites Gerät dasselbe
+ * Rezept an, wird daraus beim Sync eine Änderung, und schon Ergänztes bleibt erhalten.
+ */
+export async function ensureRecipe(
+	household: string,
+	title: string,
+	sourceUrl = '',
+	known?: readonly Recipe[]
+): Promise<string> {
+	const clean = title.trim();
+	const match = matchRecipe(clean, known ?? (await recipesOf(household)));
+	if (match) return match.id;
+	const id = recipeIdFor(household, clean);
+	const existing = await repo('recipes').get(id);
+	if (existing) {
+		if (existing.deleted_at) await repo('recipes').update(id, { deleted_at: '' });
+		return id;
+	}
+	await repo('recipes').create({
+		id,
+		household,
+		title: clean,
+		...(sourceUrl && { source_url: sourceUrl })
+	});
 	return id;
 }
 

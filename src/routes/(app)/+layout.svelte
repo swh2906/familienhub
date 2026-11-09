@@ -6,6 +6,9 @@
 	import { page } from '$app/state';
 	import { features } from '#lib/auth/features.svelte.js';
 	import { linkExistingIngredients } from '#lib/features/pantry/backfill.js';
+	import { live } from '#lib/db/live.svelte.js';
+	import { entriesWithoutRecipe } from '#lib/features/meals/plan.js';
+	import { allEntries, linkPlannedRecipes } from '#lib/features/meals/plan-store.js';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { startSync, stopSync } from '#lib/sync/service.js';
@@ -41,6 +44,23 @@
 			void linkExistingIngredients(household).catch(() => {});
 		}, 3000);
 		return () => clearTimeout(timer);
+	});
+
+	// Jedes geplante Gericht wird einmal zum Rezept: auch alte und per Sync eingetroffene Einträge
+	// ohne Rezept verknüpfen, sobald sie lokal da sind (nur wer Rezepte anlegen darf).
+	const unlinked = live(
+		() => (session.canEdit ? (session.householdId ?? '') : ''),
+		async (h) => (h ? entriesWithoutRecipe(await allEntries(h)).length : 0),
+		0
+	);
+	let linking = false;
+	$effect(() => {
+		const household = session.householdId;
+		if (!household || !session.canEdit || unlinked.current === 0 || linking) return;
+		linking = true;
+		void linkPlannedRecipes(household)
+			.catch(() => {})
+			.finally(() => (linking = false));
 	});
 
 	// Testphasen-Schalter (z. B. Feedback) beim Start einmal vom Server holen.

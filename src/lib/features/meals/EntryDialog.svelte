@@ -109,6 +109,8 @@
 		</label>
 		{#if match}
 			<p class="hint" role="status">{m.plan_link_internal({ title: match.title })}</p>
+		{:else if title.trim() && title.trim() !== target?.entry?.title}
+			<p class="hint" role="status">{m.plan_link_new_recipe()}</p>
 		{/if}
 
 		<div class="field">

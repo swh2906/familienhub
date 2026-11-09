@@ -1,4 +1,5 @@
 // Reine Logik des Wochenplans: Einträge nach Tag und Mahlzeit gruppieren, Links prüfen, Vorschläge.
+import { stableId } from '#lib/db/ids.js';
 import type { MealPlanEntry, Recipe } from '#lib/db/types.js';
 import { normalize } from './recipes.js';
 
@@ -100,4 +101,17 @@ export function dishSuggestions(
 export function matchRecipe(title: string, recipes: readonly Recipe[]): Recipe | undefined {
 	const key = normalize(title);
 	return key ? recipes.find((r) => !r.deleted_at && normalize(r.title) === key) : undefined;
+}
+
+/**
+ * Feste ID des Rezepts zu einem geplanten Gericht (Familie + Titel ohne Groß-/Kleinschreibung).
+ * Planen zwei Geräte offline dasselbe neue Gericht, entsteht so ein Rezept statt zwei.
+ */
+export function recipeIdFor(household: string, title: string): string {
+	return stableId(household, `recipe:${normalize(title)}`);
+}
+
+/** Einträge mit Gericht, aber ohne verknüpftes Rezept (für die einmalige Übernahme). */
+export function entriesWithoutRecipe(entries: readonly MealPlanEntry[]): MealPlanEntry[] {
+	return entries.filter((e) => !e.deleted_at && !e.recipe && (e.title ?? '').trim() !== '');
 }

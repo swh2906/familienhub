@@ -168,3 +168,20 @@ export function diffIngredients(
 	}
 	return result;
 }
+
+/** Ist das Rezept noch leer (z. B. aus dem Wochenplan übernommen)? */
+export function isIncomplete(recipe: Recipe, ingredientCount: number): boolean {
+	return ingredientCount === 0 && !(recipe.instructions ?? '').trim();
+}
+
+/** IDs der unvollständigen Rezepte (für den Hinweis in der Liste). */
+export function incompleteIds(
+	recipes: readonly Recipe[],
+	ingredients: readonly RecipeIngredient[]
+): Set<string> {
+	const counts = new Map<string, number>();
+	for (const i of ingredients) {
+		if (!i.deleted_at) counts.set(i.recipe, (counts.get(i.recipe) ?? 0) + 1);
+	}
+	return new Set(recipes.filter((r) => isIncomplete(r, counts.get(r.id) ?? 0)).map((r) => r.id));
+}

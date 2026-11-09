@@ -5,7 +5,7 @@
 	import { live } from '#lib/db/live.svelte.js';
 	import type { Recipe, RecipeIngredient } from '#lib/db/types.js';
 	import { recipeFacts } from '#lib/features/meals/cooking.js';
-	import { availableTags, filterRecipes } from '#lib/features/meals/recipes.js';
+	import { availableTags, filterRecipes, incompleteIds } from '#lib/features/meals/recipes.js';
 	import { ingredientsOfRecipes, recipesOf, toggleFavorite } from '#lib/features/meals/store.js';
 	import { m } from '#lib/paraglide/messages.js';
 
@@ -26,6 +26,8 @@
 	const visible = $derived(
 		filterRecipes(data.current.recipes, data.current.ingredients, { query, tag })
 	);
+	// Rezepte ohne Zutaten und Zubereitung (meist aus dem Wochenplan übernommen).
+	const incomplete = $derived(incompleteIds(data.current.recipes, data.current.ingredients));
 	const hasAny = $derived(data.current.recipes.some((r) => !r.deleted_at));
 
 	function servings(count: number): string {
@@ -94,6 +96,17 @@
 							.filter(Boolean)
 							.join(' · ')}
 					</p>
+					{#if incomplete.has(recipe.id)}
+						{#if session.canEdit}
+							<a
+								class="incomplete"
+								href={resolve('/(app)/essen/rezepte/[id]/bearbeiten', { id: recipe.id })}
+								>{m.recipes_incomplete_edit()}</a
+							>
+						{:else}
+							<p class="incomplete">{m.recipes_incomplete()}</p>
+						{/if}
+					{/if}
 					{#if session.canEdit}
 						<button
 							type="button"
@@ -211,6 +224,29 @@
 		margin: 0;
 		color: var(--color-text-muted);
 		font-size: var(--fs-small);
+	}
+
+	/* Über der Karten-Verknüpfung, damit der Link zum Ergänzen eigenständig klickbar bleibt. */
+	.incomplete {
+		position: relative;
+		z-index: 1;
+		grid-column: 1;
+		justify-self: start;
+		margin: 0;
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-pill);
+		background: var(--color-warning-bg);
+		color: var(--color-warning);
+		font-size: var(--fs-small);
+		font-weight: 600;
+	}
+
+	a.incomplete {
+		display: inline-flex;
+		align-items: center;
+		min-height: 48px;
+		background: none;
+		padding-inline: 0;
 	}
 
 	.star {

@@ -4,8 +4,9 @@
 	import { page } from '$app/state';
 	import { session } from '#lib/auth/session.svelte.js';
 	import { live } from '#lib/db/live.svelte.js';
-	import type { Household, MealPlanEntry, Recipe } from '#lib/db/types.js';
+	import type { Household, MealPlanEntry, Recipe, RecipeIngredient } from '#lib/db/types.js';
 	import EntryDialog from '#lib/features/meals/EntryDialog.svelte';
+	import SuggestDialog from '#lib/features/meals/SuggestDialog.svelte';
 	import {
 		dishSuggestions,
 		groupEntries,
@@ -23,7 +24,8 @@
 		moveEntry,
 		setMealSlots
 	} from '#lib/features/meals/plan-store.js';
-	import { recipesOf } from '#lib/features/meals/store.js';
+	import { incompleteIds } from '#lib/features/meals/recipes.js';
+	import { ingredientsOfRecipes, recipesOf } from '#lib/features/meals/store.js';
 	import {
 		formatDay,
 		formatShortDate,
@@ -62,20 +64,27 @@
 	);
 	const extra = live(
 		() => household,
-		async (h) => ({
-			entries: await allEntries(h),
-			recipes: await recipesOf(h),
-			household: await householdOf(h)
-		}),
+		async (h) => {
+			const recipes = await recipesOf(h);
+			return {
+				entries: await allEntries(h),
+				recipes,
+				ingredients: await ingredientsOfRecipes(recipes.map((r) => r.id)),
+				household: await householdOf(h)
+			};
+		},
 		{
 			entries: [] as MealPlanEntry[],
 			recipes: [] as Recipe[],
+			ingredients: [] as RecipeIngredient[],
 			household: undefined as Household | undefined
 		}
 	);
 
 	const groups = $derived(groupEntries(week.current, days));
 	const suggestions = $derived(dishSuggestions(extra.current.entries, extra.current.recipes));
+	// Leere Rezepte (aus dem Plan übernommen): „Ergänzen“ statt „Kochen“.
+	const incomplete = $derived(incompleteIds(extra.current.recipes, extra.current.ingredients));
 	const isEmpty = $derived(groups.size === 0);
 	// Geplante Mahlzeiten der Familie; ausgeblendete mit Einträgen bleiben sichtbar.
 	const planned = $derived(plannedSlots(extra.current.household?.meal_slots));
@@ -83,6 +92,7 @@
 
 	let target: DialogTarget | null = $state(null);
 	let slotsOpen = $state(false);
+	let suggestOpen = $state(false);
 
 	/** Mahlzeit an- oder abwählen; mindestens eine bleibt. */
 	function toggleSlot(slot: Slot) {
@@ -240,6 +250,11 @@
 		{/if}
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	</nav>
+	{#if session.canEdit && planned.includes('dinner')}
+		<button type="button" class="btn suggest" onclick={() => (suggestOpen = true)}>
+			{m.plan_suggest_button()}
+		</button>
+	{/if}
 	{#if session.canEdit}
 		<button
 			type="button"
@@ -342,6 +357,16 @@
 									<span aria-hidden="true">↗</span>
 								</a>
 								<!-- eslint-enable svelte/no-navigation-without-resolve -->
+							{:else if entry.recipe && incomplete.has(entry.recipe)}
+								{#if session.canEdit}
+									<a
+										class="recipe-link complete"
+										href={resolve('/(app)/essen/rezepte/[id]/bearbeiten', { id: entry.recipe })}
+										aria-label={m.plan_complete_recipe_label({ title: entry.title })}
+									>
+										{m.plan_complete_recipe()}
+									</a>
+								{/if}
 							{:else if entry.recipe}
 								<a
 									class="recipe-link cook"
@@ -385,6 +410,15 @@
 		{suggestions}
 		recipes={extra.current.recipes}
 		onclose={() => (target = null)}
+	/>
+	<SuggestDialog
+		open={suggestOpen}
+		{household}
+		{days}
+		weekEntries={week.current}
+		entries={extra.current.entries}
+		recipes={extra.current.recipes}
+		onclose={() => (suggestOpen = false)}
 	/>
 {/if}
 
@@ -596,8 +630,13 @@
 		text-decoration: none;
 	}
 
-	.recipe-link.cook {
+	.recipe-link.cook,
+	.recipe-link.complete {
 		padding: 0 var(--space-2);
+	}
+
+	.recipe-link.complete {
+		color: var(--color-warning);
 	}
 
 	.recipe-link:hover {

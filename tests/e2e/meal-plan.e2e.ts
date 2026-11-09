@@ -307,3 +307,62 @@ test('Wochen blättern und Kinder nur lesend', async ({ page }) => {
 	await page.getByRole('link', { name: 'Diese Woche' }).click();
 	await expect(page.getByText('Pizza')).toBeVisible();
 });
+
+test('geplante Gerichte werden Rezepte, Woche vorschlagen', async ({ page }) => {
+	const { email, household } = await createFamily();
+	const token = await apiToken(email);
+	const week = thisWeek();
+	const longAgo = iso(new Date(Date.now() - 30 * DAY_MS));
+	// Vor der Funktion geplant (ohne Rezept) und ein vorhandenes Lieblingsrezept.
+	await apiCreate(token, 'meal_plan_entries', {
+		household,
+		date: longAgo,
+		slot: 'dinner',
+		title: 'Pfannkuchen'
+	});
+	await apiCreate(token, 'recipes', { household, title: 'Spaghetti', is_favorite: true });
+	await login(page, email);
+	await openPlan(page);
+
+	// Neues Gericht planen: Hinweis, danach „Ergänzen“ statt „Kochen“.
+	await slot(page, 'Abend', week.mondayLabel)
+		.getByRole('button', { name: /hinzufügen/ })
+		.click();
+	const dialog = page.getByRole('dialog', { name: 'Mahlzeit planen' });
+	await dialog.getByLabel('Gericht').fill('Linsensuppe');
+	await expect(dialog.getByText(/als Rezept gespeichert/)).toBeVisible();
+	await dialog.getByRole('button', { name: 'Speichern' }).click();
+	await expect(
+		slot(page, 'Abend', week.mondayLabel).getByRole('link', {
+			name: 'Rezept für Linsensuppe ergänzen'
+		})
+	).toBeVisible();
+
+	// Rezeptliste: neues und nachträglich übernommenes Gericht, beide noch unvollständig.
+	await page
+		.getByRole('navigation', { name: 'Bereiche im Essen' })
+		.getByRole('link', { name: 'Rezepte' })
+		.click();
+	const list = page.getByRole('list', { name: 'Rezepte' });
+	for (const title of ['Linsensuppe', 'Pfannkuchen']) {
+		await expect(
+			list.getByRole('listitem').filter({ hasText: title }).getByText('Noch unvollständig')
+		).toBeVisible();
+	}
+	await expect(list.getByRole('listitem')).toHaveCount(3);
+
+	// Woche vorschlagen: nur Rezepte, die noch nicht in der Woche stehen.
+	await page
+		.getByRole('navigation', { name: 'Bereiche im Essen' })
+		.getByRole('link', { name: 'Wochenplan' })
+		.click();
+	await page.getByRole('button', { name: 'Woche vorschlagen' }).click();
+	const suggest = page.getByRole('dialog', { name: 'Abendessen vorschlagen' });
+	await expect(suggest.getByRole('checkbox')).toHaveCount(2);
+	await expect(suggest.getByText('Linsensuppe')).toHaveCount(0);
+	await expect(suggest.getByText(/übrigen Abende/)).toBeVisible();
+	await suggest.getByRole('button', { name: '2 übernehmen' }).click();
+	await expect(suggest).toBeHidden();
+	await expect(page.getByRole('button', { name: /^Spaghetti \(Abend/ })).toBeVisible();
+	await expect(page.getByRole('button', { name: /^Pfannkuchen \(Abend/ })).toBeVisible();
+});

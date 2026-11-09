@@ -145,7 +145,10 @@ test('Suche und Tag-Filter', async ({ page }) => {
 
 	await login(page, email);
 	await openRecipes(page);
-	const titles = page.getByRole('list', { name: 'Rezepte' }).getByRole('link');
+	const titles = page
+		.getByRole('list', { name: 'Rezepte' })
+		.getByRole('link')
+		.filter({ hasNotText: 'unvollständig' });
 	// Favorit zuerst, sonst alphabetisch.
 	await expect(titles).toHaveText(['Käsespätzle', 'Apfelkuchen', 'Gemüsecurry']);
 

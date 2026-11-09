@@ -366,3 +366,54 @@ test('geplante Gerichte werden Rezepte, Woche vorschlagen', async ({ page }) => 
 	await expect(page.getByRole('button', { name: /^Spaghetti \(Abend/ })).toBeVisible();
 	await expect(page.getByRole('button', { name: /^Pfannkuchen \(Abend/ })).toBeVisible();
 });
+
+test('Abendessen aus mehreren Gerichten aufteilen, altes Sammelrezept nachträglich', async ({
+	page
+}) => {
+	const { email, household } = await createFamily();
+	const token = await apiToken(email);
+	const week = thisWeek();
+	// Vor dieser Funktion fälschlich als ein Rezept übernommen.
+	const combined = await apiCreate(token, 'recipes', { household, title: 'Fisch mit Reis' });
+	await apiCreate(token, 'meal_plan_entries', {
+		household,
+		date: week.tuesday,
+		slot: 'dinner',
+		title: 'Fisch mit Reis',
+		recipe: combined.id
+	});
+	await login(page, email);
+	await openPlan(page);
+
+	const monday = slot(page, 'Abend', week.mondayLabel);
+	await monday.getByRole('button', { name: /hinzufügen/ }).click();
+	const dialog = page.getByRole('dialog', { name: 'Mahlzeit planen' });
+	await dialog.getByLabel('Gericht').fill('Schnitzel mit Pommes und Salat');
+	const split = dialog.getByRole('checkbox', { name: /Als 3 einzelne Gerichte planen/ });
+	await expect(split).toBeChecked();
+	await expect(dialog.getByText('Schnitzel · Pommes · Salat')).toBeVisible();
+	await dialog.getByRole('button', { name: 'Speichern' }).click();
+	for (const title of ['Schnitzel', 'Pommes', 'Salat']) {
+		await expect(monday.getByRole('button', { name: new RegExp(`^${title} [(]`) })).toBeVisible();
+	}
+
+	// „Zusammen lassen“: Häkchen weg → ein Gericht.
+	const tuesday = slot(page, 'Abend', week.tuesdayLabel);
+	await tuesday.getByRole('button', { name: /hinzufügen/ }).click();
+	await dialog.getByLabel('Gericht').fill('Lasagne mit Spinat');
+	await dialog.getByRole('checkbox', { name: /einzelne Gerichte/ }).uncheck();
+	await dialog.getByRole('button', { name: 'Speichern' }).click();
+	await expect(tuesday.getByRole('button', { name: /^Lasagne mit Spinat \(/ })).toBeVisible();
+
+	// Altes Sammelrezept in der Rezeptliste aufteilen.
+	await page
+		.getByRole('navigation', { name: 'Bereiche im Essen' })
+		.getByRole('link', { name: 'Rezepte' })
+		.click();
+	const list = page.getByRole('list', { name: 'Rezepte' });
+	await list.getByRole('button', { name: '„Fisch mit Reis“ in Fisch, Reis aufteilen' }).click();
+	await expect(list.getByRole('link', { name: 'Fisch mit Reis' })).toHaveCount(0);
+	await expect(list.getByRole('link', { name: 'Fisch', exact: true })).toBeVisible();
+	await expect(list.getByRole('link', { name: 'Reis', exact: true })).toBeVisible();
+	await expect(list.getByRole('link', { name: 'Lasagne mit Spinat' })).toBeVisible();
+});

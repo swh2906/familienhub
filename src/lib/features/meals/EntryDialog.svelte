@@ -3,8 +3,15 @@
 	// Eingebautes <dialog>: Fokus bleibt im Dialog, Escape schließt, Screenreader erkennen ihn als Dialog.
 	import type { Recipe } from '#lib/db/types.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import { matchRecipe, normalizeRecipeUrl, SLOTS, type DialogTarget, type Slot } from './plan.js';
-	import { addEntry, removeEntry, updateEntry } from './plan-store.js';
+	import {
+		matchRecipe,
+		normalizeRecipeUrl,
+		splitDish,
+		SLOTS,
+		type DialogTarget,
+		type Slot
+	} from './plan.js';
+	import { removeEntry, saveDishes } from './plan-store.js';
 
 	let {
 		target,
@@ -42,6 +49,11 @@
 	let busy = $state(false);
 
 	const match = $derived(matchRecipe(title, recipes));
+	// Abendessen aus mehreren Gerichten („Schnitzel mit Pommes“): Aufteilen vorschlagen, abwählbar.
+	const parts = $derived(splitDish(title, recipes));
+	let separate = $state(true);
+	const changed = $derived(title.trim() !== (target?.entry?.title ?? ''));
+	const offerSplit = $derived(parts.length > 1 && (changed || !target?.entry?.recipe));
 
 	// Beim Öffnen die Felder aus dem Ziel übernehmen und den Dialog modal zeigen.
 	$effect(() => {
@@ -52,6 +64,7 @@
 			date = target.date;
 			slot = target.slot;
 			error = '';
+			separate = true;
 			if (!dialog.open) dialog.showModal();
 		} else if (dialog.open) {
 			dialog.close();
@@ -73,8 +86,7 @@
 		busy = true;
 		try {
 			const form = { date, slot, title, recipe_url: recipeUrl, recipe: match?.id ?? '' };
-			if (target.entry) await updateEntry(target.entry, form);
-			else await addEntry(household, form);
+			await saveDishes(household, target.entry, form, offerSplit && separate ? parts : [title]);
 			dialog?.close();
 		} catch {
 			error = m.error_generic();
@@ -109,6 +121,17 @@
 		</label>
 		{#if match}
 			<p class="hint" role="status">{m.plan_link_internal({ title: match.title })}</p>
+		{:else if offerSplit}
+			<label class="split">
+				<input type="checkbox" bind:checked={separate} />
+				<span>
+					{m.plan_split({ count: parts.length })}
+					<span class="parts">{parts.join(' · ')}</span>
+				</span>
+			</label>
+			<p class="hint" role="status">
+				{separate ? m.plan_split_hint() : m.plan_link_new_recipe()}
+			</p>
 		{:else if title.trim() && title.trim() !== target?.entry?.title}
 			<p class="hint" role="status">{m.plan_link_new_recipe()}</p>
 		{/if}
@@ -196,6 +219,26 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-3);
+	}
+
+	.split {
+		display: flex;
+		gap: var(--space-3);
+		align-items: flex-start;
+		min-height: 48px;
+		cursor: pointer;
+	}
+
+	.split input {
+		flex: none;
+		width: 1.5rem;
+		height: 1.5rem;
+		margin: 0;
+	}
+
+	.parts {
+		display: block;
+		font-weight: 600;
 	}
 
 	.danger {

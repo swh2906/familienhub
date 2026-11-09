@@ -111,7 +111,45 @@ export function recipeIdFor(household: string, title: string): string {
 	return stableId(household, `recipe:${normalize(title)}`);
 }
 
-/** Einträge mit Gericht, aber ohne verknüpftes Rezept (für die einmalige Übernahme). */
-export function entriesWithoutRecipe(entries: readonly MealPlanEntry[]): MealPlanEntry[] {
-	return entries.filter((e) => !e.deleted_at && !e.recipe && (e.title ?? '').trim() !== '');
+/**
+ * Einträge mit Gericht, aber ohne verknüpftes Rezept (für die einmalige Übernahme). Zusammengesetzte
+ * Gerichte („Schnitzel mit Pommes“) bleiben außen vor: Ob sie aufgeteilt werden, entscheidet jemand
+ * im Dialog – sonst entstünde daraus ein falsches Sammelrezept.
+ */
+export function entriesWithoutRecipe(
+	entries: readonly MealPlanEntry[],
+	recipes: readonly Recipe[] = []
+): MealPlanEntry[] {
+	return entries.filter(
+		(e) =>
+			!e.deleted_at &&
+			!e.recipe &&
+			(e.title ?? '').trim() !== '' &&
+			splitDish(e.title, recipes).length === 1
+	);
+}
+
+// Trennstellen zwischen Gerichten: Komma, Plus, & sowie „und“, „mit“, „dazu“ als
+// eigene Wörter (nicht mitten im Wort, z. B. „Schmitt“).
+const DISH_SEPARATOR = /\s*[,+&]\s*|\s+(?:und|mit|dazu)\s+/i;
+
+/**
+ * Teilt ein geplantes Abendessen in einzelne Gerichte auf, z. B. „Schnitzel mit Pommes und Salat“ →
+ * Schnitzel, Pommes, Salat. Gibt es schon ein Rezept mit dem ganzen Titel, bleibt es ein Gericht.
+ * Nur ein Vorschlag: Der Dialog fragt nach („Lasagne mit Spinat“ ist ein Rezept).
+ */
+export function splitDish(title: string, recipes: readonly Recipe[] = []): string[] {
+	const whole = title.trim();
+	if (!whole || matchRecipe(whole, recipes)) return [whole];
+	const seen = new Set<string>();
+	const parts: string[] = [];
+	for (const raw of whole.split(DISH_SEPARATOR)) {
+		const part = raw.trim();
+		const key = normalize(part);
+		if (!key || seen.has(key)) continue;
+		seen.add(key);
+		// Kleingeschriebene Teile („mit pommes“) groß beginnen – deutsche Gerichte sind Nomen.
+		parts.push(part.charAt(0).toLocaleUpperCase('de') + part.slice(1));
+	}
+	return parts.length > 1 ? parts : [whole];
 }

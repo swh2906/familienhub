@@ -447,6 +447,14 @@ Entwürfe: https://claude.ai/artifact/EawiBqQcHSabnz5555MT9W (Reihe C).
 - [x] „Woche vorschlagen“ (nur Abendessen, nur freie Abende): gewichtete Auswahl – Favoriten doppelt, lange nicht gegessen höher, in der Woche davor/danach nur zur Not, unter der Woche schnelle Gerichte bevorzugt, kein Gericht doppelt in der Woche. Vorschau mit „Anderes“ und Abwählen, erst „Übernehmen“ speichert.
 - [x] Tests: Unit (`plan-recipes.test.ts`, `suggest.test.ts`), E2E in `meal-plan.e2e.ts`.
 
+### 19. Abendessen aus mehreren Gerichten (`feat/schritt-19-gerichte-aufteilen`)
+
+- [x] `splitDish` schlägt das Aufteilen vor (Komma, +, &, „und“, „mit“, „dazu“); gibt es schon ein Rezept mit dem ganzen Titel, bleibt es ein Gericht.
+- [x] Eintrag-Dialog: „Als 3 einzelne Gerichte planen“ (standardmäßig an, abwählbar für z. B. „Lasagne mit Spinat“); je Gericht ein Eintrag in derselben Mahlzeit mit eigenem Rezept, der Link bleibt am ersten.
+- [x] Nachtrag im Hintergrund legt für zusammengesetzte Titel kein Sammelrezept mehr an (entscheidet jemand im Dialog).
+- [x] Rezeptliste: leere Sammelrezepte „In 2 Gerichte aufteilen“ – Einträge werden aufgeteilt, das Sammelrezept gelöscht.
+- [x] Tests: Unit (`plan-recipes.test.ts`), E2E in `meal-plan.e2e.ts`.
+
 ### 2. Weitere offene Punkte
 
 - Feinschliff der übrigen Bereiche: Kalender, Aufgaben, Einstellungen/Anmeldung (Vorgehen wie in Schritt 10e).

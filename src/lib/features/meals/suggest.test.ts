@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { MealPlanEntry, Recipe } from '#lib/db/types.js';
-import { alternativeFor, distanceToPlanned, scoreRecipe, suggestWeek } from './suggest.js';
+import {
+	alternativeFor,
+	distanceToPlanned,
+	openDinnerDates,
+	scoreRecipe,
+	suggestWeek
+} from './suggest.js';
 
 const base = { created: '', updated: '', updated_by: '', deleted_at: '' };
 
@@ -96,5 +102,20 @@ describe('Woche vorschlagen', () => {
 		expect(alternativeFor(result, 0, input)?.id).toBe('c');
 		const full = [...result, { date: days[2], recipe: recipes[2] }];
 		expect(alternativeFor(full, 0, input)).toBeUndefined();
+	});
+});
+
+describe('freie Abende für den Vorschlag', () => {
+	it('nur ab heute und nur Abende ohne Abendessen', () => {
+		const lunch = { ...entry('2026-11-19', 'Brot'), slot: 'lunch' as const };
+		const gone = { ...entry('2026-11-20', 'Alt'), deleted_at: '2026-11-01' };
+		const entries = [entry('2026-11-18', 'Suppe'), lunch, gone];
+		expect(openDinnerDates(days, entries, '2026-11-17')).toEqual([
+			'2026-11-17',
+			'2026-11-19',
+			'2026-11-20'
+		]);
+		expect(openDinnerDates(days, [], '2026-11-23')).toEqual([]);
+		expect(openDinnerDates(days, [], '2026-11-01')).toEqual(days);
 	});
 });

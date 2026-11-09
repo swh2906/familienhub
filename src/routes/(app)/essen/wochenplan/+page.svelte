@@ -250,7 +250,8 @@
 		{/if}
 		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	</nav>
-	{#if session.canEdit && planned.includes('dinner')}
+	<!-- Vorschläge nur, solange in der Woche noch Abende vor einem liegen. -->
+	{#if session.canEdit && planned.includes('dinner') && days[days.length - 1] >= today}
 		<button type="button" class="btn suggest" onclick={() => (suggestOpen = true)}>
 			{m.plan_suggest_button()}
 		</button>
